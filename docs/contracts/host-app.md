@@ -40,9 +40,10 @@ fully usable without the app.
 | APP-007 | Battery and module status, including the physical order of chained modules. | P5 | T |
 | APP-008 | On-screen notices: Caps Lock, low battery, connection switched, module attached. Small, unobtrusive, individually switchable. | P5 | D |
 | APP-009 | Firmware updates for keyboard, dongle and modules over USB, safe against interruption. | P5 | T |
-| APP-010 | Music knob: send playback state and position to the knob module. Windows: system media transport controls. macOS has no stable public now-playing API, so per-player integrations (Apple Music, Spotify) may be needed (OPEN-10). | P5 | T |
+| APP-010 | Music knob: the app shall send playback state (playing/paused, position) to knob 3. Windows: system media transport controls. macOS has no stable public now-playing API; per-player integrations (Apple Music, Spotify) or another method (OPEN-10). | P5 | T |
 | APP-011 | The app shall run in the background (menu bar / tray), start at login, use ≤ 1 % CPU and ≤ 150 MB RAM when idle. | P5 | M |
 | APP-012 | No internet connection, account or telemetry required. | P5 | I |
 | APP-013 | All settings shall live on the keyboard; the app is only needed for per-app switching and live features. | P5 | T |
 | APP-014 | Screen-edge switching: moving the mouse past the screen edge switches the keyboard between Mac and PC (both running the app). | Later | T |
+| APP-015 | Knob tuning: presets, live sliders with immediate feel, profile export/import as JSON, and a health readout (loop rate, heat, magnet) per knob. | P5 | D |
 | APP-020 | Backlog: every feature used through Vial in P1–P2 shall be available in the KO app before Vial support is dropped. | P5 | I |

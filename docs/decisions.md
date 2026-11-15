@@ -34,6 +34,7 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 | D-25 | Generator: local program first (Python), website later; outputs one complete folder per keyboard. | Prove the pipeline on the owner's own board first. |
 | D-26 | Hardware-in-the-loop testing: the owner runs Claude Code on their own computer with boards attached (`probe-rs`, `defmt`). | Agents can then flash and read logs directly. |
 | D-27 | Project name **KO** (Keyboard Organization); repository `KO`; docs in English. | Owner's choice. |
+| D-28 | The knob module is a **new design with smaller knobs**; the owner's earlier knob project is not its base and is not kept in this repository. Motors: micro gimbal outrunners (1105 / 1806 / 2204 class), the smallest that passes KNOB-001. Caps 12–20 mm. KO defines its own profile format. Music-follow is a KO profile type, specified fresh. | Owner's instruction (2026-11-15). |
 
 ### Rejected alternatives (do not reopen without new information)
 
@@ -57,12 +58,12 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 | OPEN-02 | Charger/power-path, fuel gauge, boost and USB-C role-controller parts | P1–P2 | Must meet CORE-003…010 and CORE-021…024 |
 | OPEN-03 | Module bus physical layer and protocol: RS-485-style vs CAN FD | P3 | Criteria in module-interface.md §6 |
 | OPEN-04 | Contact parts, final pin order, magnet sizing and pattern, signature resistor value | P3 | Test pull force and alignment with printed prototypes |
-| OPEN-05 | Knob motor: 1806 vs 2204 class, specific model | P0 → P4 | Feel tests on the owner's rig; cogging is the deciding factor |
+| OPEN-05 | Knob motor: 1105 vs 1806 vs 2204 class, specific model, and cap size | P0 → P4 | Comparison on a new 5 V test jig (KNOB-001); felt strength and cogging decide |
 | OPEN-06 | RF path through the aluminium case without a bottom window | P1 (printed), P6 (CNC) | Must pass RF-011 in the final case |
 | OPEN-07 | Power switch position | P6 | Discreet but reachable without lifting the keyboard |
 | OPEN-08 | Keycap product: Choc-compatible, metallic look, RGB compatibility, legends | P1 | Metal caps block light and add weight |
 | OPEN-09 | Number and layout of programmable keys on the knob module | P4 | |
-| OPEN-10 | macOS now-playing information for the music knob | P5 | No stable public API; per-player integrations as fallback |
+| OPEN-10 | macOS playback state for the music knob | P5 | No stable public now-playing API; per-player integrations (Apple Music, Spotify) or another method |
 | OPEN-11 | Core board outline, exact stack-up heights, battery capacity | P1 | Battery must fit under a 40 % layout |
 | OPEN-12 | One LED position serving both MX and Choc light windows | P1 | Choc takes priority if impossible |
 | OPEN-13 | RMK integration: shift-register column scanning; Vial and KO protocol coexisting | P1–P2 | |
@@ -70,4 +71,5 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 | OPEN-15 | Module current budgets per side, on battery and on USB | P3 | Depends on knob module measurements |
 | OPEN-16 | Knob module MCU | P4 | STM32G4 class; needs motor timers and Embassy support |
 | OPEN-17 | Side-module heights for keyboards with fewer than 6 rows | P7 | Generator |
-| OPEN-18 | The owner's tuned knob parameters (motor, driver, sensor, smooth/thocky values) from their existing test project | P0 | Owner to provide; becomes KNOB-006 defaults |
+| ~~OPEN-18~~ | ~~The owner's tuned knob parameters from their existing test project~~ | — | Closed: not needed (D-28) |
+| OPEN-19 | TMC6300 availability (JLCPCB showed 59 in stock on 2026-11-15) | P4 | Order early from Digi-Key/Mouser, or qualify an alternative 5 V three-phase driver |

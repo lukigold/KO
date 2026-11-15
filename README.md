@@ -123,7 +123,7 @@ Each phase ends with its exit criteria verified and documented.
 
 | Phase | Goal | Main deliverables | Exit criteria |
 |---|---|---|---|
-| **P0** Foundations | Ready to build | Repo + contracts (this), pinned toolchains, CI skeleton; nRF52840 dev kit, debug probe, Nordic PPK2, 3–4 candidate knob motors bought; RMK + Vial running on the dev kit with a hand-wired test matrix; first motor feel comparison on the owner's existing test rig | Firmware flashes, logs and types on the dev kit; motor shortlist of 2 |
+| **P0** Foundations | Ready to build | Repo + contracts (this), pinned toolchains, CI skeleton; nRF52840 dev kit, debug probe, Nordic PPK2, 3–4 candidate knob motors bought; RMK + Vial running on the dev kit with a hand-wired test matrix; small-motor comparison on a new 5 V knob test jig (TMC6300 driver, MT6701 sensor) | Firmware flashes, logs and types on the dev kit; knob motor chosen (KNOB-001) |
 | **P1** Core keyboard rev A | A usable keyboard | Core board rev A; generated 75 % ISO-CH switch board rev A; 3D-printed case; USB + Bluetooth + Vial; battery and charging; power measured | Daily-usable wired/Bluetooth keyboard; SYS-03 projected from measurements |
 | **P2** Wireless and ports | Gaming-grade wireless | Dongle hardware and firmware; encrypted 1 kHz 2.4 GHz link; automatic switching; per-connection keymaps; gaming mode, SOCD; hub and identical ports; core board rev B | SYS-03, SYS-04, SYS-05, SYS-07 verified |
 | **P3** Module system | Modules work | Module interface implemented (detection, power, bus, chaining, USB lane); 1×6 macro module; numpad | 3 macro modules + numpad hot-plugged 100× on either side without a fault |

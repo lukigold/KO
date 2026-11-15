@@ -26,6 +26,7 @@ firmware/
   knob-module/     knob module application
   side-module/     macro column / numpad application
   ko-keymap/       keymap engine, tap-hold, combos, macros, SOCD   (host-testable)
+  ko-haptics/      knob haptics, music-follow, safety guards       (host-testable, see knob-module.md)
   ko-switching/    output-selection state machine                   (host-testable)
   ko-link/         2.4 GHz link protocol                             (host-testable parts)
   ko-protocol/     host protocol messages and versioning
