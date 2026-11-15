@@ -1,0 +1,242 @@
+(kicad_sch
+	(version 20250114)
+	(generator "ko-skeleton")
+	(generator_version "9.0")
+	(uuid "c9fabfcf-a5b5-4bde-9488-86ba0cdfeb90")
+	(paper "A4")
+	(title_block
+		(title "KO core board rev A")
+		(rev "A")
+		(company "KO - Keyboard Organization")
+		(comment 1 "SPDX-License-Identifier: CERN-OHL-S-2.0")
+		(comment 2 "Implements docs/contracts/core-board.md, see docs/design/core-board-rev-a.md")
+	)
+	(lib_symbols)
+	(text "KO core board rev A - block overview\nEach block is a hierarchical sheet. Contract: docs/contracts/core-board.md"
+		(exclude_from_sim no)
+		(at 25.4 30.48 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "171adcd3-3007-4433-92cc-1ea544d88784")
+	)
+	(sheet
+		(at 25.4 50.8)
+		(size 63.5 25.4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "4ecc0961-8274-4517-8051-629a26df99f9")
+		(property "Sheetname" "Power"
+			(at 25.4 50.099999999999994 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "power.kicad_sch"
+			(at 25.4 76.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ko-core"
+				(path "/c9fabfcf-a5b5-4bde-9488-86ba0cdfeb90"
+					(page "2")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 114.30000000000001 50.8)
+		(size 63.5 25.4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "cce0d42d-cf0f-447a-bd5d-8437f00e3d1a")
+		(property "Sheetname" "MCU and radio"
+			(at 114.30000000000001 50.099999999999994 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "mcu_radio.kicad_sch"
+			(at 114.30000000000001 76.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ko-core"
+				(path "/c9fabfcf-a5b5-4bde-9488-86ba0cdfeb90"
+					(page "3")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 203.20000000000002 50.8)
+		(size 63.5 25.4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "8a0e2e88-e311-48d7-85a0-8a20ec54f1c3")
+		(property "Sheetname" "USB"
+			(at 203.20000000000002 50.099999999999994 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "usb.kicad_sch"
+			(at 203.20000000000002 76.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ko-core"
+				(path "/c9fabfcf-a5b5-4bde-9488-86ba0cdfeb90"
+					(page "4")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 25.4 101.6)
+		(size 63.5 25.4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "f7bc2927-f158-41da-910c-be588d157929")
+		(property "Sheetname" "Switch board connector"
+			(at 25.4 100.89999999999999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "switchboard_conn.kicad_sch"
+			(at 25.4 127.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ko-core"
+				(path "/c9fabfcf-a5b5-4bde-9488-86ba0cdfeb90"
+					(page "5")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 114.30000000000001 101.6)
+		(size 63.5 25.4)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "e817a0b1-4293-4183-a9a0-9739b2257e6e")
+		(property "Sheetname" "Service and expansion"
+			(at 114.30000000000001 100.89999999999999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "service.kicad_sch"
+			(at 114.30000000000001 127.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "ko-core"
+				(path "/c9fabfcf-a5b5-4bde-9488-86ba0cdfeb90"
+					(page "6")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
+)

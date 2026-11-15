@@ -1,0 +1,27 @@
+(kicad_sch
+	(version 20250114)
+	(generator "ko-skeleton")
+	(generator_version "9.0")
+	(uuid "39d443e7-5b40-4607-ae80-ae3d3ec7b02a")
+	(paper "A4")
+	(title_block
+		(title "KO core board - Switch board connector")
+		(rev "A")
+		(company "KO - Keyboard Organization")
+		(comment 1 "SPDX-License-Identifier: CERN-OHL-S-2.0")
+		(comment 2 "Implements docs/contracts/core-board.md, see docs/design/core-board-rev-a.md")
+	)
+	(lib_symbols)
+	(text "Switch board connector\n\nFH34SRJ-24S-0.5SH, pinout per docs/contracts/switch-board.md:\n3V3, 4x GND, 3x LED_5V, I2C, LED_SDB, COL_DAT/CLK/LAT, ROW0-7, RSV_MISO, RSV_INT."
+		(exclude_from_sim no)
+		(at 25.4 38.1 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "0f075d62-399e-488b-96ab-b304a567718c")
+	)
+	(embedded_fonts no)
+)

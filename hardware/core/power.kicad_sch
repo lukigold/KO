@@ -1,0 +1,27 @@
+(kicad_sch
+	(version 20250114)
+	(generator "ko-skeleton")
+	(generator_version "9.0")
+	(uuid "1cf3a6a1-0f35-463a-b6b8-dbb94cfe8ce0")
+	(paper "A4")
+	(title_block
+		(title "KO core board - Power")
+		(rev "A")
+		(company "KO - Keyboard Organization")
+		(comment 1 "SPDX-License-Identifier: CERN-OHL-S-2.0")
+		(comment 2 "Implements docs/contracts/core-board.md, see docs/design/core-board-rev-a.md")
+	)
+	(lib_symbols)
+	(text "Power\n\nUSB VBUS input, BQ25628E charger + power path, LiPo + NTC, MAX17048,\nTPS7A02 3.0 V LDO (EN = power switch), TPS61023 boost, TPS2116 5 V mux,\nAP22653 LED rail switch. See design note sections 3 and 4."
+		(exclude_from_sim no)
+		(at 25.4 38.1 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "f17e8079-ea79-4b81-be9f-d3978143b4fa")
+	)
+	(embedded_fonts no)
+)

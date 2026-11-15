@@ -143,6 +143,7 @@ horizontal haptic roller, generator website, Wi-Fi storage module.
 
 ```
 docs/          contracts/, decisions.md        ← the source of truth
+               design/                          ← how contracts are implemented
 hardware/      core/, switchboard/ (generated), dongle/, modules/<name>/
 firmware/      Rust workspace: keyboard, dongle, knob-module, side-module,
                ko-protocol, ko-module-bus (shared crates)
@@ -153,7 +154,7 @@ tools/         test rigs (latency, power), scripts
 LICENSES/      full license texts
 ```
 
-Only `docs/` and `LICENSES/` exist today; the rest is created in the phase that needs it.
+Only `docs/`, `hardware/core/` (project skeleton) and `LICENSES/` exist today; the rest is created in the phase that needs it.
 
 ## License
 

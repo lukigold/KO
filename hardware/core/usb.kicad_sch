@@ -1,0 +1,27 @@
+(kicad_sch
+	(version 20250114)
+	(generator "ko-skeleton")
+	(generator_version "9.0")
+	(uuid "1a8af84d-0d51-4664-b211-8d94dcf391f5")
+	(paper "A4")
+	(title_block
+		(title "KO core board - USB")
+		(rev "A")
+		(company "KO - Keyboard Organization")
+		(comment 1 "SPDX-License-Identifier: CERN-OHL-S-2.0")
+		(comment 2 "Implements docs/contracts/core-board.md, see docs/design/core-board-rev-a.md")
+	)
+	(lib_symbols)
+	(text "USB\n\nUSB-C receptacle (port A, Rd 5.1 kOhm on CC1/CC2), USBLC6-2SC6 ESD,\nD+/D- to the nRF52840. Rev B replaces this sheet with hub + role logic."
+		(exclude_from_sim no)
+		(at 25.4 38.1 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "5993617f-ea4d-4b76-8245-3c2d5d49dceb")
+	)
+	(embedded_fonts no)
+)

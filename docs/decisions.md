@@ -35,6 +35,9 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 | D-26 | Hardware-in-the-loop testing: the owner runs Claude Code on their own computer with boards attached (`probe-rs`, `defmt`). | Agents can then flash and read logs directly. |
 | D-27 | Project name **KO** (Keyboard Organization); repository `KO`; docs in English. | Owner's choice. |
 | D-28 | The knob module is a **new design with smaller knobs**; the owner's earlier knob project is not its base and is not kept in this repository. Motors: micro gimbal outrunners (1105 / 1806 / 2204 class), the smallest that passes KNOB-001. Caps 12–20 mm. KO defines its own profile format. Music-follow is a KO profile type, specified fresh. | Owner's instruction (2026-11-15). |
+| D-29 | The core board is built in three revisions: rev A (P1) MCU, power, one USB-C port, switch-board connector; rev B (P2) hub, second identical port, role logic; rev C (P3) module ports. | One risky subsystem per revision; rev A gives a usable keyboard fast. |
+| D-30 | Core rev A parts: BMD-340 (nRF52840 module), BQ25628E charger, MAX17048 fuel gauge, TPS7A02 **3.0 V** system rail, TPS61023 boost + TPS2116 mux for the 5 V rail, AP22653 LED rail switch, FH34SRJ 24-pin FFC, 1.0 mm 4-layer PCB. The power switch drives the LDO/boost enables. Details: [design/core-board-rev-a.md](design/core-board-rev-a.md). | Lowest quiescent currents in stock at JLCPCB; 3.0 V LDO gives nA quiescent current and a quiet radio supply. |
+| D-31 | Module contacts sit on small edge boards (one per side) connected to the core board by FFC cables. | Keeps the switch-board interface size-independent; the back side's contacts can sit on the core board itself. |
 
 ### Rejected alternatives (do not reopen without new information)
 
@@ -54,9 +57,9 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 
 | ID | Question | Decide in | Notes |
 |---|---|---|---|
-| OPEN-01 | Exact pre-certified nRF52840 module | P1 | Integrated antenna, castellated pads, JLCPCB-assemblable |
-| OPEN-02 | Charger/power-path, fuel gauge, boost and USB-C role-controller parts | P1–P2 | Must meet CORE-003…010 and CORE-021…024 |
-| OPEN-03 | Module bus physical layer and protocol: RS-485-style vs CAN FD | P3 | Criteria in module-interface.md §6 |
+| ~~OPEN-01~~ | ~~Exact pre-certified nRF52840 module~~ | — | **Resolved:** BMD-340-A-R (D-30); fallback Ebyte E73-2G4M08S1CX |
+| OPEN-02 | USB-C role-controller circuit details for rev B | P2 | Rev A power parts resolved (D-30); rev B concept and parts in design/core-board-rev-a.md §6 |
+| OPEN-03 | Module bus: CAN FD (SPI controller), RS-485-style links with a helper MCU, or a faster shared link | P3 | The nRF52840 has two UARTs at ≤ 1 Mbit/s; 4 sides × 4 modules at 1 ms latency is tight. Prototype on rev A's expansion header. Criteria in module-interface.md §6 |
 | OPEN-04 | Contact parts, final pin order, magnet sizing and pattern, signature resistor value | P3 | Test pull force and alignment with printed prototypes |
 | OPEN-05 | Knob motor: 1105 vs 1806 vs 2204 class, specific model, and cap size | P0 → P4 | Comparison on a new 5 V test jig (KNOB-001); felt strength and cogging decide |
 | OPEN-06 | RF path through the aluminium case without a bottom window | P1 (printed), P6 (CNC) | Must pass RF-011 in the final case |

@@ -1,0 +1,27 @@
+(kicad_sch
+	(version 20250114)
+	(generator "ko-skeleton")
+	(generator_version "9.0")
+	(uuid "3a204361-8772-4501-b574-613ffc73cedd")
+	(paper "A4")
+	(title_block
+		(title "KO core board - MCU and radio")
+		(rev "A")
+		(company "KO - Keyboard Organization")
+		(comment 1 "SPDX-License-Identifier: CERN-OHL-S-2.0")
+		(comment 2 "Implements docs/contracts/core-board.md, see docs/design/core-board-rev-a.md")
+	)
+	(lib_symbols)
+	(text "MCU and radio\n\nBMD-340 (nRF52840), 32.768 kHz crystal, decoupling, antenna keep-out.\nPin budget: design note section 5."
+		(exclude_from_sim no)
+		(at 25.4 38.1 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "3e50d772-289c-4ab0-a0f7-e49488042088")
+	)
+	(embedded_fonts no)
+)

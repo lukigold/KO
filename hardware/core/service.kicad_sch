@@ -1,0 +1,27 @@
+(kicad_sch
+	(version 20250114)
+	(generator "ko-skeleton")
+	(generator_version "9.0")
+	(uuid "504f56a4-4390-4c87-b6f0-8a2aead1b9ee")
+	(paper "A4")
+	(title_block
+		(title "KO core board - Service and expansion")
+		(rev "A")
+		(company "KO - Keyboard Organization")
+		(comment 1 "SPDX-License-Identifier: CERN-OHL-S-2.0")
+		(comment 2 "Implements docs/contracts/core-board.md, see docs/design/core-board-rev-a.md")
+	)
+	(lib_symbols)
+	(text "Service and expansion\n\nSWD header (2x5, 1.27 mm), test points for every rail/USB/I2C/SWD,\nexpansion header (UART, SPI, 4 GPIO, 2 analog), power slide switch,\nreserved haptic driver footprint (DNP)."
+		(exclude_from_sim no)
+		(at 25.4 38.1 0)
+		(effects
+			(font
+				(size 2 2)
+			)
+			(justify left bottom)
+		)
+		(uuid "93f7ed48-29a3-4f72-9118-38b2ff8e39ba")
+	)
+	(embedded_fonts no)
+)

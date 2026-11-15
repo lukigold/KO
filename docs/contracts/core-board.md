@@ -20,6 +20,10 @@ Switch boards and modules change; the core board does not.
 | Switch board | Connector per [switch-board.md](switch-board.md) |
 | Service | SWD access, test points, reserved footprint for a future body haptic driver |
 
+**Revisions:** rev A (P1) = MCU, power, one USB-C port, switch-board connector; rev B (P2) adds the hub,
+the second identical port and port-role logic; rev C (P3) adds the module ports. Module contacts sit on small
+**edge boards**, one per side, connected to the core board by FFC cables. Details: [docs/design/core-board-rev-a.md](../design/core-board-rev-a.md).
+
 ## Interfaces
 
 | Interface | Owned by |

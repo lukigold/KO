@@ -1,0 +1,15 @@
+# KiCad local and temporary files
+*.kicad_prl
+*-backups/
+fp-info-cache
+*.lck
+\#auto_saved_files#
+_autosave-*
+
+# Check reports and exports (regenerated)
+*.rpt
+hardware/**/fab/
+
+# Python
+__pycache__/
+*.pyc

@@ -17,6 +17,8 @@ If your task touches an interface, also read the contract that **owns** that int
 - **Contracts define what must be true.** Code, schematics and CAD implement contracts.
   If an implementation and a contract disagree, the contract wins until it is changed.
 - **Interfaces are owned by exactly one contract.** Others reference it; they never redefine it.
+- **Design notes** in [`docs/design/`](docs/design/) explain *how* a contract is implemented (parts, circuits,
+  budgets). They never override a contract; if they disagree, fix one of them in the same change.
 - **Do not invent requirements.** A feature, part or dependency that no requirement asks for goes
   into the backlog (README) or an open item (decisions.md), not into the design.
 - **When something is unclear, do not guess.** Add an `OPEN-xx` item to decisions.md and ask the owner.
