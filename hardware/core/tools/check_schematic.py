@@ -22,9 +22,7 @@ sys.path.insert(0, str(CORE.parent / "tools"))
 from kisch.sexpr import find, find_all, parse  # noqa: E402
 
 # Warnings accepted for now, with the reason. Remove an entry once it no longer applies.
-WAIVED = {
-    "footprint_link_issues": "custom footprints (BMD-340, BQ25628E RYK, FH34SRJ-24S) are drawn in the layout phase",
-}
+WAIVED: dict[str, str] = {}
 
 
 def run(*args) -> None:

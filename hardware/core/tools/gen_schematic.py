@@ -277,7 +277,7 @@ C(s, "C402", "10u", "C_10u_0603_10V", "LED_5V")
 
 s = design.sheet("Service and expansion", "service.kicad_sch", paper="A4", note=(
     "SWD (2x5 1.27 mm Cortex debug pinout, matches the nRF52840 DK 'debug out' cable). Test points on every rail, USB, I2C, SWD (CORE-063).\n"
-    "J502 expansion header (DNP) for module-bus experiments on rev A. J503 (DNP) reserves a future body haptic driver (CORE-064)."))
+    "J502 expansion header (DNP, 1.27 mm SMD on the bottom) for module-bus experiments on rev A. J503 (DNP) reserves a future body haptic driver (CORE-064)."))
 s.add("J501", "Connector_Generic:Conn_02x05_Odd_Even", "SWD", {
     "1": "3V0", "2": "SWDIO", "3": "GND", "4": "SWCLK", "5": "GND", "6": "SWO", "7": "NC", "8": "NC",
     "9": "GND", "10": "NRESET"}, footprint="Connector_PinHeader_1.27mm:PinHeader_2x05_P1.27mm_Vertical_SMD",
@@ -286,7 +286,7 @@ s.add("J502", "Connector_Generic:Conn_02x08_Odd_Even", "EXPANSION DNP", {
     "1": "3V0", "2": "V5", "3": "GND", "4": "GND", "5": "EXP_TX", "6": "EXP_RX", "7": "EXP_SCK",
     "8": "EXP_MOSI", "9": "EXP_MISO", "10": "EXP_CS", "11": "EXP_IO1", "12": "EXP_IO2", "13": "EXP_IO3",
     "14": "EXP_IO4", "15": "EXP_AIN0", "16": "EXP_AIN1"},
-    footprint="Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical", dnp=True)
+    footprint="Connector_PinHeader_1.27mm:PinHeader_2x08_P1.27mm_Vertical_SMD", dnp=True)
 s.add("J503", "Connector_Generic_MountingPin:Conn_01x06_MountingPin", "HAPTIC DNP", {
     "1": "V5", "2": "3V0", "3": "GND", "4": "I2C_SDA", "5": "I2C_SCL", "6": "HAPTIC_EN", "MP": "GND"},
     footprint="Connector_JST:JST_SH_SM06B-SRSS-TB_1x06-1MP_P1.00mm_Horizontal", dnp=True, **lcsc("J_HAPTIC"))

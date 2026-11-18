@@ -168,13 +168,39 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
 
 ## 9. PCB
 
-- **Stackup:** 4 layers, JLCPCB impedance-controlled stackup, **1.0 mm thick** (height budget; the core sits under the back of the switch board).
-- **Placement:**
-  - Back-edge centre of the case, USB-C on the back edge.
-  - FFC toward the switch board.
-  - Radio module's antenna at the board edge facing the RF path (OPEN-06), with the datasheet keep-out.
-- **Bottom side:** SWD header and test points, reachable with the bottom case removed.
-- **Size target:** about 45 × 30 mm, confirmed during layout (OPEN-11). It must leave room for the battery under a 40 % layout.
+- **Outline:** **50 × 32 mm**, 4 layers, JLCPCB impedance-controlled stackup, **1.0 mm** thick. At 45 × 30 mm the parts covered about 60 % of the board, too dense to route well. 50 × 32 mm still fits easily beside the battery under a 40 % layout.
+- **Edges:**
+  - Top edge = back of the keyboard: USB-C, opening outwards.
+  - Right edge: BMD-340, antenna flush with the edge.
+  - Bottom edge = towards the switch board: FFC connector, the cable leaves the edge.
+  - Left edge: power slide switch and battery connector.
+- **Antenna keep-out:**
+  - No copper on any layer in a 4.4 mm strip along the right edge, over the module and 5 mm beyond it (19 mm from the top); datasheet section 6.1.
+  - The module footprint carries the same keep-out over its antenna section.
+- **Layers:**
+  - In1 is a solid GND plane, the reference for every signal.
+  - Top, bottom and In2 get GND pours after routing.
+  - Power nets use 0.5 mm tracks (net class Power), USB uses a 0.2/0.2 mm pair (net class USB).
+  - Everything else: 0.15 mm tracks, 0.15 mm clearance, 0.5/0.25 mm vias. All within JLCPCB's standard 4-layer rules.
+- **Placement** (`hardware/core/tools/gen_pcb.py`, generated from the schematic netlist, footprints linked to their symbols):
+  - Charger top-left beside the USB-C VBUS pins: PMID capacitor directly above the PMID/GND pads, inductor to the right, SYS/BAT capacitors below.
+  - USB ESD and CC resistors right below the receptacle.
+  - Power rails in the middle band: LDO, boost with inductor and output capacitors, 5 V mux, LED switch.
+  - Fuel gauge beside the battery connector.
+  - 32.768 kHz crystal directly above BMD-340 pads 13/14; VCC/VBUS decoupling on the module's left side.
+  - Bottom side: SWD header, test points, unpopulated expansion and haptic connectors.
+- **Status:** placement done; DRC shows no overlaps, clearance or short violations. Routing is not started.
+
+### Custom footprints
+
+`hardware/core/tools/gen_footprints.py` writes `hardware/core/lib/ko.pretty`. Each footprint was loaded through
+KiCad's API and drawn with its pad numbers to compare against the source drawing.
+
+| Footprint | Source | How the geometry was taken |
+|---|---|---|
+| u-blox_BMD-340 | Datasheet R13, fig. 12 (land pads), fig. 2 (pin numbers), sec. 6.1 (keep-out) | Rendered fig. 12 at 600 dpi, calibrated on the 15.00 × 10.20 mm outline (126.3 px/mm), detected all 0.5 mm pad squares. They sit on a 1.10 mm column grid with half-pitch staggered rows. Numbering matched to fig. 2 row by row |
+| Texas_RYK_WQFN-HR-18 | BQ25628E datasheet p. 74–75 (RYK0018A) | Measured every pad edge on TI's 20× land pattern and checked against its dimension labels (±0.01 mm). Four L-shaped corner pads as custom pads |
+| Hirose_FH34SRJ-24S | Hirose catalogue p. 3–4 | Signal pads 0.3 × 0.8 mm at 0.5 mm pitch, tabs 0.4 × 0.8 mm at ±6.75 mm, 3.3 mm tab offset; contact 1 at +x; cable enters from the tab side |
 
 ## 10. Rev A verification plan
 

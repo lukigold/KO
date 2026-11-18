@@ -40,6 +40,7 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 | D-31 | Module contacts sit on small edge boards (one per side) connected to the core board by FFC cables. | Keeps the switch-board interface size-independent; the back side's contacts can sit on the core board itself. |
 | D-32 | The charger's hardware input limit defaults to 490 mA (ILIM = 5.1 kΩ). Firmware reads the USB-C current advertisement on CC1/CC2 (MCU analog inputs) and then raises the limit to 1.5 A or 3 A. | USB-compliant even before firmware runs; no Type-C controller needed in rev A. |
 | D-33 | Schematics are generated from Python design data (`hardware/core/tools/gen_schematic.py`, library `hardware/tools/kisch`). The KiCad schematic files are outputs; every change runs `check_schematic.py` (ERC + pin-by-pin netlist comparison). | Agents can edit and verify text; deterministic output diffs cleanly; prevents GUI drift. |
+| D-34 | Core board rev A outline 50 × 32 mm; custom footprints for BMD-340, BQ25628E (RYK) and FH34SRJ-24S generated from the manufacturers' drawings (`gen_footprints.py`); PCB placement generated from the schematic netlist (`gen_pcb.py`). | 45 × 30 mm reached ~60 % component coverage, too dense to route; generated footprints and placement stay reproducible and reviewable. |
 
 ### Rejected alternatives (do not reopen without new information)
 
@@ -69,7 +70,7 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 | OPEN-08 | Keycap product: Choc-compatible, metallic look, RGB compatibility, legends | P1 | Metal caps block light and add weight |
 | OPEN-09 | Number and layout of programmable keys on the knob module | P4 | |
 | OPEN-10 | macOS playback state for the music knob | P5 | No stable public now-playing API; per-player integrations (Apple Music, Spotify) or another method |
-| OPEN-11 | Core board outline, exact stack-up heights, battery capacity | P1 | Battery must fit under a 40 % layout |
+| OPEN-11 | Exact stack-up heights and battery capacity | P1 | Core outline set to 50 × 32 mm (D-34); battery must fit beside it under a 40 % layout |
 | OPEN-12 | One LED position serving both MX and Choc light windows | P1 | Choc takes priority if impossible |
 | OPEN-13 | RMK integration: shift-register column scanning; Vial and KO protocol coexisting | P1–P2 | |
 | OPEN-14 | 2.4 GHz pairing flow details | P2 | Must satisfy RF-013 |

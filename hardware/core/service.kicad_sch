@@ -1447,7 +1447,7 @@
 			(embedded_fonts no)
 		)
 	)
-	(text "SWD (2x5 1.27 mm Cortex debug pinout, matches the nRF52840 DK 'debug out' cable). Test points on every rail, USB, I2C, SWD (CORE-063).\nJ502 expansion header (DNP) for module-bus experiments on rev A. J503 (DNP) reserves a future body haptic driver (CORE-064)."
+	(text "SWD (2x5 1.27 mm Cortex debug pinout, matches the nRF52840 DK 'debug out' cable). Test points on every rail, USB, I2C, SWD (CORE-063).\nJ502 expansion header (DNP, 1.27 mm SMD on the bottom) for module-bus experiments on rev A. J503 (DNP) reserves a future body haptic driver (CORE-064)."
 		(exclude_from_sim no)
 		(at 20.32 15.24 0)
 		(effects
@@ -1988,7 +1988,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x08_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinHeader_1.27mm:PinHeader_2x08_P1.27mm_Vertical_SMD"
 			(at 81.28 50.8 0)
 			(effects
 				(font
