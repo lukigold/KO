@@ -1,6 +1,6 @@
 # Design note: Core board rev A
 
-**Implements:** [core-board.md](../contracts/core-board.md) (P1 scope) · **Status:** architecture and part selection done, schematic next · **Date:** 2026-11-15
+**Implements:** [core-board.md](../contracts/core-board.md) (P1 scope) · **Status:** schematic done (generated, ERC and netlist verified), layout next · **Date:** 2026-11-15, schematic 2026-11-18
 
 Design notes explain *how* a contract is implemented. They never override a contract; if they disagree,
 fix one of them in the same change.
@@ -68,10 +68,10 @@ Stock and prices from JLCPCB/LCSC on 2026-11-15 (unit price at quantity 1, USD).
 | 5 V boost | TI **TPS61023DRLR** (≈ 1 A at 5 V from a 3.3 V cell) | C919459 | 3,839 | 0.27 | Tiny, enough for battery-mode LEDs and later modules | TPS61022 (stock 302) |
 | 5 V source mux | TI **TPS2116DRLR** (2.5 A, priority mode, reverse blocking) | C3235557 | 64,213 | 0.46 | Seamless switch between USB and boost | TPS2121 |
 | LED rail switch | Diodes **AP22653W6-7** (adjustable limit up to 2.1 A, reverse blocking when off) | C2158037 | 7,048 | 0.25 | Current limit + hard off = 0 µA LED leakage | — |
-| USB-C receptacle | Kinghelm **KH-TYPE-C-16P** (USB 2.0) | C709357 | 147,898 | 0.08 | Cheap, common; mid-mount variant considered for height in layout | GCT USB4105 |
+| USB-C receptacle | HRO **TYPE-C-31-M-12** (USB 2.0, 16-pin) | C165948 | 511,683 | — | Most common at JLCPCB and has a KiCad footprint (changed from KH-TYPE-C-16P in the schematic phase) | GCT USB4105 |
 | USB ESD | ST **USBLC6-2SC6** | C5261088 | 70,038 | 0.04 | D+, D−, VBUS | — |
 | Switch-board connector | Hirose **FH34SRJ-24S-0.5SH** (24-pin, 0.5 mm pitch, 1.0 mm tall, flip lock) | C324726 | 8,019 | 0.28 | Lowest height, robust lock | Molex 505110-2491 (C5902849) |
-| 32.768 kHz crystal | JLCPCB basic part, chosen in schematic | — | — | — | Lowest-power BLE timing | Internal RC (higher sleep current) |
+| 32.768 kHz crystal | ECS **ECS-.327-12.5-34B** (CL 12.5 pF, ESR ≤ 70 kΩ) with 18 pF load capacitors | C387600 | 3,204 | — | Lowest-power BLE timing | Internal RC (higher sleep current) |
 
 Switch-board parts, for the matching interface ([switch-board.md](../contracts/switch-board.md)):
 
@@ -92,28 +92,33 @@ Switch-board parts, for the matching interface ([switch-board.md](../contracts/s
 | Knob motor driver | ADI/Trinamic TMC6300 | C5274455 | **59** (OPEN-19) |
 | Knob angle sensor | MagnTek MT6701 | C3202694 | 3,901 |
 
-## 5. MCU pin budget (rev A)
+## 5. MCU pin assignment (rev A, final)
 
-The BMD-340 exposes 48 GPIOs. Rev A uses about 20. The rest goes to the expansion header and test pads,
-so module-bus experiments can start on rev A in P2/P3.
+Taken from the schematic (hardware/core/tools/gen_schematic.py). "LF" = BMD-340 pins rated
+"standard drive, low frequency I/O only"; they carry only rows, static outputs, interrupts and analog inputs.
+Firmware board support must use exactly this map.
 
-| Function | Pins | Notes |
+| Function | nRF52840 pin (BMD-340 pad) | Notes |
 |---|---|---|
-| Matrix rows ROW0–7 | 8 | Wake-capable inputs (GPIO SENSE) |
-| Column chain COL_DAT, COL_CLK, COL_LAT | 3 | SPIM; ≤ 10 MHz at 3.0 V |
-| I²C (charger, fuel gauge, switch-board EEPROM + LED driver) | 2 | One bus at 400 kHz |
-| LED_SDB, LED_5V_EN, BOOST_EN | 3 | |
-| Charger INT, fuel-gauge ALRT | 2 | |
-| Reserved switch-board lines RSV_MISO, RSV_INT | 2 | Hall-effect variant later |
-| USB D+/D− | dedicated | VBUS sensing is built into the nRF52840 |
-| SWD | dedicated | |
-| 32.768 kHz crystal | 2 | P0.00/P0.01 |
-| Expansion header | ~10 | UART, SPI, 4 GPIO, 2 analog inputs |
+| ROW0–ROW3 | P1.01–P1.04 (57–60) LF | Inputs, internal pull-down, wake (SENSE) |
+| ROW4–ROW7 | P1.12–P1.15 (61–64) LF | Inputs, internal pull-down, wake (SENSE) |
+| COL_CLK, COL_DAT, COL_LAT | P0.13, P0.14, P0.15 (31–33) | SPIM SCK/MOSI + latch GPIO |
+| RSV_MISO, RSV_INT | P0.16, P0.17 (34, 35) | Reserved for Hall-effect switch boards |
+| I2C_SDA, I2C_SCL | P0.06, P0.08 (22, 24) | TWIM, 4.7 kΩ pull-ups to 3V0 |
+| LED_SDB, LED_EN, BOOST_EN | P1.05, P1.06, P1.07 (48–50) LF | Static outputs; LED_EN and BOOST_EN have 100 kΩ pull-downs |
+| LED_FAULT, CHG_INT | P1.10, P1.11 (53, 54) LF | Open-drain inputs, 10 kΩ pull-ups |
+| FG_ALRT | P0.30 (11) LF | Open-drain input, 10 kΩ pull-up |
+| HAPTIC_EN | P0.31 (12) LF | Reserved haptic connector |
+| CC1, CC2 | P0.02/AIN0, P0.03/AIN1 (15, 19) LF | SAADC: USB-C current advertisement (default ≈ 0.25–0.61 V, 1.5 A ≈ 0.70–1.16 V, 3 A ≈ 1.31–2.04 V across 5.1 kΩ) |
+| 32.768 kHz crystal | P0.00, P0.01 (13, 14) | LFXO |
+| USB | USB_D+, USB_D− (68, 67); VBUS (66) | Direct to port A in rev A |
+| SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39); P1.00 SWO (56) | 2×5 1.27 mm header |
+| Expansion header | P0.19 TX, P0.20 RX, P0.22 SCK, P0.23 MOSI, P0.24 MISO, P0.21 CS, P0.25/P0.26/P0.27/P1.08 IO1–4, P0.28/P0.29 AIN (LF) | J502, unpopulated by default |
+| Spare (test pads) | P0.04/AIN2, P0.05/AIN3 (20, 21) | Full-speed, analog-capable; for rev C prototyping |
+| Not connected | P0.07, P0.09, P0.10, P0.11, P0.12, P1.09 | Free for later revisions |
 
-Pin assignment rules for the schematic:
-- High-speed signals (SPIM, UART) must avoid pins the nRF52840 product spec marks "low frequency I/O only".
-- Analog-capable pins (AIN0–7) are kept free for module-port sensing (rev C).
-- The radio module's recommended layout is followed exactly.
+Rev C needs four analog inputs for module signature detection; the map is reassigned in that revision
+(board support is per core-board revision, FW-019).
 
 ## 6. Port-role logic (rev B preview, confirmed from datasheets)
 
@@ -184,10 +189,41 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
 | Switch board: descriptor read, 1 kHz scan, wake on key, LED rail 0 µA when off | CORE-050, SWB-005, FW-007 | Firmware tests + PPK2 |
 | Bluetooth range inside the printed case | RF-040 | RSSI at 2 m |
 
-## 11. Next steps
+## 11. Schematic (rev A)
 
-1. Schematic in KiCad, hierarchical sheets: power, MCU/radio, USB, switch-board connector, expansion and service.
-2. ERC clean, then BOM with LCSC numbers.
-3. Layout with the radio and charger reference layouts.
-4. DRC clean, renders, 1:1 print for fit check.
-5. Owner review, then order.
+**How it is made:**
+- **Source of truth:** `hardware/core/tools/gen_schematic.py` describes every part (value, footprint, LCSC number) and every net. It writes the six KiCad sheets plus the project symbol library `lib/ko.kicad_sym`. The KiCad files are outputs; edit the Python, not the GUI.
+- **Verification:** `hardware/core/tools/check_schematic.py` runs ERC and fails on any error. It exports KiCad's netlist, compares it pin by pin with the intended nets, and writes the PDF and BOM. Current result: 0 errors, 69 nets, 0 mismatches. The only warnings are the three custom footprints still to be drawn (waived until layout).
+- **Part numbers:** `hardware/core/bom/parts.csv` holds the LCSC numbers, resolved by `hardware/tools/jlc_lookup.py` with a lookup date. Re-check stock before ordering; 30.1 kΩ and 133 kΩ showed unknown stock.
+
+**Sheets:** Battery and charger · Power rails · MCU and radio · USB · Switch board connector · Service and expansion.
+
+**Design decisions made while drawing:**
+
+| Item | Value | Why |
+|---|---|---|
+| Charger input limit (ILIM) | 5.1 kΩ → 490 mA | USB-compliant before firmware runs. Firmware reads CC1/CC2, then disables ILIM (EN_EXTILIM = 0) and sets IINDPM to 1.5 A or 3 A |
+| CC sensing | CC1/CC2 to AIN0/AIN1, protected by a second USBLC6-2SC6 | Detects the source's current advertisement without a Type-C controller |
+| Battery temperature | RT1 5.23 kΩ, RT2 30.1 kΩ, 10 kΩ NTC (103AT class) on J102 taped to the cell; board NTC RT101 unpopulated as fallback | TI datasheet values for 0–60 °C |
+| Charger passives | VBUS 1 µF, PMID 10 µF + 100 nF, BTST 47 nF, REGN 4.7 µF, L 1 µH (WPN252012E1R0MT), SYS 2 × 10 µF, BAT 10 µF | TI application circuit |
+| Boost output | 1 MΩ / 133 kΩ → 5.07 V; COUT 2 × 22 µF; L 1 µH | VREF 0.595 V; true output disconnect when off |
+| 5 V mux | TPS2116 priority mode, MODE = VBUS, PR1 divider 100 kΩ / 33 kΩ → switches to boost below 4.03 V | Basic-part values |
+| LED rail limit | AP22653 with 15 kΩ → 1.735 A | Datasheet table |
+| 3.0 V LDO | 1 µF in, 2.2 µF out | ≥ 0.5 µF effective output required |
+| Power switch | PCM12 slide switch: SYS ↔ PWR_EN ↔ GND, 1 MΩ pull-down | Off = LDO disabled; charger and fuel gauge stay powered |
+| nRF52840 | VCC = VCCH = 3V0 (normal mode), 10 µF + 100 nF on VCC, 4.7 µF on VBUS | BMD-340 datasheet; total VBUS capacitance 6.7 µF (< 10 µF USB limit) |
+
+**Owner review checklist:**
+1. **Battery connector polarity:** J101 pin 1 = +. JST PH cells from different vendors swap polarity; check your cell before plugging in.
+2. **Power switch position:** it sits on the schematic only. Its physical position is OPEN-07.
+3. **Expansion and haptic headers:** both are left unpopulated. Tell me if you want either fitted on the prototypes.
+
+**Still to do in layout:** custom footprints for the BMD-340 (68 pads, datasheet land pattern),
+the BQ25628E (RYK WQFN-HR-18) and the FH34SRJ-24S connector; check the SOT-583 footprint pin order against
+the TPS2116 datasheet.
+
+## 12. Next steps
+
+1. Custom footprints, then PCB layout: charger and boost loops first, radio keep-out, USB pair.
+2. DRC clean, 3D render, 1:1 print for fit check.
+3. Owner review, then order rev A at JLCPCB.

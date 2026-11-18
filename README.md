@@ -144,7 +144,8 @@ horizontal haptic roller, generator website, Wi-Fi storage module.
 ```
 docs/          contracts/, decisions.md        ← the source of truth
                design/                          ← how contracts are implemented
-hardware/      core/, switchboard/ (generated), dongle/, modules/<name>/
+hardware/      core/, switchboard/ (generated), dongle/, modules/<name>/,
+               tools/ (kisch schematic generator, JLCPCB part lookup)
 firmware/      Rust workspace: keyboard, dongle, knob-module, side-module,
                ko-protocol, ko-module-bus (shared crates)
 app/           Tauri desktop app (macOS, Windows)
@@ -154,7 +155,7 @@ tools/         test rigs (latency, power), scripts
 LICENSES/      full license texts
 ```
 
-Only `docs/`, `hardware/core/` (project skeleton) and `LICENSES/` exist today; the rest is created in the phase that needs it.
+Only `docs/`, `hardware/` (core board rev A schematic, tools) and `LICENSES/` exist today; the rest is created in the phase that needs it.
 
 ## License
 

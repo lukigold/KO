@@ -14,7 +14,7 @@ Switch boards and modules change; the core board does not.
 |---|---|
 | MCU + radio | Pre-certified nRF52840 module with integrated antenna (part: OPEN-01) |
 | Battery | One flat LiPo pouch cell, ≤ 3.5 mm thick, under the switch board |
-| Power | Charger with power path, fuel gauge, NTC, power switch, 3.3 V system rail, switched 5 V rail for LEDs and modules (from USB, or boost converter on battery) |
+| Power | Charger with power path, fuel gauge, NTC, power switch, 3.0 V system rail, switched 5 V rail for LEDs and modules (from USB, or boost converter on battery) |
 | USB | 2 × USB-C receptacles on the back edge, CC role logic per port, USB 2.0 HS 2:1 data switch, 7-port USB 2.0 HS hub, current-limited accessory-port switch |
 | Module ports | 4 × module side interfaces (left, right, back, front) per [module-interface.md](module-interface.md) |
 | Switch board | Connector per [switch-board.md](switch-board.md) |

@@ -38,6 +38,8 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 | D-29 | The core board is built in three revisions: rev A (P1) MCU, power, one USB-C port, switch-board connector; rev B (P2) hub, second identical port, role logic; rev C (P3) module ports. | One risky subsystem per revision; rev A gives a usable keyboard fast. |
 | D-30 | Core rev A parts: BMD-340 (nRF52840 module), BQ25628E charger, MAX17048 fuel gauge, TPS7A02 **3.0 V** system rail, TPS61023 boost + TPS2116 mux for the 5 V rail, AP22653 LED rail switch, FH34SRJ 24-pin FFC, 1.0 mm 4-layer PCB. The power switch drives the LDO/boost enables. Details: [design/core-board-rev-a.md](design/core-board-rev-a.md). | Lowest quiescent currents in stock at JLCPCB; 3.0 V LDO gives nA quiescent current and a quiet radio supply. |
 | D-31 | Module contacts sit on small edge boards (one per side) connected to the core board by FFC cables. | Keeps the switch-board interface size-independent; the back side's contacts can sit on the core board itself. |
+| D-32 | The charger's hardware input limit defaults to 490 mA (ILIM = 5.1 kΩ). Firmware reads the USB-C current advertisement on CC1/CC2 (MCU analog inputs) and then raises the limit to 1.5 A or 3 A. | USB-compliant even before firmware runs; no Type-C controller needed in rev A. |
+| D-33 | Schematics are generated from Python design data (`hardware/core/tools/gen_schematic.py`, library `hardware/tools/kisch`). The KiCad schematic files are outputs; every change runs `check_schematic.py` (ERC + pin-by-pin netlist comparison). | Agents can edit and verify text; deterministic output diffs cleanly; prevents GUI drift. |
 
 ### Rejected alternatives (do not reopen without new information)
 

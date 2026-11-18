@@ -1,29 +1,39 @@
 # KO core board (KiCad project)
 
 - **Contract:** [docs/contracts/core-board.md](../../docs/contracts/core-board.md)
-- **Design note (parts, power tree, pin budget):** [docs/design/core-board-rev-a.md](../../docs/design/core-board-rev-a.md)
-- **Status:** rev A skeleton. The block sheets are empty and only carry a note of what belongs on them; the schematic comes next.
+- **Design note (parts, power tree, pin map, schematic decisions):** [docs/design/core-board-rev-a.md](../../docs/design/core-board-rev-a.md)
+- **Status:** rev A schematic done and verified. PCB layout is next.
+
+## The schematic is generated
+
+`tools/gen_schematic.py` is the source of truth: every part, value, footprint, LCSC number and net is defined
+there. It writes the KiCad files below. **Do not edit the schematic in KiCad**; your changes would be overwritten.
+Edit the Python, then regenerate and check:
+
+```bash
+python3 hardware/core/tools/gen_schematic.py
+```
+
+```bash
+python3 hardware/core/tools/check_schematic.py out/
+```
+
+The check fails on any ERC error and on any difference between KiCad's netlist and the intended nets. It also
+writes `ko-core-schematic.pdf` and `ko-core-bom.csv` to the output folder.
 
 | File | Content |
 |---|---|
-| `ko-core.kicad_pro` | Project with JLCPCB 4-layer design rules |
-| `ko-core.kicad_sch` | Root sheet: one hierarchical sheet per block |
-| `power.kicad_sch` | USB input, charger, battery, fuel gauge, 3.0 V and 5 V rails, LED rail switch |
-| `mcu_radio.kicad_sch` | BMD-340 (nRF52840), crystal |
-| `usb.kicad_sch` | USB-C port A, ESD |
-| `switchboard_conn.kicad_sch` | 24-pin FFC to the switch board |
-| `service.kicad_sch` | SWD, test points, expansion header, power switch, reserved haptic driver |
-| `ko-core.kicad_pcb` | 4-layer, 1.0 mm board with a 45 × 30 mm placeholder outline |
-| `tools/create_skeleton.py` | Regenerates the skeleton. Refuses to overwrite without `--force` |
+| `ko-core.kicad_sch` | Root sheet with the six block sheets |
+| `power.kicad_sch` | Battery and charger: BQ25628E, LiPo and NTC connectors, MAX17048 |
+| `power_rails.kicad_sch` | Power switch, 3.0 V LDO, 5 V boost, 5 V mux, LED rail switch |
+| `mcu_radio.kicad_sch` | BMD-340 (nRF52840), 32.768 kHz crystal, I²C pull-ups |
+| `usb.kicad_sch` | USB-C port A, CC resistors, ESD |
+| `switchboard_conn.kicad_sch` | 24-pin FFC to the switch board (pinout fixed by the contract) |
+| `service.kicad_sch` | SWD header, test points, expansion header (DNP), haptic connector (DNP) |
+| `lib/ko.kicad_sym`, `sym-lib-table` | Project symbols drawn from datasheets (generated) |
+| `bom/parts_query.json`, `bom/parts.csv` | Part queries and resolved LCSC numbers (`hardware/tools/jlc_lookup.py`) |
+| `ko-core.kicad_pcb`, `ko-core.kicad_pro` | 4-layer, 1.0 mm board with placeholder outline; JLCPCB design rules |
+| `tools/` | `gen_schematic.py` (design data), `check_schematic.py` (verification) |
 
-## Checks (headless)
-
-```bash
-kicad-cli sch erc --output erc.rpt ko-core.kicad_sch
-```
-
-```bash
-kicad-cli pcb drc --output drc.rpt ko-core.kicad_pcb
-```
-
-Both must report 0 errors before any commit that changes the design (AGENTS.md, Definition of Done).
+The generator library lives in [`hardware/tools/kisch`](../tools/kisch) and will be reused for the switch board,
+the dongle and the modules.

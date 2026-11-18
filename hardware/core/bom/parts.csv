@@ -1,0 +1,40 @@
+key,lcsc,mfr,package,stock,basic,description,checked
+R_10k_0402,C25744,0402WGF1002TCE,0402,basic,yes,-55℃~+155℃ 10kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surface ,2026-11-18
+R_4k7_0402,C25900,0402WGF4701TCE,0402,basic,yes,-55℃~+155℃ 4.7kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surface,2026-11-18
+R_5k23_0402,C2479336,RMCF0402FT5K23,0402,9595,no,-55℃~+155℃ 5.23kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surfac,2026-11-18
+R_30k1_0402,C29402,0402WGF3012TCE,0402,unknown,no,-55℃~+155℃ 30.1kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surfac,2026-11-18
+R_15k_0402,C25756,0402WGF1502TCE,0402,basic,yes,-55℃~+155℃ 15kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surface ,2026-11-18
+R_100k_0402,C25741,0402WGF1003TCE,0402,basic,yes,-55℃~+155℃ 100kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surface,2026-11-18
+R_5k1_0402,C25905,0402WGF5101TCE,0402,basic,yes,-55℃~+155℃ 5.1kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surface,2026-11-18
+R_1M_0402,C26083,0402WGF1004TCE,0402,basic,yes,-55℃~+155℃ 1MΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surface M,2026-11-18
+C_100n_0402_16V,C1525,CL05B104KO5NNNC,0402,basic,yes,100nF 16V X7R ±10% 0402 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+C_1u_0402_25V,C52923,CL05A105KA5NQNC,0402,basic,yes,1uF 25V X5R ±10% 0402 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+C_47n_0402_25V,C576715,CC0402JRX7R9BB473,0402,95982,no,47nF 50V X7R ±5% 0402 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+C_4u7_0603_10V,C19666,CL10A475KO8NNNC,0603,basic,yes,16V 4.7uF X5R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+C_10u_0805_25V,C15850,CL21A106KAYNNNE,0805,basic,yes,10uF 25V X5R ±10% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+C_10u_0603_10V,C19702,CL10A106KP8NNNC,0603,basic,yes,10V 10uF X5R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+C_22u_0805_10V,C45783,CL21A226MAQNNNE,0805,basic,yes,22uF 25V X5R ±20% 0805 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+C_2u2_0402_10V,C2999759,GRM155Z71A225KE44D,0402,2596,no,10V 2.2uF X7R ±10% 0402 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+C_4u7_0402_10V,C23733,CL05A475MP5NRNC,0402,basic,yes,10V 4.7uF X5R ±20% 0402 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+U_BMD340,C5456944,BMD-340-A-R,LGA-60,,no,verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md),2026-11-15
+U_BQ25628E,C18221178,BQ25628ERYKR,WQFN-HR-18,,no,verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md),2026-11-15
+U_MAX17048,C2682616,MAX17048G+T10,TDFN-8,,no,verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md),2026-11-15
+U_TPS7A0230,C3747031,TPS7A0230PDBVR,SOT-23-5,,no,verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md),2026-11-15
+U_TPS61023,C919459,TPS61023DRLR,SOT-563,,no,verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md),2026-11-15
+U_TPS2116,C3235557,TPS2116DRLR,SOT-583,,no,verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md),2026-11-15
+U_AP22653,C2158037,AP22653W6-7,SOT-26,5923,no,-40℃~+85℃ 1 2.1A 3V~5.5V 65mΩ Active High High Side Switch Short-Circuit  Protection(SCP)、,2026-11-18
+U_USBLC6,C5261088,USBLC6-2SC6,SOT-23-6,,no,verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md),2026-11-15
+J_USBC,C165948,TYPE-C-31-M-12,SMD,511683,no,"-30℃~+80℃ 1 10,000 cycles 16P 20V 5A 7.35mm Female Surface Mount, Right Angle Type-C SMD U",2026-11-18
+J_FFC24,C324726,FH34SRJ-24S-0.5SH(50),"SMD,P=0.5mm,卧贴",12553,no,"-55℃~+105℃ 0.3mm 0.5mm 1mm 24P Double-Sided Contacts, Top and Bottom Entry Gold Phosphor b",2026-11-18
+J_BAT,C54582899,XY-S2B-PH-SM4-TB,"SMD,P=2mm,卧贴",2924,no,"SMD,P=2mm,卧贴 Wire To Board Connector ROHS",2026-11-18
+J_NTC,C160402,SM02B-SRSS-TB(LF)(SN),"SMD,P=1mm,卧贴",46547,no,-25℃~+85℃ 1 1A 1mm 1x2P 2 2.9mm 2P 4.32mm 4mm 50V Auxiliary Solder Pin Copper alloy PA SH ,2026-11-18
+J_HAPTIC,C160405,SM06B-SRSS-TB(LF)(SN),"SMD,P=1mm,卧贴",17892,no,-25℃~+85℃ 1 1A 1mm 1x6P 2.9mm 4.32mm 50V 6 6P 8mm Auxiliary Solder Pin Copper alloy PA SH ,2026-11-18
+SW_PWR,C221841,PCM12SMTR,SMD,7789,no,"-20℃~+85℃ 6V PC Pin Rectangular Columnar SPDT Surface Mount,Vertical SMD Slide Switches RO",2026-11-18
+RT_NTC,,NCP15XH103F03RC,0402,,no,DNP fallback NTC; choose part when needed,
+L_CHG_1u,C370610,WPN252012E1R0MT,1008,10457,no,1uH 3.5A 37mΩ 5A ±20% 1008 Power Inductors ROHS,2026-11-18
+L_BOOST_1u,C370610,WPN252012E1R0MT,1008,10457,no,1uH 3.5A 37mΩ 5A ±20% 1008 Power Inductors ROHS,2026-11-18
+Y_32k,C387600,ECS-.327-12.5-34B-TR,SMD3215-2P,3204,no,-40℃~+85℃ 12.5pF 32.768kHz 70kΩ ±20ppm SMD3215-2P Crystals ROHS,2026-11-18
+J_SWD,C2962219,X1270WVS-2x05B-9TV01,"SMD,P=1.27mm",8580,no,"-40℃~+125℃ 1.27mm 1.27mm 1A 2 250V 2x5P 5 Black Brass Gold IDC Header Surface Mount,Vertic",2026-11-18
+C_18p_0402_C0G,C1549,0402CG180J500NT,0402,basic,yes,18pF 50V C0G ±5% 0402 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS,2026-11-18
+R_33k_0402,C25779,0402WGF3302TCE,0402,basic,yes,-55℃~+155℃ 33kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surface ,2026-11-18
+R_133k_0402,C25753,0402WGF1333TCE,0402,unknown,no,-55℃~+155℃ 133kΩ 50V 62.5mW Thick Film Resistor ±1% ±100ppm/℃ 0402 Chip Resistor - Surface,2026-11-18

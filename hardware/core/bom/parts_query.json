@@ -1,0 +1,222 @@
+{
+ "R_10k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 10000.0
+ },
+ "R_4k7_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 4700.0
+ },
+ "R_5k23_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 5230.0
+ },
+ "R_30k1_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 30100.0
+ },
+ "R_15k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 15000.0
+ },
+ "R_100k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 100000.0
+ },
+ "R_5k1_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 5100.0
+ },
+ "R_1M_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 1000000.0
+ },
+ "C_100n_0402_16V": {
+  "kind": "capacitor",
+  "package": "0402",
+  "value": 1e-07,
+  "min_v": 16
+ },
+ "C_1u_0402_25V": {
+  "kind": "capacitor",
+  "package": "0402",
+  "value": 1e-06,
+  "min_v": 25
+ },
+ "C_47n_0402_25V": {
+  "kind": "capacitor",
+  "package": "0402",
+  "value": 4.7e-08,
+  "min_v": 25
+ },
+ "C_4u7_0603_10V": {
+  "kind": "capacitor",
+  "package": "0603",
+  "value": 4.7e-06,
+  "min_v": 10
+ },
+ "C_10u_0805_25V": {
+  "kind": "capacitor",
+  "package": "0805",
+  "value": 1e-05,
+  "min_v": 25
+ },
+ "C_10u_0603_10V": {
+  "kind": "capacitor",
+  "package": "0603",
+  "value": 1e-05,
+  "min_v": 10
+ },
+ "C_22u_0805_10V": {
+  "kind": "capacitor",
+  "package": "0805",
+  "value": 2.2e-05,
+  "min_v": 10
+ },
+ "C_2u2_0402_10V": {
+  "kind": "capacitor",
+  "package": "0402",
+  "value": 2.2e-06,
+  "min_v": 10
+ },
+ "C_4u7_0402_10V": {
+  "kind": "capacitor",
+  "package": "0402",
+  "value": 4.7e-06,
+  "min_v": 10
+ },
+ "U_BMD340": {
+  "kind": "fixed",
+  "lcsc": "C5456944",
+  "mfr": "BMD-340-A-R",
+  "package": "LGA-60",
+  "checked": "2026-11-15",
+  "description": "verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md)"
+ },
+ "U_BQ25628E": {
+  "kind": "fixed",
+  "lcsc": "C18221178",
+  "mfr": "BQ25628ERYKR",
+  "package": "WQFN-HR-18",
+  "checked": "2026-11-15",
+  "description": "verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md)"
+ },
+ "U_MAX17048": {
+  "kind": "fixed",
+  "lcsc": "C2682616",
+  "mfr": "MAX17048G+T10",
+  "package": "TDFN-8",
+  "checked": "2026-11-15",
+  "description": "verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md)"
+ },
+ "U_TPS7A0230": {
+  "kind": "fixed",
+  "lcsc": "C3747031",
+  "mfr": "TPS7A0230PDBVR",
+  "package": "SOT-23-5",
+  "checked": "2026-11-15",
+  "description": "verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md)"
+ },
+ "U_TPS61023": {
+  "kind": "fixed",
+  "lcsc": "C919459",
+  "mfr": "TPS61023DRLR",
+  "package": "SOT-563",
+  "checked": "2026-11-15",
+  "description": "verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md)"
+ },
+ "U_TPS2116": {
+  "kind": "fixed",
+  "lcsc": "C3235557",
+  "mfr": "TPS2116DRLR",
+  "package": "SOT-583",
+  "checked": "2026-11-15",
+  "description": "verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md)"
+ },
+ "U_AP22653": {
+  "kind": "mpn",
+  "mpn": "AP22653W6-7"
+ },
+ "U_USBLC6": {
+  "kind": "fixed",
+  "lcsc": "C5261088",
+  "mfr": "USBLC6-2SC6",
+  "package": "SOT-23-6",
+  "checked": "2026-11-15",
+  "description": "verified via JLCPCB search on 2026-11-15 (docs/design/core-board-rev-a.md)"
+ },
+ "J_USBC": {
+  "kind": "mpn",
+  "mpn": "TYPE-C-31-M-12"
+ },
+ "J_FFC24": {
+  "kind": "mpn",
+  "mpn": "FH34SRJ-24S-0.5SH(50)"
+ },
+ "J_BAT": {
+  "kind": "mpn",
+  "mpn": "XY-S2B-PH-SM4-TB"
+ },
+ "J_NTC": {
+  "kind": "mpn",
+  "mpn": "SM02B-SRSS-TB(LF)(SN)"
+ },
+ "J_HAPTIC": {
+  "kind": "mpn",
+  "mpn": "SM06B-SRSS-TB(LF)(SN)"
+ },
+ "SW_PWR": {
+  "kind": "mpn",
+  "mpn": "PCM12SMTR"
+ },
+ "RT_NTC": {
+  "kind": "fixed",
+  "lcsc": "",
+  "mfr": "NCP15XH103F03RC",
+  "package": "0402",
+  "checked": "",
+  "description": "DNP fallback NTC; choose part when needed"
+ },
+ "L_CHG_1u": {
+  "kind": "mpn",
+  "mpn": "WPN252012E1R0MT"
+ },
+ "L_BOOST_1u": {
+  "kind": "mpn",
+  "mpn": "WPN252012E1R0MT"
+ },
+ "Y_32k": {
+  "kind": "mpn",
+  "mpn": "ECS-.327-12.5-34B-TR"
+ },
+ "J_SWD": {
+  "kind": "search",
+  "search": "2x5P 1.27mm SMD pin header",
+  "package": ""
+ },
+ "C_18p_0402_C0G": {
+  "kind": "capacitor",
+  "package": "0402",
+  "value": 1.8e-11,
+  "min_v": 25,
+  "dielectric": "C0G"
+ },
+ "R_33k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 33000
+ },
+ "R_133k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 133000
+ }
+}
