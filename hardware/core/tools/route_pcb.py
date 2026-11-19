@@ -206,8 +206,9 @@ def expansion_routes() -> tuple[list, list]:
         tracks += [(net, F, w, top), (net, B, w, bottom)]
         vias.append((net, top[-1]) + via)
     # module interior escapes to vias outside the band the In2 row bus occupies (y 7.7-10.0)
-    for net, path in (("I2C_SDA", [(37.25, 8.05), (38.65, 8.05), (38.65, 6.65)]),
-                      ("I2C_SCL", [(37.25, 9.15), (39.15, 9.15), (39.15, 7.35)]),
+    for net, path in (("I2C_SDA", [(37.25, 8.05), (38.65, 8.05), (38.65, 6.75)]),
+                      ("SPARE_P004", [(37.25, 6.95), (37.9, 6.95), (38.1, 6.25)]),
+                      ("HAPTIC_EN", [(39.1, 5.1), (39.1, 3.45)]),
                       ("CHG_INT", [(40.75, 6.0), (40.75, 7.2)]),
                       ("BOOST_EN", [(41.85, 6.0), (41.85, 7.0)]),
                       ("LED_EN", [(42.95, 6.0), (42.95, 7.0)]),
@@ -215,8 +216,9 @@ def expansion_routes() -> tuple[list, list]:
         tracks.append((net, F, w, path))
         vias.append((net, path[-1]) + via)
     # LED current-limit resistor sits west of the LED switch, its pin east: under the package and around
-    tracks.append(("/Power rails/LED_ILIM", F, w, [(25.14, 21.8), (24.0, 21.8), (24.0, 23.45), (21.65, 23.45),
-                                                   (21.65, 23.0), (20.09, 23.0), (20.09, 22.6)]))
+    tracks.append(("/Power rails/LED_ILIM", F, w, [(25.14, 21.8), (24.0, 21.8), (24.0, 23.45), (21.6, 23.45),
+                                                   (21.2, 23.6)]))
+    tracks.append(("LED_EN", F, w, [(22.86, 22.75), (21.6, 22.5), (21.2, 22.4)]))
     return tracks, vias
 
 
@@ -577,7 +579,7 @@ def drc_unconnected(path: pathlib.Path) -> list:
     return data.get("unconnected_items", [])
 
 
-ESCAPE_NETS = {"I2C_SDA", "I2C_SCL", "CHG_INT", "BOOST_EN", "LED_EN", "LED_FAULT"}
+ESCAPE_NETS = {"I2C_SDA", "SPARE_P004", "HAPTIC_EN", "CHG_INT", "BOOST_EN", "LED_EN", "LED_FAULT"}
 
 
 def step_maze() -> None:
