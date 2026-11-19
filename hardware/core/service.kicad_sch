@@ -1895,37 +1895,9 @@
 			)
 		)
 	)
-	(wire
-		(pts
-			(xy 45.72 45.72)
-			(xy 48.26 45.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bc2d99eb-5784-5d33-a0f2-932bf5b1f4f5")
-	)
-	(global_label "SWO"
-		(shape passive)
-		(at 48.26 45.72 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "63aa7efb-17b8-51a4-a42f-1a7e9de69050")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 48.26 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
+	(no_connect
+		(at 45.72 45.72)
+		(uuid "caf23f2a-a5a1-54fa-9a93-fca704eabe35")
 	)
 	(no_connect
 		(at 45.72 48.26)
@@ -2083,7 +2055,7 @@
 		)
 		(uuid "f977c7ce-bc8f-5993-be85-f8cff00e103b")
 	)
-	(global_label "3V0"
+	(global_label "EXP_MISO"
 		(shape passive)
 		(at 73.66 43.18 180)
 		(fields_autoplaced yes)
@@ -2115,68 +2087,24 @@
 		)
 		(uuid "8e5c726e-4d13-5baa-8d31-78115b15da02")
 	)
-	(symbol
-		(lib_id "power:GND")
-		(at 73.66 45.72 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "fa7da8fe-6aba-56ff-bc29-a44d09053e54")
-		(property "Reference" "#PWR0704"
+	(global_label "EXP_SCK"
+		(shape passive)
+		(at 73.66 45.72 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "04d14c89-550e-54df-8c59-2398a8921074")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 73.66 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 69.85 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 73.66 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 73.66 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 73.66 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "498b2618-bf17-55fa-b970-55ed3164c27b")
-		)
-		(instances
-			(project "ko-core"
-				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
-					(reference "#PWR0704")
-					(unit 1)
-				)
 			)
 		)
 	)
@@ -2191,7 +2119,7 @@
 		)
 		(uuid "59bd02d7-b45f-533d-bebb-acc01f02bda9")
 	)
-	(global_label "EXP_TX"
+	(global_label "EXP_RX"
 		(shape passive)
 		(at 73.66 48.26 180)
 		(fields_autoplaced yes)
@@ -2223,7 +2151,7 @@
 		)
 		(uuid "e8b431c2-a1a9-5ead-973a-407ab8383499")
 	)
-	(global_label "EXP_SCK"
+	(global_label "EXP_CS"
 		(shape passive)
 		(at 73.66 50.8 180)
 		(fields_autoplaced yes)
@@ -2255,7 +2183,7 @@
 		)
 		(uuid "c14d43e2-cdbd-5e1c-a7ff-cfe6f0db3aba")
 	)
-	(global_label "EXP_MISO"
+	(global_label "EXP_TX"
 		(shape passive)
 		(at 73.66 53.34 180)
 		(fields_autoplaced yes)
@@ -2287,7 +2215,7 @@
 		)
 		(uuid "196ff90f-0495-560d-b28b-15b18e9ef5a1")
 	)
-	(global_label "EXP_IO1"
+	(global_label "EXP_MOSI"
 		(shape passive)
 		(at 73.66 55.88 180)
 		(fields_autoplaced yes)
@@ -2319,24 +2247,68 @@
 		)
 		(uuid "46cd939c-adc6-5079-b1d1-d87ee2b1059d")
 	)
-	(global_label "EXP_IO3"
-		(shape passive)
-		(at 73.66 58.42 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "3dc128af-8654-518d-92e2-815177b47299")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+	(symbol
+		(lib_id "power:GND")
+		(at 73.66 58.42 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "955680a2-d084-5301-bbeb-018f75c6bb23")
+		(property "Reference" "#PWR0704"
 			(at 73.66 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 69.85 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 73.66 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 73.66 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 73.66 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "945f722e-8220-54e7-a3a9-79943a9d6d7c")
+		)
+		(instances
+			(project "ko-core"
+				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
+					(reference "#PWR0704")
+					(unit 1)
+				)
 			)
 		)
 	)
@@ -2351,24 +2323,68 @@
 		)
 		(uuid "43a6ebd2-49bd-59fc-9737-e126a1416589")
 	)
-	(global_label "EXP_AIN0"
-		(shape passive)
-		(at 73.66 60.96 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "22dba019-4acf-5e0c-ab65-a4a4624e86d9")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+	(symbol
+		(lib_id "power:GND")
+		(at 73.66 60.96 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "09672cc4-e044-5de7-8fac-de5956b6f38f")
+		(property "Reference" "#PWR0705"
 			(at 73.66 60.96 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 69.85 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 73.66 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 73.66 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 73.66 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a27a6673-547b-5d7a-ac74-91b8fe4c2ddd")
+		)
+		(instances
+			(project "ko-core"
+				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
+					(reference "#PWR0705")
+					(unit 1)
+				)
 			)
 		)
 	)
@@ -2383,7 +2399,7 @@
 		)
 		(uuid "2d29c2fb-f1a2-516c-96ce-50d36fc7b3ae")
 	)
-	(global_label "V5"
+	(global_label "EXP_IO2"
 		(shape passive)
 		(at 91.44 43.18 0)
 		(fields_autoplaced yes)
@@ -2415,68 +2431,24 @@
 		)
 		(uuid "f61b9a26-2dd0-5ff2-bef5-b9d27711e08d")
 	)
-	(symbol
-		(lib_id "power:GND")
-		(at 91.44 45.72 90)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "62aea20d-2585-5040-a3ec-d047f4682cef")
-		(property "Reference" "#PWR0705"
+	(global_label "EXP_IO1"
+		(shape passive)
+		(at 91.44 45.72 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "05fe2ef6-be21-50b7-a783-ad96f9460bd4")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 91.44 45.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 95.25 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 91.44 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 91.44 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 91.44 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "5173781e-f426-593d-99dd-4e64acb1996d")
-		)
-		(instances
-			(project "ko-core"
-				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
-					(reference "#PWR0705")
-					(unit 1)
-				)
 			)
 		)
 	)
@@ -2491,7 +2463,7 @@
 		)
 		(uuid "1ba8519c-ae05-564d-98be-d681953acb16")
 	)
-	(global_label "EXP_RX"
+	(global_label "EXP_IO3"
 		(shape passive)
 		(at 91.44 48.26 0)
 		(fields_autoplaced yes)
@@ -2523,7 +2495,7 @@
 		)
 		(uuid "c41cce40-ce54-5713-a54b-068a3a88d5d6")
 	)
-	(global_label "EXP_MOSI"
+	(global_label "EXP_AIN1"
 		(shape passive)
 		(at 91.44 50.8 0)
 		(fields_autoplaced yes)
@@ -2555,7 +2527,7 @@
 		)
 		(uuid "cca374dc-ff76-5552-bac4-85691edbbfc7")
 	)
-	(global_label "EXP_CS"
+	(global_label "EXP_IO4"
 		(shape passive)
 		(at 91.44 53.34 0)
 		(fields_autoplaced yes)
@@ -2587,24 +2559,68 @@
 		)
 		(uuid "7842808a-68be-54f1-bf72-df7d18a60807")
 	)
-	(global_label "EXP_IO2"
-		(shape passive)
-		(at 91.44 55.88 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "9940bb7b-9170-54aa-863e-2ee3dea3f1f0")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+	(symbol
+		(lib_id "power:GND")
+		(at 91.44 55.88 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d31edfc9-df48-5178-bc54-74071e57a025")
+		(property "Reference" "#PWR0706"
 			(at 91.44 55.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 95.25 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 91.44 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 91.44 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 91.44 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a189ef79-61fe-5123-86f5-93a334b88329")
+		)
+		(instances
+			(project "ko-core"
+				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
+					(reference "#PWR0706")
+					(unit 1)
+				)
 			)
 		)
 	)
@@ -2619,7 +2635,7 @@
 		)
 		(uuid "45f9f5b2-87aa-535c-82f8-155262e9b91f")
 	)
-	(global_label "EXP_IO4"
+	(global_label "V5"
 		(shape passive)
 		(at 91.44 58.42 0)
 		(fields_autoplaced yes)
@@ -2651,7 +2667,7 @@
 		)
 		(uuid "f1e6357c-82ad-5d74-bbfe-c5885b74d65f")
 	)
-	(global_label "EXP_AIN1"
+	(global_label "3V0"
 		(shape passive)
 		(at 91.44 60.96 0)
 		(fields_autoplaced yes)
@@ -2856,7 +2872,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "5bb291cd-a52d-53ad-9914-f0f8d2af8cf7")
-		(property "Reference" "#PWR0706"
+		(property "Reference" "#PWR0707"
 			(at 121.92 45.72 0)
 			(effects
 				(font
@@ -2906,7 +2922,7 @@
 		(instances
 			(project "ko-core"
 				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
-					(reference "#PWR0706")
+					(reference "#PWR0707")
 					(unit 1)
 				)
 			)
@@ -3028,7 +3044,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "044ba5c7-e831-5451-9457-b484c9ac7477")
-		(property "Reference" "#PWR0707"
+		(property "Reference" "#PWR0708"
 			(at 129.54 60.96 0)
 			(effects
 				(font
@@ -3078,7 +3094,7 @@
 		(instances
 			(project "ko-core"
 				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
-					(reference "#PWR0707")
+					(reference "#PWR0708")
 					(unit 1)
 				)
 			)
@@ -5032,7 +5048,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "1d35b4cb-3235-5d42-95ad-9a04b2c66a7c")
-		(property "Reference" "#PWR0708"
+		(property "Reference" "#PWR0709"
 			(at 160.02 78.74 0)
 			(effects
 				(font
@@ -5082,7 +5098,7 @@
 		(instances
 			(project "ko-core"
 				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
-					(reference "#PWR0708")
+					(reference "#PWR0709")
 					(unit 1)
 				)
 			)
@@ -5174,7 +5190,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "69282325-8351-57e7-b76c-dfb652b0a168")
-		(property "Reference" "#PWR0709"
+		(property "Reference" "#PWR0710"
 			(at 172.72 78.74 0)
 			(effects
 				(font
@@ -5224,7 +5240,7 @@
 		(instances
 			(project "ko-core"
 				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
-					(reference "#PWR0709")
+					(reference "#PWR0710")
 					(unit 1)
 				)
 			)

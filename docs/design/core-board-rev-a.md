@@ -101,9 +101,9 @@ Firmware board support must use exactly this map.
 | Function | nRF52840 pin (BMD-340 pad) | Notes |
 |---|---|---|
 | ROW0–ROW3 | P1.01–P1.04 (57–60) LF | Inputs, internal pull-down, wake (SENSE) |
-| ROW4–ROW7 | P1.12–P1.15 (61–64) LF | Inputs, internal pull-down, wake (SENSE) |
-| COL_CLK, COL_DAT, COL_LAT | P0.13, P0.14, P0.15 (31–33) | SPIM SCK/MOSI + latch GPIO |
-| RSV_MISO, RSV_INT | P0.16, P0.17 (34, 35) | Reserved for Hall-effect switch boards |
+| ROW7, ROW6, ROW5, ROW4 | P1.12, P1.13, P1.14, P1.15 (61–64) LF | Inputs, internal pull-down, wake (SENSE). Reversed order so the row bus to the FFC needs no crossings (D-35) |
+| RSV_MISO, COL_LAT, COL_DAT, COL_CLK | P0.13, P0.14, P0.15, P0.16 (31–34) | COL_CLK/COL_DAT = SPIM SCK/MOSI, COL_LAT = latch GPIO, RSV_MISO reserved (Hall-effect boards). Order follows the FFC pins (D-35) |
+| RSV_INT | P0.17 (35) | Reserved for Hall-effect switch boards |
 | I2C_SDA, I2C_SCL | P0.06, P0.08 (22, 24) | TWIM, 4.7 kΩ pull-ups to 3V0 |
 | LED_SDB, LED_EN, BOOST_EN | P1.05, P1.06, P1.07 (48–50) LF | Static outputs; LED_EN and BOOST_EN have 100 kΩ pull-downs |
 | LED_FAULT, CHG_INT | P1.10, P1.11 (53, 54) LF | Open-drain inputs, 10 kΩ pull-ups |
@@ -112,10 +112,10 @@ Firmware board support must use exactly this map.
 | CC1, CC2 | P0.02/AIN0, P0.03/AIN1 (15, 19) LF | SAADC: USB-C current advertisement (default ≈ 0.25–0.61 V, 1.5 A ≈ 0.70–1.16 V, 3 A ≈ 1.31–2.04 V across 5.1 kΩ) |
 | 32.768 kHz crystal | P0.00, P0.01 (13, 14) | LFXO |
 | USB | USB_D+, USB_D− (68, 67); VBUS (66) | Direct to port A in rev A |
-| SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39); P1.00 SWO (56) | 2×5 1.27 mm header |
-| Expansion header | P0.19 TX, P0.20 RX, P0.22 SCK, P0.23 MOSI, P0.24 MISO, P0.21 CS, P0.25/P0.26/P0.27/P1.08 IO1–4, P0.28/P0.29 AIN (LF) | J502, unpopulated by default |
+| SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39) | 2×5 1.27 mm header; pin 6 (SWO) not connected: probe-rs and defmt use RTT over SWD (D-35) |
+| Expansion header | P0.19 TX, P0.20 RX, P0.22 SCK, P0.23 MOSI, P0.24 MISO, P0.21 CS, P0.25/P0.26/P0.27 IO1–3, P1.09 IO4 (LF), P0.29 AIN1 (LF) | J502, unpopulated; pin order set for routing under the module, pin 12 = GND (D-35) |
 | Spare (test pads) | P0.04/AIN2, P0.05/AIN3 (20, 21) | Full-speed, analog-capable; for rev C prototyping |
-| Not connected | P0.07, P0.09, P0.10, P0.11, P0.12, P1.09 | Free for later revisions |
+| Not connected | P0.07, P0.09, P0.10, P0.11, P0.12, P0.28, P1.00, P1.08 | Free for later revisions |
 
 Rev C needs four analog inputs for module signature detection; the map is reassigned in that revision
 (board support is per core-board revision, FW-019).
@@ -180,16 +180,21 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
 - **Layers:**
   - In1 is a solid GND plane, the reference for every signal.
   - Top, bottom and In2 get GND pours after routing.
-  - Power nets use 0.5 mm tracks (net class Power), USB uses a 0.2/0.2 mm pair (net class USB).
-  - Everything else: 0.15 mm tracks, 0.15 mm clearance, 0.5/0.25 mm vias. All within JLCPCB's standard 4-layer rules.
+  - Power nets: 0.6 mm tracks (net class Power), wider (0.8–1.0 mm) on the VBUS and LED trunks; 3V0: 0.3 mm (net class Supply); USB: 0.2 mm (full speed, no impedance control needed at these lengths).
+  - Everything else: 0.15 mm tracks, 0.15 mm clearance, 0.5/0.25 mm vias (power vias 0.6/0.3). All within JLCPCB's standard 4-layer rules.
 - **Placement** (`hardware/core/tools/gen_pcb.py`, generated from the schematic netlist, footprints linked to their symbols):
   - Charger top-left beside the USB-C VBUS pins: PMID capacitor directly above the PMID/GND pads, inductor to the right, SYS/BAT capacitors below.
   - USB ESD and CC resistors right below the receptacle.
   - Power rails in the middle band: LDO, boost with inductor and output capacitors, 5 V mux, LED switch.
   - Fuel gauge beside the battery connector.
   - 32.768 kHz crystal directly above BMD-340 pads 13/14; VCC/VBUS decoupling on the module's left side.
-  - Bottom side: SWD header, test points, unpopulated expansion and haptic connectors.
-- **Status:** placement done; DRC shows no overlaps, clearance or short violations. Routing is not started.
+  - Bottom side: SWD header, test points, unpopulated haptic connector; the unpopulated expansion header sits under the module, next to the pins it carries.
+- **Routing** (`hardware/core/tools/route_pcb.py`, D-35), in this order:
+  1. **Drawn in code and locked:** the charger's switching node, PMID and bootstrap loop; VBUS from the receptacle on a 1 mm bottom-layer trunk to the charger and the 5 V mux; the boost switch node and output; the LED rail on a 0.8 mm bottom trunk to FFC pins 2–4; the ROW bus (In2) and shift-register bus (top) from the module to the FFC, both crossing-free thanks to the pin order; escapes from the module interior to the expansion header.
+  2. **GND fan-out:** every SMD GND pad gets its own short stub and via to the In1 plane.
+  3. **Grid maze router** (`hardware/tools/maze.py`) for every remaining connection: negotiated congestion (crossings priced out over iterations), then legalisation with exact clearances and targeted rip-up. Results are stored in `hardware/core/route/ko-core-maze.json`.
+  4. **Stitching vias** on a 2.5 mm grid where all layers are free, then all pours are filled.
+  Freerouting (phases in the script) was tried first; it stalled after its first pass and left long, wandering power tracks, so the maze router replaced it for the remaining nets.
 
 ### Custom footprints
 

@@ -220,13 +220,13 @@ s = design.sheet("MCU and radio", "mcu_radio.kicad_sch", paper="A4", note=(
 s.add("U201", "ko:BMD-340", "BMD-340-A-R", {
     "13": "XL1", "14": "XL2", "15": "CC1", "19": "CC2", "20": "SPARE_P004", "21": "SPARE_P005",
     "22": "I2C_SDA", "23": "NC", "24": "I2C_SCL", "25": "NC", "26": "NC", "27": "NC", "28": "NC",
-    "31": "COL_CLK", "32": "COL_DAT", "33": "COL_LAT", "34": "RSV_MISO", "35": "RSV_INT", "39": "NRESET",
+    "31": "RSV_MISO", "32": "COL_LAT", "33": "COL_DAT", "34": "COL_CLK", "35": "RSV_INT", "39": "NRESET",
     "37": "EXP_TX", "38": "EXP_RX", "36": "EXP_CS", "40": "EXP_SCK", "41": "EXP_MOSI", "42": "EXP_MISO",
-    "6": "EXP_IO1", "7": "EXP_IO2", "8": "EXP_IO3", "9": "EXP_AIN0", "10": "EXP_AIN1", "11": "FG_ALRT",
+    "6": "EXP_IO1", "7": "EXP_IO2", "8": "EXP_IO3", "9": "LED_FAULT", "10": "EXP_AIN1", "11": "FG_ALRT",
     "12": "HAPTIC_EN",
-    "56": "SWO", "57": "ROW0", "58": "ROW1", "59": "ROW2", "60": "ROW3", "48": "LED_SDB", "49": "LED_EN",
-    "50": "BOOST_EN", "51": "EXP_IO4", "52": "NC", "53": "LED_FAULT", "54": "CHG_INT", "61": "ROW4",
-    "62": "ROW5", "63": "ROW6", "64": "ROW7", "44": "SWDIO", "43": "SWCLK", "68": "USB_DP", "67": "USB_DN",
+    "56": "NC", "57": "ROW0", "58": "ROW1", "59": "ROW2", "60": "ROW3", "48": "LED_SDB", "49": "LED_EN",
+    "50": "BOOST_EN", "51": "CHG_INT", "52": "EXP_IO4", "53": "NC", "54": "NC", "61": "ROW7",
+    "62": "ROW6", "63": "ROW5", "64": "ROW4", "44": "SWDIO", "43": "SWCLK", "68": "USB_DP", "67": "USB_DN",
     "17": "3V0", "65": "3V0", "66": "VBUS", "GND": "GND"},
     footprint="ko:u-blox_BMD-340", **lcsc("U_BMD340"))
 C(s, "C201", "10u", "C_10u_0603_10V", "3V0")
@@ -279,13 +279,14 @@ s = design.sheet("Service and expansion", "service.kicad_sch", paper="A4", note=
     "SWD (2x5 1.27 mm Cortex debug pinout, matches the nRF52840 DK 'debug out' cable). Test points on every rail, USB, I2C, SWD (CORE-063).\n"
     "J502 expansion header (DNP, 1.27 mm SMD on the bottom) for module-bus experiments on rev A. J503 (DNP) reserves a future body haptic driver (CORE-064)."))
 s.add("J501", "Connector_Generic:Conn_02x05_Odd_Even", "SWD", {
-    "1": "3V0", "2": "SWDIO", "3": "GND", "4": "SWCLK", "5": "GND", "6": "SWO", "7": "NC", "8": "NC",
+    "1": "3V0", "2": "SWDIO", "3": "GND", "4": "SWCLK", "5": "GND", "6": "NC", "7": "NC", "8": "NC",
     "9": "GND", "10": "NRESET"}, footprint="Connector_PinHeader_1.27mm:PinHeader_2x05_P1.27mm_Vertical_SMD",
     **lcsc("J_SWD"))
 s.add("J502", "Connector_Generic:Conn_02x08_Odd_Even", "EXPANSION DNP", {
-    "1": "3V0", "2": "V5", "3": "GND", "4": "GND", "5": "EXP_TX", "6": "EXP_RX", "7": "EXP_SCK",
-    "8": "EXP_MOSI", "9": "EXP_MISO", "10": "EXP_CS", "11": "EXP_IO1", "12": "EXP_IO2", "13": "EXP_IO3",
-    "14": "EXP_IO4", "15": "EXP_AIN0", "16": "EXP_AIN1"},
+    # pin order chosen for routing under the module (D-35)
+    "1": "EXP_MISO", "2": "EXP_IO2", "3": "EXP_SCK", "4": "EXP_IO1", "5": "EXP_RX", "6": "EXP_IO3",
+    "7": "EXP_CS", "8": "EXP_AIN1", "9": "EXP_TX", "10": "EXP_IO4", "11": "EXP_MOSI", "12": "GND",
+    "13": "GND", "14": "V5", "15": "GND", "16": "3V0"},
     footprint="Connector_PinHeader_1.27mm:PinHeader_2x08_P1.27mm_Vertical_SMD", dnp=True)
 s.add("J503", "Connector_Generic_MountingPin:Conn_01x06_MountingPin", "HAPTIC DNP", {
     "1": "V5", "2": "3V0", "3": "GND", "4": "I2C_SDA", "5": "I2C_SCL", "6": "HAPTIC_EN", "MP": "GND"},
