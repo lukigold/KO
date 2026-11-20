@@ -219,7 +219,7 @@ s = design.sheet("MCU and radio", "mcu_radio.kicad_sch", paper="A4", note=(
     "32.768 kHz crystal ECS-.327-12.5-34B (CL 12.5 pF) with 18 pF load capacitors. I2C pull-ups 4.7 kOhm to 3V0."))
 s.add("U201", "ko:BMD-340", "BMD-340-A-R", {
     "13": "XL1", "14": "XL2", "15": "CC1", "19": "CC2", "20": "SPARE_P004", "21": "SPARE_P005",
-    "22": "I2C_SDA", "23": "NC", "24": "I2C_SCL", "25": "NC", "26": "NC", "27": "NC", "28": "NC",
+    "22": "NC", "23": "NC", "24": "I2C_SCL", "25": "NC", "26": "NC", "27": "NC", "28": "I2C_SDA",
     "31": "RSV_MISO", "32": "COL_LAT", "33": "COL_DAT", "34": "COL_CLK", "35": "RSV_INT", "39": "NRESET",
     "37": "EXP_TX", "38": "EXP_RX", "36": "EXP_CS", "40": "EXP_SCK", "41": "EXP_MOSI", "42": "EXP_MISO",
     "6": "EXP_IO1", "7": "EXP_IO2", "8": "EXP_IO3", "9": "LED_FAULT", "10": "EXP_AIN1", "11": "FG_ALRT",

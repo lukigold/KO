@@ -213,8 +213,7 @@ def expansion_routes() -> tuple[list, list]:
         tracks += [(net, F, w, top), (net, B, w, bottom)]
         vias.append((net, top[-1]) + via)
     # module interior escapes to vias outside the band the In2 row bus occupies (y 7.7-10.0)
-    for net, path in (("I2C_SDA", [(37.25, 8.05), (38.65, 8.05), (38.65, 6.75)]),
-                      ("SPARE_P004", [(37.25, 6.95), (37.9, 6.95), (38.1, 6.25)]),
+    for net, path in (("SPARE_P004", [(37.25, 6.95), (37.9, 6.95), (38.1, 6.25)]),
                       ("HAPTIC_EN", [(39.1, 5.1), (39.1, 3.45)]),
                       ("CHG_INT", [(40.75, 6.0), (40.75, 7.2)]),
                       ("BOOST_EN", [(41.85, 6.0), (41.85, 7.0)]),
@@ -574,6 +573,59 @@ def step_export(phase: str) -> None:
     print(f"  {n} nets exported")
 
 
+def bridge_narrow_forks(b: pcbnew.BOARD, max_angle: float = 25.0, at: float = 0.5) -> int:
+    """Two tracks of one net that leave (nearly) the same point less than max_angle apart leave a thin
+    V-shaped notch between them, which KiCad reports as a copper sliver. A short bridge between the two
+    tracks, `at` mm from the fork, closes the tip of the V. The bridge lies inside the gap between the two
+    tracks (at most a few hundredths of a mm wide), so it cannot come closer to anything else than they do.
+    Both tracks are split at the bridge ends, so every track end meets another track end."""
+    segs = {}
+    for t in b.GetTracks():
+        if t.GetClass() == "PCB_TRACK" and t.GetLength() > mm(0.05):
+            segs.setdefault((t.GetNetCode(), t.GetLayer()), []).append(t)
+    splits, bridges = {}, []
+    for (net, layer), ts in segs.items():
+        ends = []                      # (fork point, unit direction away from it, length, width, track)
+        for t in ts:
+            a = (t.GetStart().x / 1e6, t.GetStart().y / 1e6)
+            e = (t.GetEnd().x / 1e6, t.GetEnd().y / 1e6)
+            n = math.dist(a, e)
+            for p, q in ((a, e), (e, a)):
+                ends.append((p, ((q[0] - p[0]) / n, (q[1] - p[1]) / n), n, t.GetWidth() / 1e6, t))
+        done = set()
+        for i, (p1, d1, n1, w1, t1) in enumerate(ends):
+            for j in range(i + 1, len(ends)):
+                p2, d2, n2, w2, t2 = ends[j]
+                if t1 is t2 or math.dist(p1, p2) > 0.15 or n1 < at + 0.1 or n2 < at + 0.1:
+                    continue
+                cos = d1[0] * d2[0] + d1[1] * d2[1]
+                if cos > 0.9999 or math.degrees(math.acos(max(-1.0, min(1.0, cos)))) >= max_angle:
+                    continue           # collinear (overlapping trunk) or wide enough
+                q1 = (mm(p1[0] + d1[0] * at), mm(p1[1] + d1[1] * at))
+                q2 = (mm(p2[0] + d2[0] * at), mm(p2[1] + d2[1] * at))
+                if (q1, q2) in done or math.dist(q1, q2) < mm(0.01):
+                    continue
+                done.add((q1, q2))
+                for t, q in ((t1, q1), (t2, q2)):
+                    splits.setdefault(t.m_Uuid.AsString(), (t, set()))[1].add(q)
+                bridges.append((q1, q2, mm(min(w1, w2)), layer, net))
+    for t, pts in splits.values():
+        a = (t.GetStart().x, t.GetStart().y)
+        chain = [a] + sorted(pts, key=lambda q: math.dist(a, q)) + [(t.GetEnd().x, t.GetEnd().y)]
+        t.SetEnd(pcbnew.VECTOR2I(*chain[1]))
+        for u, v in zip(chain[1:-1], chain[2:]):
+            bridges.append((u, v, t.GetWidth(), t.GetLayer(), t.GetNetCode()))
+    for u, v, w, layer, net in bridges:
+        tr = pcbnew.PCB_TRACK(b)
+        tr.SetStart(pcbnew.VECTOR2I(*u))
+        tr.SetEnd(pcbnew.VECTOR2I(*v))
+        tr.SetWidth(w)
+        tr.SetLayer(layer)
+        tr.SetNetCode(net)
+        b.Add(tr)
+    return len(bridges) - sum(len(pts) for _, pts in splits.values())
+
+
 def step_finish(stitch: bool = True, use_maze: bool = True) -> None:
     sessions = [ROUTE / f"ko-core-{ph['name']}.ses" for ph in PHASES]
     sessions = [s for s in sessions if s.exists()]
@@ -593,6 +645,9 @@ def step_finish(stitch: bool = True, use_maze: bool = True) -> None:
         lone = drop_single_layer_vias(b)
         if lone:
             print(f"  vias joining only one layer removed: {lone}")
+    forks = bridge_narrow_forks(b)
+    if forks:
+        print(f"  narrow forks bridged: {forks}")
     if stitch:
         print(f"  stitching: {stitching(b)} vias")
     pcbnew.SaveBoard(str(BOARD), b)
@@ -622,7 +677,7 @@ def drc_unconnected(path: pathlib.Path) -> list:
     return data.get("unconnected_items", [])
 
 
-ESCAPE_NETS = {"I2C_SDA", "SPARE_P004", "HAPTIC_EN", "CHG_INT", "BOOST_EN", "LED_EN", "LED_FAULT"}
+ESCAPE_NETS = {"SPARE_P004", "HAPTIC_EN", "CHG_INT", "BOOST_EN", "LED_EN", "LED_FAULT"}
 
 
 def conn_ends(it, net):

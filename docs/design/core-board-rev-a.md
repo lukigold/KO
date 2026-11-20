@@ -1,6 +1,6 @@
 # Design note: Core board rev A
 
-**Implements:** [core-board.md](../contracts/core-board.md) (P1 scope) · **Status:** schematic done (generated, ERC and netlist verified), layout next · **Date:** 2026-11-15, schematic 2026-11-18
+**Implements:** [core-board.md](../contracts/core-board.md) (P1 scope) · **Status:** layout done: placed and routed by script, DRC clean (0 violations, 0 unconnected, schematic parity clean), JLCPCB files generated; owner review next · **Date:** 2026-11-15, schematic 2026-11-18, layout 2026-11-20
 
 Design notes explain *how* a contract is implemented. They never override a contract; if they disagree,
 fix one of them in the same change.
@@ -104,9 +104,9 @@ Firmware board support must use exactly this map.
 | ROW7, ROW6, ROW5, ROW4 | P1.12, P1.13, P1.14, P1.15 (61–64) LF | Inputs, internal pull-down, wake (SENSE). Reversed order so the row bus to the FFC needs no crossings (D-35) |
 | RSV_MISO, COL_LAT, COL_DAT, COL_CLK | P0.13, P0.14, P0.15, P0.16 (31–34) | COL_CLK/COL_DAT = SPIM SCK/MOSI, COL_LAT = latch GPIO, RSV_MISO reserved (Hall-effect boards). Order follows the FFC pins (D-35) |
 | RSV_INT | P0.17 (35) | Reserved for Hall-effect switch boards |
-| I2C_SDA, I2C_SCL | P0.06, P0.08 (22, 24) | TWIM, 4.7 kΩ pull-ups to 3V0 |
+| I2C_SDA, I2C_SCL | P0.12, P0.08 (28, 24) | TWIM, 4.7 kΩ pull-ups to 3V0. SDA moved from P0.06 so the last connection could be routed (D-35); P0.12 is a full-speed pin |
 | LED_SDB, LED_EN, BOOST_EN | P1.05, P1.06, P1.07 (48–50) LF | Static outputs; LED_EN and BOOST_EN have 100 kΩ pull-downs |
-| LED_FAULT, CHG_INT | P1.10, P1.11 (53, 54) LF | Open-drain inputs, 10 kΩ pull-ups |
+| LED_FAULT, CHG_INT | P0.28 (9), P1.08 (51) | Open-drain inputs, 10 kΩ pull-ups. Moved from P1.10/P1.11 for routing (D-35) |
 | FG_ALRT | P0.30 (11) LF | Open-drain input, 10 kΩ pull-up |
 | HAPTIC_EN | P0.31 (12) LF | Reserved haptic connector |
 | CC1, CC2 | P0.02/AIN0, P0.03/AIN1 (15, 19) LF | SAADC: USB-C current advertisement (default ≈ 0.25–0.61 V, 1.5 A ≈ 0.70–1.16 V, 3 A ≈ 1.31–2.04 V across 5.1 kΩ) |
@@ -115,7 +115,7 @@ Firmware board support must use exactly this map.
 | SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39) | 2×5 1.27 mm header; pin 6 (SWO) not connected: probe-rs and defmt use RTT over SWD (D-35) |
 | Expansion header | P0.19 TX, P0.20 RX, P0.22 SCK, P0.23 MOSI, P0.24 MISO, P0.21 CS, P0.25/P0.26/P0.27 IO1–3, P1.09 IO4 (LF), P0.29 AIN1 (LF) | J502, unpopulated; pin order set for routing under the module, pin 12 = GND (D-35) |
 | Spare (test pads) | P0.04/AIN2, P0.05/AIN3 (20, 21) | Full-speed, analog-capable; for rev C prototyping |
-| Not connected | P0.07, P0.09, P0.10, P0.11, P0.12, P0.28, P1.00, P1.08 | Free for later revisions |
+| Not connected | P0.06, P0.07, P0.09, P0.10, P0.11, P1.00, P1.10, P1.11 | Free for later revisions |
 
 Rev C needs four analog inputs for module signature detection; the map is reassigned in that revision
 (board support is per core-board revision, FW-019).
@@ -195,9 +195,27 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
   1. **Drawn in code and locked:** the charger's switching node, PMID and bootstrap loop; VBUS from the receptacle on a 1 mm bottom-layer trunk to the charger and the 5 V mux; the boost switch node and output; the LED rail on a 0.8 mm bottom trunk to FFC pins 2–4; the ROW bus (In2) and shift-register bus (top) from the module to the FFC, both crossing-free thanks to the pin order; escapes from the module interior to the expansion header.
   2. **GND fan-out:** every SMD GND pad gets its own short stub and via to the In1 plane.
   3. **Grid maze router** (`hardware/tools/maze.py`) for every remaining connection: negotiated congestion (crossings priced out over iterations), then legalisation with exact clearances and targeted rip-up. Results are stored in `hardware/core/route/ko-core-maze.json`. A **repair mode** (`route_pcb.py --repair`) then closes what is left: each open connection may rip up the stored routes in its way, all-or-nothing, and the pass is kept only if the board gets better.
-  4. **Stitching vias** on a 2.5 mm grid where all layers are free, then all pours are filled.
+  4. **Clean-up:** escape vias the router did not use are removed, and so are vias that join only one layer. Where two tracks of one net leave the same point less than 25° apart, a short bridge 0.5 mm from the fork closes the thin V between them, which KiCad would otherwise report as a copper sliver.
+  5. **Stitching vias** on a 2.5 mm grid where all layers are free, then all pours are filled.
   Later additions drawn by hand after the first routing rounds: the USB D+/D− pair (ESD array to module, about 16 mm each, kept off the top layer under the USB-C shell, which is a copper keep-out), CC2 under the receptacle on In2, V5 from the mux to the LED switch on In2 (0.5 mm), and the last part of LED_EN.
   Freerouting (phases in the script) was tried first; it stalled after its first pass and left long, wandering power tracks, so the maze router replaced it for the remaining nets.
+  The last open connection, I2C_SDA from module pad 22, had no free path out of the module's pad field. Every free module pad was tried; only pad 28 (P0.12) reaches the rest of the net, so SDA moved there (D-35).
+- **Result (2026-11-20):** 2 186 track segments, 316 vias. `kicad-cli pcb drc --schematic-parity`: 0 violations (warnings included), 0 unconnected items, 0 parity issues. No waivers.
+
+### Ordering at JLCPCB
+
+`hardware/core/tools/fab_outputs.py` writes `hardware/core/fab/`. It refuses to run unless DRC is clean.
+
+| File | Use |
+|---|---|
+| `ko-core-rev-a-gerbers.zip` | PCB order: 4 layers, 1.0 mm FR-4, 50 × 32 mm, 1 oz outer copper, standard rules (0.15/0.15 mm, 0.25 mm drill) |
+| `ko-core-rev-a-bom.csv`, `ko-core-rev-a-cpl.csv` | Assembly (PCBA). DNP parts (RT101, J502, J503) and test points are left out |
+| `ko-core-rev-a-fit-1to1.pdf` | Print at 100 % (no "fit to page"): page 1 top, page 2 bottom (mirrored, as seen from below). Check the outline, the USB-C and FFC positions and the switch against the case |
+| `ko-core-rev-a-top.png`, `-bottom.png`, `-iso.png` | Renders |
+
+Before ordering:
+- **Check part rotation in JLCPCB's placement preview.** JLCPCB's library sometimes defines a part's zero rotation differently from KiCad. Pin 1 marks on the BMD-340, the BQ25628E, the ICs and the connectors must match the silkscreen dots; JLCPCB corrects any offset on request.
+- **J501 (SWD header) is the only assembled part on the bottom side.** That makes it a two-sided assembly at JLCPCB, which costs extra. The alternative is to leave J501 out of the CPL and solder the 1.27 mm header by hand. You need SWD for the first flash, because a new BMD-340 has no bootloader (OPEN-20).
 
 ### Custom footprints
 
@@ -227,7 +245,7 @@ KiCad's API and drawn with its pad numbers to compare against the source drawing
 
 **How it is made:**
 - **Source of truth:** `hardware/core/tools/gen_schematic.py` describes every part (value, footprint, LCSC number) and every net. It writes the six KiCad sheets plus the project symbol library `lib/ko.kicad_sym`. The KiCad files are outputs; edit the Python, not the GUI.
-- **Verification:** `hardware/core/tools/check_schematic.py` runs ERC and fails on any error. It exports KiCad's netlist, compares it pin by pin with the intended nets, and writes the PDF and BOM. Current result: 0 errors, 69 nets, 0 mismatches. The only warnings are the three custom footprints still to be drawn (waived until layout).
+- **Verification:** `hardware/core/tools/check_schematic.py` runs ERC and fails on any error. It exports KiCad's netlist, compares it pin by pin with the intended nets, and writes the PDF and BOM. Current result: 0 errors, 67 nets, 0 mismatches, no waived warnings.
 - **Part numbers:** `hardware/core/bom/parts.csv` holds the LCSC numbers, resolved by `hardware/tools/jlc_lookup.py` with a lookup date. Re-check stock before ordering; 30.1 kΩ and 133 kΩ showed unknown stock.
 
 **Sheets:** Battery and charger · Power rails · MCU and radio · USB · Switch board connector · Service and expansion.
@@ -252,12 +270,11 @@ KiCad's API and drawn with its pad numbers to compare against the source drawing
 2. **Power switch position:** it sits on the schematic only. Its physical position is OPEN-07.
 3. **Expansion and haptic headers:** both are left unpopulated. Tell me if you want either fitted on the prototypes.
 
-**Still to do in layout:** custom footprints for the BMD-340 (68 pads, datasheet land pattern),
-the BQ25628E (RYK WQFN-HR-18) and the FH34SRJ-24S connector; check the SOT-583 footprint pin order against
-the TPS2116 datasheet.
+**Layout:** done (§9). The custom footprints are in `lib/ko.pretty`; the TPS2116 uses KiCad's own SOT-583-8 footprint, which is drawn from TI's DRL package (same package as the TPS2116) with the usual numbering: pins 1–4 down the left side, 5–8 up the right.
 
 ## 12. Next steps
 
-1. Custom footprints, then PCB layout: charger and boost loops first, radio keep-out, USB pair.
-2. DRC clean, 3D render, 1:1 print for fit check.
-3. Owner review, then order rev A at JLCPCB.
+1. ~~Custom footprints, then PCB layout~~ done.
+2. ~~DRC clean, 3D render, 1:1 print for fit check~~ done (`hardware/core/fab/`).
+3. Owner review: fit check with the 1:1 print, renders, the review checklist in §11, the J501 choice (OPEN-20).
+4. Order rev A at JLCPCB (see "Ordering at JLCPCB" in §9).

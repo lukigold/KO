@@ -8,7 +8,6 @@ _autosave-*
 
 # Check reports and exports (regenerated)
 *.rpt
-hardware/**/fab/
 
 # Python
 __pycache__/

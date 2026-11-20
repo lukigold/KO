@@ -280,10 +280,9 @@ def build() -> pcbnew.BOARD:
             if ref not in PLACEMENT:
                 raise SystemExit(f"no placement for {ref}")
             x, y, rot, side = PLACEMENT[ref]
-        if dnp:
+        if dnp:                                 # DNP keeps it out of BOM and CPL; the symbol stays "in BOM"
             fp.SetDNP(True)
             fp.SetExcludedFromPosFiles(True)
-            fp.SetExcludedFromBOM(True)
         # silkscreen: passives carry their reference only on the assembly (Fab) layer
         ref_text = fp.Reference()
         if ref[:1] in "RCL" or ref.startswith("RT"):
