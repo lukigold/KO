@@ -180,7 +180,7 @@ class Router:
     def base_via(self, r, drill):
         key = (r, drill)
         if key not in self._base_v:
-            m = self._raster(self.base, r + self.clr, drill / 2 + self.hclr, 1)[0]
+            m = self._raster(self.base, r + self.clr, max(r, drill / 2) + self.hclr, 1)[0]   # via copper to holes
             self._edge(m[None], r)
             self._base_v[key] = m
         return self._base_v[key]
@@ -205,8 +205,9 @@ class Router:
         key = (r, drill)
         if key not in self._rv:
             items, nets, ids = self._route_items()
-            self._rv[key] = (self._raster(items, r + self.clr, drill / 2 + self.hclr, 1, nets)[0],
-                             self._raster(items, r + self.clr, drill / 2 + self.hclr, 1, [i + 1 for i in ids])[0])
+            hole = max(r, drill / 2) + self.hclr
+            self._rv[key] = (self._raster(items, r + self.clr, hole, 1, nets)[0],
+                             self._raster(items, r + self.clr, hole, 1, [i + 1 for i in ids])[0])
         return self._rv[key]
 
     # ------------------------------------------------------------------ routes kept by the router
@@ -296,11 +297,20 @@ class Router:
                     s = came[s]
                 path.reverse()
                 if soft:
+                    amb = []                           # cells where several routes overlap: resolve by geometry
+                    for x, y, l in path:
+                        i, j = self.cell(x, y)
+                        if r_other[l, j, i] and rt_id[l, j, i] <= 0:
+                            amb.append((x, y, l, hw + self.clr, False))
                     for a, c in zip(path, path[1:]):
                         if a[2] != c[2]:
                             i, j = self.cell(a[0], a[1])
                             if v_other[j, i] and rv_id[j, i] > 0:
                                 crossed.add(int(rv_id[j, i]) - 1)
+                            elif v_other[j, i]:
+                                amb.append((a[0], a[1], None, via_r + self.clr, True))
+                    if amb:
+                        crossed |= self._who(amb, net, drill)
                 return path, crossed
             n += 1
             if n > max_nodes:
@@ -333,11 +343,49 @@ class Router:
                             heapq.heappush(openh, (g2 + h(i, j), g2, s2))
         return None, set()
 
+    def _who(self, pts, net, drill) -> set:
+        """Route ids whose copper comes too close to any of pts [(x, y, layer|None, reach, is_via)]."""
+        hit = set()
+        for rid, val in self.routes.items():
+            if val[0] == net:
+                continue
+            for kind, data, lis, _ in val[1]:
+                for x, y, l, reach, is_via in pts:
+                    if kind == "hole":
+                        if not is_via:
+                            continue
+                        (cx, cy), rr = data
+                        d = math.hypot(x - cx, y - cy) - rr - drill / 2 - self.hclr
+                    else:
+                        if l is not None and l not in lis:
+                            continue
+                        if kind == "circle":
+                            (cx, cy), rr = data
+                            d = math.hypot(x - cx, y - cy) - rr - reach
+                        elif kind == "seg":
+                            (ax, ay), (bx, by), shw = data
+                            dx, dy = bx - ax, by - ay
+                            ll = dx * dx + dy * dy
+                            t = 0.0 if ll == 0 else max(0.0, min(1.0, ((x - ax) * dx + (y - ay) * dy) / ll))
+                            d = math.hypot(x - (ax + t * dx), y - (ay + t * dy)) - shw - reach
+                        else:
+                            continue
+                    if d < 0:
+                        hit.add(rid)
+                        break
+                if rid in hit:
+                    break
+        return hit
+
     # ------------------------------------------------------------------ results
     def simplify(self, path, net, hw):
-        """Split at layer changes and string-pull each run. Returns (segments, vias) in mm."""
-        bt = self.base_track(hw)
-        rt_net, _ = self.route_track(hw)
+        """Split at layer changes and string-pull each run. Returns (segments, vias) in mm.
+
+        Shortcuts are checked against maps inflated by an extra 0.04 mm: a straight line between grid cells
+        can pass up to ~0.035 mm closer to an obstacle than the cell centres the check samples.
+        """
+        bt = self.base_track(round(hw + 0.04, 4))
+        rt_net, _ = self.route_track(round(hw + 0.04, 4))
         ok = ((bt == FREE) | (bt == net)) & ((rt_net == FREE) | (rt_net == net))
         runs, cur, vias = [], [path[0]], []
         for p in path[1:]:
@@ -351,7 +399,15 @@ class Router:
         segs = []
         for run in runs:
             layer = run[0][2]
-            pts = [(x, y) for x, y, _ in run]
+            raw = [(x, y) for x, y, _ in run]
+            pts = [raw[0]]                             # keep only the corners of the grid path
+            for k in range(1, len(raw) - 1):
+                d1 = (round((raw[k][0] - raw[k - 1][0]) / self.p), round((raw[k][1] - raw[k - 1][1]) / self.p))
+                d2 = (round((raw[k + 1][0] - raw[k][0]) / self.p), round((raw[k + 1][1] - raw[k][1]) / self.p))
+                if d1 != d2:
+                    pts.append(raw[k])
+            if len(raw) > 1:
+                pts.append(raw[-1])
             out, k = [pts[0]], 0
             while k < len(pts) - 1:
                 m = len(pts) - 1

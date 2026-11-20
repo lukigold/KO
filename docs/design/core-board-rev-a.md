@@ -189,11 +189,14 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
   - Fuel gauge beside the battery connector.
   - 32.768 kHz crystal directly above BMD-340 pads 13/14; VCC/VBUS decoupling on the module's left side.
   - Bottom side: SWD header, test points, unpopulated haptic connector; the unpopulated expansion header sits under the module, next to the pins it carries.
+  - Test points: VBAT (TP503) and SYS (TP502) moved to the bottom row next to the battery side; a GND test point took VBAT's place in the middle row.
+  - LED switch input capacitor C117 sits right at the switch's V5 pin; R113/R114 swapped and rotated so LED_ILIM and LED_EN run straight.
 - **Routing** (`hardware/core/tools/route_pcb.py`, D-35), in this order:
   1. **Drawn in code and locked:** the charger's switching node, PMID and bootstrap loop; VBUS from the receptacle on a 1 mm bottom-layer trunk to the charger and the 5 V mux; the boost switch node and output; the LED rail on a 0.8 mm bottom trunk to FFC pins 2–4; the ROW bus (In2) and shift-register bus (top) from the module to the FFC, both crossing-free thanks to the pin order; escapes from the module interior to the expansion header.
   2. **GND fan-out:** every SMD GND pad gets its own short stub and via to the In1 plane.
-  3. **Grid maze router** (`hardware/tools/maze.py`) for every remaining connection: negotiated congestion (crossings priced out over iterations), then legalisation with exact clearances and targeted rip-up. Results are stored in `hardware/core/route/ko-core-maze.json`.
+  3. **Grid maze router** (`hardware/tools/maze.py`) for every remaining connection: negotiated congestion (crossings priced out over iterations), then legalisation with exact clearances and targeted rip-up. Results are stored in `hardware/core/route/ko-core-maze.json`. A **repair mode** (`route_pcb.py --repair`) then closes what is left: each open connection may rip up the stored routes in its way, all-or-nothing, and the pass is kept only if the board gets better.
   4. **Stitching vias** on a 2.5 mm grid where all layers are free, then all pours are filled.
+  Later additions drawn by hand after the first routing rounds: the USB D+/D− pair (ESD array to module, about 16 mm each, kept off the top layer under the USB-C shell, which is a copper keep-out), CC2 under the receptacle on In2, V5 from the mux to the LED switch on In2 (0.5 mm), and the last part of LED_EN.
   Freerouting (phases in the script) was tried first; it stalled after its first pass and left long, wandering power tracks, so the maze router replaced it for the remaining nets.
 
 ### Custom footprints

@@ -87,7 +87,7 @@ PLACEMENT = {
     "R113": (20.6, 23.6, 180, "T"),
     "R114": (20.6, 22.4, 180, "T"),
     "R115": (28.0, 22.6, 0, "T"),
-    "C117": (28.0, 21.4, 0, "T"),
+    "C117": (22.56, 18.85, 180, "T"),  # LED switch input cap, next to its V5 pin
     "C118": (24.0, 24.8, 0, "T"),
     # --- fuel gauge next to the battery connector
     "U102": (13.6, 23.4, 0, "T"),
@@ -113,6 +113,9 @@ PLACEMENT = {
 # Test points on the bottom side.
 TP_GRID = [(x, y) for y in (19.6, 22.6) for x in (24.0, 26.5, 29.0, 31.5, 34.0, 36.5, 39.0)] + \
           [(x, 29.5) for x in (14.0, 16.5, 19.0, 21.5, 24.0, 26.5, 29.0)]
+
+# VBAT test point next to the battery side of the board, a GND test point takes its grid place
+TP_SWAP = {"TP503": (29.0, 29.5), "TP521": (29.0, 19.6), "TP502": (11.5, 29.5)}
 
 STANDIN_MODELS = {"J301": "USB_C_HRO_TYPE-C-31-M-12_standin", "J101": "JST_PH_S2B-PH-SM4-TB_standin"}
 
@@ -188,7 +191,7 @@ def footprint(fpid: str) -> pcbnew.FOOTPRINT:
     return fp
 
 
-def add_zone(board, net, layers, poly, name, priority=0, rule_area=False):
+def add_zone(board, net, layers, poly, name, priority=0, rule_area=False, allow_pads=False):
     z = pcbnew.ZONE(board)
     ls = pcbnew.LSET()
     for layer in layers:
@@ -206,7 +209,7 @@ def add_zone(board, net, layers, poly, name, priority=0, rule_area=False):
         z.SetIsRuleArea(True)
         z.SetDoNotAllowTracks(True)
         z.SetDoNotAllowVias(True)
-        z.SetDoNotAllowPads(True)
+        z.SetDoNotAllowPads(not allow_pads)
         z.SetDoNotAllowCopperPour(True)
         z.SetDoNotAllowFootprints(False)
     else:
@@ -268,7 +271,7 @@ def build() -> pcbnew.BOARD:
                  for p in find_all(comp, "property")}
         dnp = "dnp" in props or ref in ("J502", "J503", "RT101")
         if ref.startswith("TP"):
-            x, y = TP_GRID[tp_index]
+            x, y = TP_SWAP.get(ref, TP_GRID[tp_index])
             tp_index += 1
             rot, side = 0, "B"
             fp.SetExcludedFromBOM(True)
@@ -316,6 +319,9 @@ def build() -> pcbnew.BOARD:
     add_zone(board, None, [pcbnew.F_Cu, pcbnew.In1_Cu, pcbnew.In2_Cu, pcbnew.B_Cu],
              [(x0, -0.5), (BOARD_W + 0.5, -0.5), (BOARD_W + 0.5, RF_STRIP_LEN), (x0, RF_STRIP_LEN)],
              "antenna keep-out", rule_area=True)
+    # no top-layer tracks or vias under the USB-C receptacle's metal shell (only its own pads)
+    add_zone(board, None, [pcbnew.F_Cu], [(13.6, -0.5), (24.4, -0.5), (24.4, 6.0), (13.6, 6.0)],
+             "USB-C shell keep-out", rule_area=True, allow_pads=True)
     tidy_silk(board)
     return board
 

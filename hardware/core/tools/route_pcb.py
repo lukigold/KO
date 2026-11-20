@@ -31,6 +31,7 @@ import math
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 
@@ -68,7 +69,7 @@ STITCH_VIA = (0.6, 0.3)
 STITCH_PITCH = 2.5
 CLR_VIA = 0.2                  # via copper to other-net copper (net classes ask 0.15)
 CLR_STUB = 0.17
-PRE_GND_PADS = {("U201", "55"), ("J502", "12")}   # GND pads already tied to a via by the hand routes
+PRE_GND_PADS = {("U201", "55"), ("J502", "12"), ("U106", "2")}   # GND pads tied to a via by the hand routes
 EXTRA_GND_VIAS = {("U101", "15"): 2, ("U103", "2"): 2, ("U104", "4"): 2, ("U106", "2"): 2}
 
 # Hand-routed power copper (board mm, origin top-left). Every point was checked against the pad edges for
@@ -114,11 +115,16 @@ PRE_TRACKS = [
     ("VBOOST", F, 0.3, [(18.31, 17.9), (18.31, 17.2)]),
     ("VBOOST", I2, 0.6, [(18.31, 17.2), (19.85, 17.55)]),
     ("VBOOST", F, 0.6, [(19.85, 17.55), (20.6, 17.55)]),
-    ("VBOOST", F, 0.6, [(21.0, 17.55), (23.2, 17.55), (23.2, 18.45)]),
-    ("VBOOST", I2, 0.8, [(23.2, 18.45), (23.4, 18.55), (27.4, 18.55), (28.85, 18.0)]),
+    ("VBOOST", F, 0.6, [(21.0, 17.55), (24.3, 17.55)]),
+    ("VBOOST", I2, 0.8, [(24.3, 17.55), (25.3, 18.55), (27.4, 18.55), (28.85, 18.0)]),
     ("VBOOST", F, 0.3, [(28.14, 16.65), (28.85, 16.65)]),
     ("VBOOST", F, 0.4, [(28.85, 16.65), (28.85, 18.0)]),
     ("V5", F, 0.3, [(26.66, 16.15), (28.7, 16.15), (29.5, 15.9)]),
+    # mux output -> LED switch input (up to 1.7 A): from C116 via In2 round the boost output to U106 pin 1
+    ("V5", F, 0.5, [(30.0, 15.6), (30.8, 15.6), (30.8, 16.6)]),
+    ("V5", I2, 0.5, [(30.8, 16.6), (22.3, 16.6), (22.3, 19.2), (22.7, 19.6)]),
+    ("V5", F, 0.5, [(22.7, 19.6), (22.75, 20.8)]),
+    ("V5", F, 0.3, [(22.7, 19.6), (23.04, 18.9)]),
     ("VBUS", F, 0.2, [(27.95, 17.15), (26.85, 16.65)]),
     # LED rail: LED switch -> via -> 0.8 mm bottom trunk between the test-point rows -> FFC pins 2-4
     ("LED_5V", F, 0.6, [(25.14, 20.85), (25.4, 19.95)]),
@@ -140,8 +146,9 @@ PRE_VIAS = [
     ("VBUS", (25.9, 17.6), 0.6, 0.3),
     ("LED_5V", (25.4, 19.95), 0.6, 0.3), ("LED_5V", (36.25, 27.1), 0.6, 0.3),
     ("LED_5V", (37.0, 26.7), 0.6, 0.3), ("LED_5V", (23.2, 25.95), 0.6, 0.3),
+    ("V5", (30.8, 16.6), 0.6, 0.3), ("V5", (22.7, 19.6), 0.6, 0.3),
     ("VBOOST", (18.31, 17.2), 0.6, 0.3), ("VBOOST", (19.85, 17.55), 0.6, 0.3),
-    ("VBOOST", (23.2, 18.45), 0.6, 0.3), ("VBOOST", (28.85, 18.0), 0.6, 0.3),
+    ("VBOOST", (24.3, 17.55), 0.6, 0.3), ("VBOOST", (28.85, 18.0), 0.6, 0.3),
 ]
 LAYERS = {"F.Cu": pcbnew.F_Cu, "In2.Cu": pcbnew.In2_Cu, "B.Cu": pcbnew.B_Cu}
 
@@ -219,6 +226,30 @@ def expansion_routes() -> tuple[list, list]:
     tracks.append(("/Power rails/LED_ILIM", F, w, [(25.14, 21.8), (24.0, 21.8), (24.0, 23.45), (21.6, 23.45),
                                                    (21.2, 23.6)]))
     tracks.append(("LED_EN", F, w, [(22.86, 22.75), (21.6, 22.5), (21.2, 22.4)]))
+    tracks.append(("GND", F, 0.3, [(22.86, 21.8), (21.75, 21.8)]))       # LED switch GND pin, boxed in
+    # LED_EN at the LED switch: the last part of the path the maze router found on the hand-routed board,
+    # kept as a hand route because later routes otherwise wall the switch's EN pin in
+    tracks += [("LED_EN", I2, w, [(26.05, 19.4), (25.6, 19.35), (25.25, 19.35), (25.05, 19.45), (21.9, 22.6),
+                                  (21.8, 22.9)]),
+               ("LED_EN", F, w, [(21.8, 22.9), (21.6, 22.5)])]
+    vias += [("LED_EN", (26.05, 19.4)) + via, ("LED_EN", (21.8, 22.9)) + via]
+    vias.append(("GND", (21.75, 21.8)) + via)
+    # USB D+/D- from the ESD array to the module (full speed: length-matched to ~0.5 mm is plenty),
+    # found by the maze router on the hand-routed board, kept clear of the receptacle shell
+    tracks += [("USB_DP", F, 0.2, [(20.15, 10.05), (21.15, 10.25)]),
+               ("USB_DP", I2, 0.2, [(21.15, 10.25), (23.6, 9.45)]),
+               ("USB_DP", F, 0.2, [(23.6, 9.45), (24.05, 9.4), (32.4, 9.4), (35.45, 12.45)]),
+               ("USB_DN", F, 0.2, [(20.15, 11.95), (21.1, 12.1), (21.6, 12.6), (23.45, 12.65), (24.2, 13.4),
+                                   (29.6, 13.4)]),
+               ("USB_DN", B, 0.2, [(29.6, 13.4), (31.6, 13.4), (34.4, 10.6)]),
+               ("USB_DN", F, 0.2, [(34.4, 10.6), (35.45, 11.35)])]
+    vias += [("USB_DP", (21.15, 10.25)) + via, ("USB_DP", (23.6, 9.45)) + via,
+             ("USB_DN", (29.6, 13.4)) + via, ("USB_DN", (34.4, 10.6)) + via]
+    # CC2 receptacle pin -> via under the receptacle body -> In2 above the shell tabs -> CC ESD pin 4
+    tracks += [("CC2", F, w, [(17.25, 6.85), (17.4, 6.3)]),
+               ("CC2", I2, w, [(17.4, 6.3), (17.4, 4.4), (24.4, 4.4), (24.4, 12.8)]),
+               ("CC2", F, w, [(24.4, 12.8), (24.54, 12.0)])]
+    vias += [("CC2", (17.4, 6.3)) + via, ("CC2", (24.4, 12.8)) + via]
     return tracks, vias
 
 
@@ -543,7 +574,7 @@ def step_export(phase: str) -> None:
     print(f"  {n} nets exported")
 
 
-def step_finish(stitch: bool = True) -> None:
+def step_finish(stitch: bool = True, use_maze: bool = True) -> None:
     sessions = [ROUTE / f"ko-core-{ph['name']}.ses" for ph in PHASES]
     sessions = [s for s in sessions if s.exists()]
     b = load_board(sessions, lock=False)
@@ -552,12 +583,16 @@ def step_finish(stitch: bool = True) -> None:
         t.SetWidth(mm(0.1))
     if thin:
         print(f"  widened {len(thin)} neck-down slivers to 0.1 mm")
-    nm = add_maze(b)
+    nm = add_maze(b) if use_maze else 0
     if nm:
         print(f"  maze-routed leftovers: {nm} segments")
     dropped = drop_unused_escapes(b) if nm else []     # only once the router has had its chance to use them
     if dropped:
         print(f"  unused escape vias removed: {', '.join(dropped)}")
+    if nm:
+        lone = drop_single_layer_vias(b)
+        if lone:
+            print(f"  vias joining only one layer removed: {lone}")
     if stitch:
         print(f"  stitching: {stitching(b)} vias")
     pcbnew.SaveBoard(str(BOARD), b)
@@ -568,6 +603,14 @@ def step_finish(stitch: bool = True) -> None:
 MAZE_JSON = ROUTE / "ko-core-maze.json"
 MAZE_WIDTH = {"Power": (0.3, 0.6, 0.3), "Supply": (0.25, 0.5, 0.25), "USB": (0.2, 0.5, 0.25),
               "Ground": (0.25, 0.5, 0.25), "Signal": (0.15, 0.5, 0.25)}   # track, via dia, drill
+
+
+def drc_violations(path: pathlib.Path) -> list:
+    out = path.with_suffix(".drcv.json")
+    subprocess.run(["kicad-cli", "pcb", "drc", "--format", "json", "-o", str(out), str(path)], capture_output=True)
+    data = json.loads(out.read_text())
+    out.unlink()
+    return data.get("violations", [])
 
 
 def drc_unconnected(path: pathlib.Path) -> list:
@@ -582,30 +625,28 @@ def drc_unconnected(path: pathlib.Path) -> list:
 ESCAPE_NETS = {"I2C_SDA", "SPARE_P004", "HAPTIC_EN", "CHG_INT", "BOOST_EN", "LED_EN", "LED_FAULT"}
 
 
+def conn_ends(it, net):
+    """Start/goal points of one end of a DRC 'unconnected' pair: (x, y, layer index) candidates."""
+    names = {"F.Cu": 0, "In2.Cu": 1, "B.Cu": 2}
+    d = it["description"]
+    xy = (it["pos"]["x"], it["pos"]["y"])
+    for n, (x, y), _, _ in PRE_VIAS:
+        if n == net and net in ESCAPE_NETS and math.dist((OX + x, OY + y), xy) < 2.5:
+            return [(OX + x, OY + y, li) for li in range(3)]     # the prepared escape via, not the pad
+    if d.startswith("Via") or "PTH pad" in d:
+        return [(xy[0], xy[1], li) for li in (0, 2)]
+    for k, li in names.items():
+        if f" on {k}" in d:
+            return [(xy[0], xy[1], li)]
+    return [(xy[0], xy[1], 0)]
+
+
 def step_maze() -> None:
     """Route every connection still open with the grid maze router (targeted rip-up); store in MAZE_JSON."""
     b = pcbnew.LoadBoard(str(BOARD))
     r = maze.Router(b, (OX, OY, OX + BOARD_W, OY + BOARD_H), [pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu],
                     clearance=0.18, hole_clearance=0.28)   # margin for the 0.05 mm grid
-    names = {"F.Cu": 0, "In2.Cu": 1, "B.Cu": 2}
-    escapes = {}
-    for net, (x, y), _, _ in PRE_VIAS:
-        if net in ESCAPE_NETS:
-            escapes.setdefault(net, []).append((OX + x, OY + y))
-
-    def ends(it, net):
-        d = it["description"]
-        xy = (it["pos"]["x"], it["pos"]["y"])
-        for e in escapes.get(net, []):
-            if math.dist(e, xy) < 2.5:             # start from the prepared escape via, not the pad
-                return [(e[0], e[1], li) for li in range(3)]
-        if d.startswith("Via") or "PTH pad" in d:
-            return [(xy[0], xy[1], li) for li in (0, 2)]
-        for k, li in names.items():
-            if f" on {k}" in d:
-                return [(xy[0], xy[1], li)]
-        return [(xy[0], xy[1], 0)]
-
+    ends = conn_ends
     conns = []
     for v in drc_unconnected(BOARD):
         a, c = v["items"][0], v["items"][1]
@@ -730,6 +771,326 @@ def step_maze() -> None:
           (f"; not routed: {', '.join(conns[c][2] for c in gave_up)}" if gave_up else ""))
 
 
+OPEN_JSON = ROUTE / "_open.json"
+LAYER_NAMES = ["F.Cu", "In2.Cu", "B.Cu"]
+
+
+def net_islands(b: pcbnew.BOARD, net: str) -> list:
+    """Copper islands of one net (pads, tracks, vias), each as a list of (item, [(x, y, layer index)])."""
+    lay = {pcbnew.F_Cu: 0, pcbnew.In2_Cu: 1, pcbnew.B_Cu: 2}
+    items = []
+    for fp in b.GetFootprints():
+        for pd in fp.Pads():
+            if pd.GetNetname() == net:
+                c = pd.GetPosition()
+                pts = [(c.x / 1e6, c.y / 1e6, li) for l, li in lay.items() if pd.IsOnLayer(l)]
+                items.append((pd, pts))
+    for t in b.GetTracks():
+        if t.GetNetname() != net:
+            continue
+        if t.GetClass() == "PCB_VIA":
+            c = t.GetPosition()
+            items.append((t, [(c.x / 1e6, c.y / 1e6, li) for li in range(3)]))
+        elif t.GetLayer() in lay:
+            li = lay[t.GetLayer()]
+            s0, e0 = t.GetStart(), t.GetEnd()
+            items.append((t, [(s0.x / 1e6, s0.y / 1e6, li), (e0.x / 1e6, e0.y / 1e6, li),
+                              ((s0.x + e0.x) / 2e6, (s0.y + e0.y) / 2e6, li)]))
+    inv = {v: k for k, v in lay.items()}
+    parent = list(range(len(items)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for i, (a, pa) in enumerate(items):
+        for j in range(i + 1, len(items)):
+            bitem, pb = items[j]
+            touch = False
+            for x, y, li in pa:
+                q = pcbnew.VECTOR2I(int(round(x * 1e6)), int(round(y * 1e6)))
+                if bitem.IsOnLayer(inv[li]) and bitem.HitTest(q, 1000):
+                    touch = True
+                    break
+            if not touch:
+                for x, y, li in pb:
+                    q = pcbnew.VECTOR2I(int(round(x * 1e6)), int(round(y * 1e6)))
+                    if a.IsOnLayer(inv[li]) and a.HitTest(q, 1000):
+                        touch = True
+                        break
+            if touch:
+                parent[find(i)] = find(j)
+    groups = {}
+    for i, it in enumerate(items):
+        groups.setdefault(find(i), []).append(it)
+    return list(groups.values())
+
+
+def step_repair_prep() -> None:
+    """Record the connections still open on the full board, each as start/goal point sets (whole islands)."""
+    b = pcbnew.LoadBoard(str(BOARD))
+    opens = []
+    for v in drc_unconnected(BOARD):
+        m = re.search(r"\[([^\]]+)\]", v["items"][0]["description"])
+        if not m or m.group(1) == "GND":
+            continue
+        net = m.group(1)
+        isl = net_islands(b, net)
+        sides = []
+        for it in v["items"][:2]:
+            q = pcbnew.VECTOR2I(int(round(it["pos"]["x"] * 1e6)), int(round(it["pos"]["y"] * 1e6)))
+            hit = [g for g in isl if any(item.HitTest(q, 20000) for item, _ in g)]
+            pts = [p for item, pp in (hit[0] if hit else []) for p in pp] or conn_ends(it, net)
+            if net in ESCAPE_NETS:                     # the prepared escape via counts as part of its pad
+                for n, (x, y), _, _ in PRE_VIAS:
+                    if n == net and any(math.dist((OX + x, OY + y), pt[:2]) < 2.5 for pt in pts):
+                        pts = [(OX + x, OY + y, li) for li in range(3)] + pts
+            sides.append(pts[:60])
+        opens.append({"net": net, "starts": sides[0], "goals": sides[1]})
+    bad = []
+    for v in drc_violations(BOARD):
+        if v["type"] in ("clearance", "hole_clearance", "shorting_items", "tracks_crossing", "hole_to_hole"):
+            for it in v["items"]:
+                m = re.search(r"^(Track|Via) \[([^\]]+)\]", it["description"])
+                if m:
+                    bad.append((m.group(2), it["pos"]["x"], it["pos"]["y"]))
+    OPEN_JSON.write_text(json.dumps({"opens": opens, "violations": bad}))
+    print(f"  {len(opens)} connections open, {len(bad)} copper items in DRC violations")
+
+
+def maze_components(data, on_base=lambda net, x, y, li: False):
+    """Group stored maze tracks/vias into routes: connected pieces with exactly two ends.
+
+    Points on existing copper of the net (pads, hand routes) are ends, never joints: two routes that meet
+    at a pad stay two routes.
+    """
+    tr = [(t["net"], LAYER_NAMES.index(t["layer"]), t["width"], [(OX + x, OY + y) for x, y in t["points"]])
+          for t in data["tracks"]]
+    vi = [(v["net"], OX + v["x"], OY + v["y"], v["dia"], v["drill"]) for v in data["vias"]]
+    parent = list(range(len(tr) + len(vi)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    def key(x, y):
+        return (round(x, 3), round(y, 3))
+    at = {}
+    for i, (net, li, w, pts) in enumerate(tr):
+        for x, y in (pts[0], pts[-1]):
+            at.setdefault((net, key(x, y)), []).append((i, li))
+    for k, (net, x, y, d, dr) in enumerate(vi):
+        at.setdefault((net, key(x, y)), []).append((len(tr) + k, None))
+    for (net, (kx, ky)), lst in at.items():
+        if any(li is not None and on_base(net, kx, ky, li) for _, li in lst):
+            continue
+        for (i, li), (j, lj) in zip(lst, lst[1:]):
+            if li is None or lj is None or li == lj:
+                parent[find(i)] = find(j)
+            else:                                      # different layers only join through a via
+                for k, lk in lst:
+                    if lk is None:
+                        parent[find(i)] = find(k)
+                        parent[find(j)] = find(k)
+    comps = {}
+    for i in range(len(parent)):
+        comps.setdefault(find(i), []).append(i)
+    out = []
+    for members in comps.values():
+        ts = [tr[i] for i in members if i < len(tr)]
+        vs = [vi[i - len(tr)] for i in members if i >= len(tr)]
+        if not ts:
+            continue
+        vxy = {key(v[1], v[2]) for v in vs}
+        cnt = {}
+        for net, li, w, pts in ts:
+            for x, y in (pts[0], pts[-1]):
+                cnt[(li, key(x, y))] = cnt.get((li, key(x, y)), 0) + 1
+        free = [(x, y, li) for (li, (x, y)), n in cnt.items()
+                if (x, y) not in vxy and (n == 1 or on_base(ts[0][0], x, y, li))]
+        out.append({"net": ts[0][0], "tracks": ts, "vias": vs, "ends": free})
+    return out
+
+
+def step_repair() -> None:
+    """Route the recorded open connections, ripping up only the stored maze routes in their way."""
+    b = pcbnew.LoadBoard(str(BOARD))              # rebuilt without maze routes
+    r = maze.Router(b, (OX, OY, OX + BOARD_W, OY + BOARD_H), [pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu],
+                    clearance=0.18, hole_clearance=0.28)
+    lay = [pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu]
+    base_cu = {}
+    for fp in b.GetFootprints():
+        for pad in fp.Pads():
+            base_cu.setdefault(pad.GetNetname(), []).append(pad)
+    for t in b.GetTracks():
+        base_cu.setdefault(t.GetNetname(), []).append(t)
+
+    def on_base(net, x, y, li):
+        q = pcbnew.VECTOR2I(int(round(x * 1e6)), int(round(y * 1e6)))
+        return any(it.IsOnLayer(lay[li]) and it.HitTest(q, 10000) for it in base_cu.get(net, ()))
+
+    comps = maze_components(json.loads(MAZE_JSON.read_text()), on_base)
+    ends_of, width_of, chain_of, fixed_ids = {}, {}, {}, set()
+    rid = 0
+    for c in comps:
+        code = b.FindNet(c["net"]).GetNetCode()
+        hw = c["tracks"][0][2] / 2
+        vr = (c["vias"][0][3] / 2) if c["vias"] else MAZE_WIDTH[net_class(c["net"])][1] / 2
+        dr = c["vias"][0][4] if c["vias"] else MAZE_WIDTH[net_class(c["net"])][2]
+        segs = [(li, pts) for _, li, _, pts in c["tracks"]]
+        vias = [(x, y) for _, x, y, _, _ in c["vias"]]
+        r.add(rid, code, segs, vias, hw, vr, dr)
+        width_of[rid] = hw * 2
+        if len(c["ends"]) == 2:
+            ends_of[rid] = (c["net"], [c["ends"][0]], [c["ends"][1]])
+        else:                                          # branched piece: never ripped up as a whole
+            fixed_ids.add(rid)
+            chain_of[rid] = (c["net"], c["ends"])
+        rid += 1
+    clash = []
+    viol = json.loads(OPEN_JSON.read_text())["violations"]
+    for k, (code, its, (segs, vias, hw, vr, dr)) in list(r.routes.items()):
+        bad = False                                    # only what KiCad's DRC flags counts as a clash
+        for vnet, vx, vy in viol:
+            if bad or vnet != b.FindNet(code).GetNetname():
+                continue
+            for li, pts in segs:
+                for a, e in zip(pts, pts[1:]):
+                    dx, dy = e[0] - a[0], e[1] - a[1]
+                    ll = dx * dx + dy * dy
+                    t = 0.0 if ll == 0 else max(0.0, min(1.0, ((vx - a[0]) * dx + (vy - a[1]) * dy) / ll))
+                    if math.hypot(vx - a[0] - t * dx, vy - a[1] - t * dy) < hw + 0.02:
+                        bad = True
+            for x, y in vias:
+                if math.hypot(vx - x, vy - y) < vr + 0.02:
+                    bad = True
+        if bad:
+            clash.append(k)
+    print(f"  {len(clash)} stored routes fail DRC and are routed again")
+    print(f"  {len(r.routes) - len(fixed_ids)} stored routes can be moved, {len(fixed_ids)} branched ones kept")
+
+    def hard(net, st, go, w0):
+        code = b.FindNet(net).GetNetCode()
+        _, vd, vdr = MAZE_WIDTH[net_class(net)]
+        for w, margin in [(w0, 8.0), (w0, 60.0)] + ([(0.15, 60.0)] if w0 > 0.15 else []):
+            path, _ = r.route(code, st, go, w / 2, vd / 2, vdr, margin=margin)
+            if path:
+                segs, vias = r.simplify(path, code, w / 2)
+                return code, segs, vias, w / 2, vd / 2, vdr
+        return None
+
+    def soft(net, st, go, w0):
+        code = b.FindNet(net).GetNetCode()
+        _, vd, vdr = MAZE_WIDTH[net_class(net)]
+        _, crossed = r.route(code, st, go, w0 / 2, vd / 2, vdr, margin=60.0, soft=True)
+        return crossed
+
+    state = {"rid": rid, "budget": 1500}
+
+    def snapshot():
+        return dict(r.routes), dict(ends_of), dict(width_of), state["rid"]
+
+    def restore(snap):
+        routes, e, w, nrid = snap
+        r.routes = dict(routes)
+        r._rt.clear()
+        r._rv.clear()
+        ends_of.clear()
+        ends_of.update(e)
+        width_of.clear()
+        width_of.update(w)
+        state["rid"] = nrid
+
+    def place(net, st, go, res):
+        k = state["rid"]
+        r.add(k, *res)
+        ends_of[k] = (net, st, go)
+        width_of[k] = res[3] * 2
+        state["rid"] += 1
+        return k
+
+    def attempt(net, st, go, w0, depth, protected):
+        """Route one connection; may rip up and re-route others. All or nothing."""
+        state["budget"] -= 1
+        if state["budget"] < 0:
+            return False
+        res = hard(net, st, go, w0)
+        if res:
+            protected.add(place(net, st, go, res))
+            return True
+        if depth == 0:
+            return False
+        crossed = soft(net, st, go, w0)
+        crossed = {x for x in crossed if x in r.routes}
+        if not crossed or crossed & protected or len(crossed) > 8:
+            return False
+        snap = snapshot()
+        ripped = []
+        for x in crossed:
+            if x in fixed_ids:                         # branched piece: back as a chain of connections
+                n2, ends2 = chain_of[x]
+                ripped += [(x, n2, [e1], [e2], width_of[x]) for e1, e2 in zip(ends2, ends2[1:])]
+            else:
+                ripped.append((x,) + ends_of[x] + (width_of[x],))
+        for x in crossed:
+            r.remove(x)
+        res = hard(net, st, go, w0)
+        if not res:
+            restore(snap)
+            return False
+        mine = set(protected) | {place(net, st, go, res)}
+        for _, n2, s2, g2, w2 in sorted(ripped, key=lambda t: math.dist(t[2][0][:2], t[3][0][:2])):
+            if not attempt(n2, s2, g2, w2, depth - 1, mine):
+                restore(snap)
+                return False
+        protected |= mine
+        return True
+
+    opens = []
+    for k in clash:
+        if k in fixed_ids:                             # a branched piece goes back as a chain of connections
+            net, ends = chain_of[k]
+            for e1, e2 in zip(ends, ends[1:]):
+                opens.append((net, [e1], [e2], width_of[k]))
+            fixed_ids.discard(k)
+        else:
+            net, st, go = ends_of[k]
+            opens.append((net, st, go, width_of[k]))
+        r.remove(k)
+    for v in json.loads(OPEN_JSON.read_text())["opens"]:
+        if b.FindNet(v["net"]) is not None:
+            opens.append((v["net"], [tuple(p) for p in v["starts"]], [tuple(p) for p in v["goals"]],
+                          MAZE_WIDTH[net_class(v["net"])][0]))
+    failed = []
+    for depth in (1, 2, 3, 4):                      # cheap fixes first, deeper rip-up chains for the rest
+        left = []
+        for net, st, go, w0 in (opens if depth == 1 else failed_conns):
+            if not attempt(net, st, go, w0, depth, set()):
+                left.append((net, st, go, w0))
+        failed_conns = left
+        print(f"  rip-up depth {depth}: {len(left)} still open")
+        if not left:
+            break
+    failed = [c[0] for c in failed_conns]
+    found = {"tracks": [], "vias": []}
+    allr = dict(r.routes)
+    for k in sorted(allr):
+        code, _, (segs, vias, hw, vr, dr) = allr[k][:3]
+        net = b.FindNet(code).GetNetname()
+        for li, pts in segs:
+            found["tracks"].append({"net": net, "layer": LAYER_NAMES[li], "width": round(hw * 2, 3),
+                                    "points": [[round(x - OX, 4), round(y - OY, 4)] for x, y in pts]})
+        for x, y in vias:
+            found["vias"].append({"net": net, "x": round(x - OX, 4), "y": round(y - OY, 4),
+                                  "dia": round(vr * 2, 3), "drill": dr})
+    MAZE_JSON.write_text(json.dumps(found, indent=1) + "\n")
+    OPEN_JSON.unlink()
+    print("  repaired" + (f"; still open: {', '.join(failed)}" if failed else ": nothing left open"))
+
+
 def add_maze(b: pcbnew.BOARD) -> int:
     if not MAZE_JSON.exists():
         return 0
@@ -788,6 +1149,25 @@ def drop_unused_escapes(b: pcbnew.BOARD) -> list:
     return gone
 
 
+def drop_single_layer_vias(b: pcbnew.BOARD) -> int:
+    """A signal via whose tracks are all on one layer (and no pad on another) does nothing: remove it."""
+    n = 0
+    tracks = [t for t in b.GetTracks() if t.GetClass() == "PCB_TRACK"]
+    pads = [p for fp in b.GetFootprints() for p in fp.Pads()]
+    for v in [t for t in b.GetTracks() if t.GetClass() == "PCB_VIA"]:
+        net = v.GetNetname()
+        if net == "GND":
+            continue                                   # GND vias also join the In1 plane
+        c = v.GetPosition()
+        layers = {t.GetLayer() for t in tracks if t.GetNetname() == net and (t.GetStart() == c or t.GetEnd() == c)}
+        layers |= {l for p in pads if p.GetNetname() == net and p.HitTest(c, 0)
+                   for l in (pcbnew.F_Cu, pcbnew.B_Cu) if p.IsOnLayer(l)}
+        if len(layers) <= 1:
+            b.Remove(v)
+            n += 1
+    return n
+
+
 def step_fill() -> None:
     """Zone fill on the board as loaded from file: only then is KiCad's rule engine (hole clearance etc.) set up."""
     b = pcbnew.LoadBoard(str(BOARD))
@@ -835,17 +1215,23 @@ if __name__ == "__main__":
     ap.add_argument("--autoroute", action="store_true", help="run Freerouting and store new sessions")
     ap.add_argument("--phase", help="with --autoroute: run only this phase")
     ap.add_argument("--maze", action="store_true", help="maze-route the connections still open, then rebuild")
+    ap.add_argument("--repair", action="store_true",
+                    help="route what is still open, moving only the stored maze routes in the way, then rebuild")
     ap.add_argument("--step", nargs="+", help=argparse.SUPPRESS)
     a = ap.parse_args()
     if a.step:
         if a.step[0] == "export":
             step_export(a.step[1])
         elif a.step[0] == "finish":
-            step_finish(stitch="nostitch" not in a.step)
+            step_finish(stitch="nostitch" not in a.step, use_maze="nomaze" not in a.step)
         elif a.step[0] == "fill":
             step_fill()
         elif a.step[0] == "maze":
             step_maze()
+        elif a.step[0] == "repair-prep":
+            step_repair_prep()
+        elif a.step[0] == "repair":
+            step_repair()
         sys.stdout.flush()
         os._exit(0)          # skip interpreter teardown: SWIG objects of removed items crash on exit
     if a.autoroute:
@@ -856,6 +1242,35 @@ if __name__ == "__main__":
             print(f"phase {ph['name']}:")
             run_step("export", ph["name"])
             freerouting(ROUTE / f"ko-core-{ph['name']}.dsn", ROUTE / f"ko-core-{ph['name']}.ses", ph["passes"])
+    if a.repair:
+        best_copy = MAZE_JSON.with_suffix(".best")
+
+        def measure():
+            r = subprocess.run([sys.executable, __file__, "--step", "repair-prep"], capture_output=True, text=True)
+            m = re.search(r"(\d+) connections open, (\d+) copper", r.stdout)
+            print("  " + (r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr[-300:]))
+            return int(m.group(1)) + int(m.group(2)) if m else 10 ** 6
+
+        print("repair:")
+        best = measure()
+        shutil.copy(MAZE_JSON, best_copy)
+        for n in range(5):                             # again while it keeps closing connections
+            if best == 0:
+                break
+            run_step("finish", "nostitch", "nomaze")
+            run_step("repair")
+            run_step("finish", "nostitch")
+            run_step("fill")
+            count = measure()
+            if count < best:
+                best = count
+                shutil.copy(MAZE_JSON, best_copy)
+            else:                                      # no better: keep the best routes and stop
+                shutil.copy(best_copy, MAZE_JSON)
+                print("  no improvement, best result kept")
+                break
+        best_copy.unlink(missing_ok=True)
+        OPEN_JSON.unlink(missing_ok=True)
     if a.maze:
         print("maze (on the board without stitching vias):")
         run_step("finish", "nostitch")
