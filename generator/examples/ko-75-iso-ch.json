@@ -1,18 +1,26 @@
 {
   "format": "ko-layout",
-  "version": 1,
+  "version": 2,
   "name": "KO 75 ISO-CH",
   "layout": {
     "size": "75",
+    "style": "staggered",
     "standard": "ISO",
     "language": "CH"
   },
   "connectivity": "wireless",
   "switch": {
-    "family": "choc",
-    "feel": "linear"
+    "sockets": "mx-choc",
+    "fitted": [
+      "choc_v1"
+    ],
+    "feel": "linear",
+    "case": "slim"
   },
-  "rgb": true,
+  "lighting": {
+    "per_key": true,
+    "underglow": false
+  },
   "unit_mm": 19.05,
   "matrix": "auto",
   "blocks": [],

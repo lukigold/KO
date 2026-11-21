@@ -178,16 +178,18 @@ code { font-family: var(--font-mono); font-size: 12px; background: var(--bg); pa
 
   <section class="settings" aria-label="Keyboard settings">
     <div class="group"><span class="label" id="lbl-size">Size</span><div class="seg" role="group" aria-labelledby="lbl-size" id="seg-size"></div></div>
+    <div class="group"><span class="label" id="lbl-style">Layout</span><div class="seg" role="group" aria-labelledby="lbl-style" id="seg-style"></div></div>
     <div class="group"><span class="label" id="lbl-std">Standard and legends</span><div class="seg" role="group" aria-labelledby="lbl-std" id="seg-std"></div></div>
     <div class="group"><span class="label" id="lbl-conn">Connection</span><div class="seg" role="group" aria-labelledby="lbl-conn" id="seg-conn"></div></div>
-    <div class="group"><span class="label" id="lbl-fam">Switches</span><div class="seg" role="group" aria-labelledby="lbl-fam" id="seg-family"></div></div>
+    <div class="group"><span class="label" id="lbl-sw">Switches · hot-swap, mix per key</span><div class="seg" role="group" aria-labelledby="lbl-sw" id="seg-switches"></div></div>
     <div class="group"><span class="label" id="lbl-feel">Feel</span><div class="seg" role="group" aria-labelledby="lbl-feel" id="seg-feel"></div></div>
     <div class="group"><span class="label" id="lbl-rgb">Per-key light</span><div class="seg" role="group" aria-labelledby="lbl-rgb" id="seg-rgb"></div></div>
+    <div class="group"><span class="label" id="lbl-glow">Underglow</span><div class="seg" role="group" aria-labelledby="lbl-glow" id="seg-glow"></div></div>
   </section>
 
   <section class="stage" id="stage" aria-label="Keyboard layout">
     <div class="stage-scroll" id="stage-scroll"></div>
-    <p class="stage-hint">Click ⊕ to add a row of keys, then click a key to give it a function.</p>
+    <p class="stage-hint">⊕ adds keys · click a key to set its function</p>
     <div class="pop" id="pop" hidden role="dialog" aria-modal="false" aria-labelledby="pop-title"></div>
   </section>
 
@@ -196,10 +198,7 @@ code { font-family: var(--font-mono); font-size: 12px; background: var(--bg); pa
 
   <section class="lower">
     <div class="card">
-      <div class="card-head">
-        <h2>Hand it to the generator</h2>
-        <p>The KO layout file holds every key position in units of 19.05 mm, its legend and keycode, the switch family, the connection and your extra keys. The generator turns it into the switch-board PCB, its EEPROM descriptor and the default keymap.</p>
-      </div>
+      <div class="card-head"><h2>Layout file</h2></div>
       <div class="actions">
         <button class="btn primary" id="btn-save" type="button" hidden>Save build</button>
         <button class="btn" id="btn-download" type="button" hidden>Download .json</button>
@@ -223,16 +222,12 @@ code { font-family: var(--font-mono); font-size: 12px; background: var(--bg); pa
     </div>
 
     <div class="card" id="saved-card">
-      <div class="card-head">
-        <h2>Saved builds</h2>
-        <p>Builds saved here stay with this page. Tell Claude which one to generate.</p>
-      </div>
+      <div class="card-head"><h2>Saved builds</h2></div>
       <ul class="saved" id="saved-list"></ul>
       <p class="status" id="saved-status"></p>
     </div>
   </section>
 
-  <footer>Key pitch 19.05 mm. Keycodes are positional (QMK/Vial names), so the language only changes keycaps and the OS setting. Format: <code>ko-layout</code> v1, see docs/contracts/generator.md in the KO repository.</footer>
 </div>
 <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
@@ -284,9 +279,14 @@ const SIZES = [
   { id: "40", label: "40 %" }, { id: "60", label: "60 %" }, { id: "65", label: "65 %" }, { id: "75", label: "75 %" },
   { id: "tkl", label: "TKL" }, { id: "96", label: "96 %" }, { id: "100", label: "100 %" },
 ];
-const FAMILIES = [
-  { id: "choc", label: "Choc low profile" }, { id: "mx", label: "MX" }, { id: "hall", label: "Hall effect", later: true },
+const SWITCHES = [
+  { id: "mx", label: "MX", title: "Cherry MX and MX-style switches (Gateron, Kailh Box, Akko …)" },
+  { id: "choc_v1", label: "Choc v1", title: "Kailh Choc v1 low profile" },
+  { id: "choc_v2", label: "Choc v2", title: "Kailh Choc v2 low profile (MX keycap stem)" },
+  { id: "gateron_lp", label: "Gateron LP", later: true, title: "Needs its own switch board (different pins)" },
+  { id: "hall", label: "Hall effect", later: true, title: "Needs its own switch board (magnetic sensors)" },
 ];
+const STYLES = [{ id: "staggered", label: "Staggered" }, { id: "grid", label: "Grid" }];
 const FEELS = [{ id: "linear", label: "Linear" }, { id: "tactile", label: "Tactile" }, { id: "clicky", label: "Clicky" }, { id: "silent", label: "Silent" }];
 const CONNS = [{ id: "wireless", label: "Wireless" }, { id: "wired", label: "Wired" }];
 
@@ -340,7 +340,7 @@ function alphaBlock(std, rshift) {
 }
 
 // Returns {rows: [[item…]…], fGap}. item: [id, w, h] | ["_", gap] | ["@", absolute x]
-function layoutRows(size, std) {
+function staggeredRows(size, std) {
   if (size === "40") return { rows: [
     [["tab", 1.25], ...seq(["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]), ["bspc", 1.75]],
     [["esc", 1.5], ...seq(["a", "s", "d", "f", "g", "h", "j", "k", "l", "scln"]), ["ent", 1.5]],
@@ -378,8 +378,48 @@ function layoutRows(size, std) {
   throw new Error("unknown size " + size);
 }
 
-function buildMain(size, std) {
-  const { rows, hasF, fGap } = layoutRows(size, std);
+// Grid (ortholinear): every key on whole-unit columns. The alpha block is 14 columns; the ISO enter becomes a 1 × 2 key.
+function gridRows(size, std) {
+  const iso = std === "ISO";
+  const R1 = [...seq(NUM), ["bspc", 1]];
+  const R2 = iso ? [["tab", 1], ...seq(QROW), ["ent", 1, 2]] : [["tab", 1], ...seq(QROW), ["bsls", 1]];
+  const R3 = iso ? [["caps", 1], ...seq(AROW), ["nuhs", 1], ["_", 1]] : [["caps", 1], ...seq(AROW), ["ent", 2]];
+  const R4 = iso ? [["lsft", 1], ["nubs", 1], ...seq(ZROW), ["rsft", 2]] : [["lsft", 2], ...seq(ZROW), ["rsft", 2]];
+  const R4u = iso ? [["lsft", 1], ["nubs", 1], ...seq(ZROW), ["rsft", 1], ["up", 1]] : [["lsft", 2], ...seq(ZROW), ["rsft", 1], ["up", 1]];
+  const GB60 = [["lctl", 1], ["lgui", 1], ["lalt", 1], ["spc", 6], ["ralt", 1], ["rgui", 1], ["fn", 1], ["app", 1], ["rctl", 1]];
+  const GB65 = [["lctl", 1], ["lgui", 1], ["lalt", 1], ["spc", 6], ["ralt", 1], ["fn", 1], ["rctl", 1], ...ARROWS];
+  if (size === "40") return { rows: [
+    [["tab", 1], ...seq(["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]), ["bspc", 1]],
+    [["esc", 1], ...seq(["a", "s", "d", "f", "g", "h", "j", "k", "l", "scln"]), ["ent", 1]],
+    iso ? [["lsft", 1], ["nubs", 1], ...seq(ZROW.slice(0, 9)), ["rsft", 1]] : [["lsft", 1], ...seq(ZROW), ["rsft", 1]],
+    [["lctl", 1], ["lgui", 1], ["lalt", 1], ["spc", 6], ["ralt", 1], ["fn", 1], ["rctl", 1]],
+  ], hasF: false };
+  if (size === "60") return { rows: [R1, R2, R3, R4, GB60], hasF: false };
+  if (size === "65") return { rows: [[...R1, ["del", 1]], [...R2, ["pgup", 1]], [...R3, ["pgdn", 1]], [...R4u, ["end", 1]], GB65], hasF: false };
+  if (size === "75") return { rows: [[["esc", 1], ...seq(FROW), ["prt", 1], ["del", 1]],
+    [...R1, ["home", 1]], [...R2, ["pgup", 1]], [...R3, ["pgdn", 1]], [...R4u, ["end", 1]], GB65], hasF: true, fGap: 0.25 };
+  if (size === "tkl" || size === "100") {
+    const rows = [[["esc", 1], ["_", 1], ...seq(FROW), ["@", 14.25], ["prt", 1], ["scr", 1], ["pause", 1]],
+      [...R1, ["@", 14.25], ["ins", 1], ["home", 1], ["pgup", 1]], [...R2, ["@", 14.25], ["del", 1], ["end", 1], ["pgdn", 1]],
+      [...R3], [...R4, ["@", 15.25], ["up", 1]], [...GB60, ["@", 14.25], ...ARROWS]];
+    if (size === "100") {
+      rows[1].push(["@", 17.5], ["nlck", 1], ["pslash", 1], ["past", 1], ["pmns", 1]);
+      rows[2].push(["@", 17.5], ["p7", 1], ["p8", 1], ["p9", 1], ["pplus", 1, 2]);
+      rows[3].push(["@", 17.5], ["p4", 1], ["p5", 1], ["p6", 1]);
+      rows[4].push(["@", 17.5], ["p1", 1], ["p2", 1], ["p3", 1], ["pent", 1, 2]);
+      rows[5].push(["@", 17.5], ["p0", 2], ["pdot", 1]);
+    }
+    return { rows, hasF: true, fGap: 0.5 };
+  }
+  if (size === "96") return { rows: [[["esc", 1], ...seq(FROW), ["del", 1], ["home", 1], ["end", 1], ["pgup", 1], ["pgdn", 1]],
+    [...R1, ["nlck", 1], ["pslash", 1], ["past", 1], ["pmns", 1]], [...R2, ["p7", 1], ["p8", 1], ["p9", 1], ["pplus", 1, 2]],
+    [...R3, ["p4", 1], ["p5", 1], ["p6", 1]], [...R4u, ["p1", 1], ["p2", 1], ["p3", 1], ["pent", 1, 2]],
+    [...GB65, ["p0", 1], ["pdot", 1]]], hasF: true, fGap: 0.25 };
+  throw new Error("unknown size " + size);
+}
+
+function buildMain(size, std, style) {
+  const { rows, hasF, fGap } = style === "grid" ? gridRows(size, std) : staggeredRows(size, std);
   const keys = [];
   let y = 0;
   rows.forEach((row, ri) => {
@@ -401,26 +441,26 @@ function buildMain(size, std) {
 /* ------------------------------------------------------------------ state */
 const LIMITS = { top: 2, left: 2, right: 2 };
 const DEFAULT_STATE = {
-  name: "KO 75 ISO-CH", nameAuto: true,
-  size: "75", standard: "iso-ch", connectivity: "wireless", family: "choc", feel: "linear", rgb: true,
-  extra: { top: [{ keys: ["stealth", "discord_mute", "discord_deafen", "screenshot", "prev_track", "play_pause", "next_track", "mute"].map(fn => ({ fn })) }],
-    left: [], right: [] },
+  name: "KO 65 ISO-CH", nameAuto: true,
+  size: "65", style: "staggered", standard: "iso-ch", connectivity: "wireless",
+  fitted: ["choc_v1"], feel: "linear", rgb: true, underglow: false,
+  extra: { top: [], left: [], right: [] },
 };
 let state = load() || structuredClone(DEFAULT_STATE);
 let format = "ko";
 let selected = null;     // {side, bi, ki}
 
 function load() {
-  try { const s = JSON.parse(localStorage.getItem("ko-layout-draft") || "null"); return s && s.extra && s.size ? s : null; } catch (e) { return null; }
+  try { const s = JSON.parse(localStorage.getItem("ko-layout-draft-v2") || "null"); return s && s.extra && s.size && s.style && Array.isArray(s.fitted) && s.fitted.length ? s : null; } catch (e) { return null; }
 }
-function persist() { try { localStorage.setItem("ko-layout-draft", JSON.stringify(state)); } catch (e) {} }
+function persist() { try { localStorage.setItem("ko-layout-draft-v2", JSON.stringify(state)); } catch (e) {} }
 const stdInfo = () => STANDARDS.find(s => s.id === state.standard) || STANDARDS[0];
 
 /* ------------------------------------------------------------------ geometry */
 function round(v) { return Math.round(v * 10000) / 10000; }
 function geometry() {
   const si = stdInfo();
-  const main = buildMain(state.size, si.std);
+  const main = buildMain(state.size, si.std, state.style);
   const maxX = Math.max(...main.map(k => k.x + k.w));
   const maxY = Math.max(...main.map(k => k.y + k.h));
   const rowsY = [...new Set(main.map(k => k.y))].sort((a, b) => a - b);
@@ -507,6 +547,12 @@ function render() {
   const defs = el("defs", {}, svg);
   const f = el("filter", { id: "cap-shadow", x: "-10%", y: "-10%", width: "120%", height: "130%" }, defs);
   el("feDropShadow", { dx: 0, dy: 3, stdDeviation: 2.5, "flood-color": "#000", "flood-opacity": 0.38 }, f);
+  if (state.underglow) {          // soft light around the board where the underside LEDs shine on the desk
+    const gf = el("filter", { id: "underglow", x: "-50%", y: "-50%", width: "200%", height: "200%" }, defs);
+    el("feGaussianBlur", { stdDeviation: 34 }, gf);
+    el("rect", { x: minX * S - 14, y: minY * S - 14, width: (maxX - minX) * S + 28, height: (maxY - minY) * S + 28, rx: 40,
+      fill: "#cfd8ff", opacity: 0.2, filter: "url(#underglow)" }, svg);
+  }
   const caps = el("g", { filter: "url(#cap-shadow)" }, svg);
   const legends = el("g", {}, svg);
 
@@ -676,21 +722,23 @@ function exportKO() {
   const blocks = [];
   for (const side of ["top", "left", "right"]) state.extra[side].forEach((b, i) => blocks.push({ id: `${side}-${i + 1}`, side, count: b.keys.length }));
   return {
-    format: "ko-layout", version: 1, name: state.name.trim() || "KO build",
-    layout: { size: state.size, standard: si.std, language: si.lang },
+    format: "ko-layout", version: 2, name: state.name.trim() || "KO build",
+    layout: { size: state.size, style: state.style, standard: si.std, language: si.lang },
     connectivity: state.connectivity,
-    switch: { family: state.family, feel: state.feel },
-    rgb: state.rgb,
+    switch: { sockets: "mx-choc", fitted: fittedList(), feel: state.feel, case: caseFor(fittedList()) },
+    lighting: { per_key: state.rgb, underglow: state.underglow },
     unit_mm: 19.05,
     matrix: "auto",
     blocks, keys,
   };
 }
+function fittedList() { return SWITCHES.filter(w => !w.later && state.fitted.includes(w.id)).map(w => w.id); }
+function caseFor(fitted) { return fitted.includes("mx") ? "tall" : "slim"; }   // MX does not fit the slim case
 function exportKLE() {
   const ko = exportKO();
   const rows = new Map();
   for (const k of ko.keys) { const key = k.y.toFixed(4); if (!rows.has(key)) rows.set(key, []); rows.get(key).push(k); }
-  const out = [{ name: ko.name, notes: "Exported from the KO layout builder (ko-layout v1)" }];
+  const out = [{ name: ko.name, notes: "Exported from the KO layout builder (ko-layout v2)" }];
   let prevY = -1, first = true;
   for (const ky of [...rows.keys()].sort((a, b) => a - b)) {
     const y = +ky, row = [], keys = rows.get(ky).sort((a, b) => a.x - b.x);
@@ -726,14 +774,20 @@ function importKO(text) {
   let o;
   try { o = JSON.parse(text); } catch (e) { throw new Error("This is not valid JSON."); }
   if (!o || o.format !== "ko-layout") throw new Error("Not a KO layout file (\"format\" must be \"ko-layout\").");
-  if (o.version !== 1) throw new Error(`Layout file version ${o.version} is not supported here; this page reads version 1.`);
+  if (o.version !== 1 && o.version !== 2) throw new Error(`Layout file version ${o.version} is not supported here; this page reads versions 1 and 2.`);
   const std = STANDARDS.find(s => s.std === o.layout?.standard && s.lang === o.layout?.language);
   if (!SIZES.some(s => s.id === o.layout?.size) || !std) throw new Error("Unknown size or standard in the file.");
+  const usable = SWITCHES.filter(w => !w.later).map(w => w.id);
+  let fitted = o.version === 1 ? (o.switch?.family === "mx" ? ["mx"] : ["choc_v1"])
+    : (Array.isArray(o.switch?.fitted) ? o.switch.fitted.filter(f => usable.includes(f)) : []);
+  if (!fitted.length) fitted = ["choc_v1"];
   const next = { name: o.name || "KO build", nameAuto: false, size: o.layout.size, standard: std.id,
+    style: o.version === 2 && STYLES.some(t => t.id === o.layout.style) ? o.layout.style : "staggered",
     connectivity: CONNS.some(c => c.id === o.connectivity) ? o.connectivity : "wireless",
-    family: FAMILIES.some(f => f.id === o.switch?.family && !f.later) ? o.switch.family : "choc",
-    feel: FEELS.some(f => f.id === o.switch?.feel) ? o.switch.feel : "linear",
-    rgb: o.rgb !== false, extra: { top: [], left: [], right: [] } };
+    fitted, feel: FEELS.some(f => f.id === o.switch?.feel) ? o.switch.feel : "linear",
+    rgb: o.version === 1 ? o.rgb !== false : o.lighting?.per_key !== false,
+    underglow: o.version === 2 && o.lighting?.underglow === true,
+    extra: { top: [], left: [], right: [] } };
   for (const b of o.blocks || []) {
     if (!LIMITS[b.side] || next.extra[b.side].length >= LIMITS[b.side]) continue;
     const ks = (o.keys || []).filter(k => k.block === b.id).sort((p, q) => b.side === "top" ? p.x - q.x : p.y - q.y);
@@ -759,31 +813,23 @@ function renderInfo(g) {
   const perRow = {};
   for (const k of all) perRow[k.y] = (perRow[k.y] || 0) + 1;
   const cols = Math.max(...Object.values(perRow));
-  const assigned = g.extras.filter(k => k.fn).length;
   const stats = [
     [String(all.length), "switches"],
     [`${Math.round(w * 19.05)} × ${Math.round(d * 19.05)} mm`, "key area"],
     [String(stabs), "stabilizers"],
-    [`${rows} × ${cols}`, "matrix rows × columns (auto)"],
-    [`${assigned} / ${g.extras.length}`, "extra keys assigned"],
+    [`${rows} × ${cols}`, "matrix"],
+    [caseFor(fittedList()) === "tall" ? "Tall" : "Slim", "case"],
   ];
   const box = document.getElementById("stats");
   box.replaceChildren(...stats.map(([v, l]) => { const s = document.createElement("div"); s.className = "stat";
     const b = document.createElement("b"); b.textContent = v; const sp = document.createElement("span"); sp.textContent = l; s.append(b, sp); return s; }));
 
   const notes = [];
-  const si = stdInfo();
-  notes.push([state.connectivity === "wireless" ? "Wireless: USB-C and Bluetooth, with the LiPo battery under the keys." : "Wired: USB-C only, no battery fitted.", ""]);
-  notes.push([state.family === "choc" ? "Choc low profile: slim case, about 20 mm tall with keycaps. The switch board takes Choc and MX hot-swap sockets at every key."
-    : "MX: tall case. The same switch board takes MX and Choc hot-swap sockets at every key.", ""]);
-  if (si.std === "ISO") notes.push([`ISO · ${si.lang} only changes the legends here; the keyboard sends positional keycodes and your OS layout decides the characters.`, ""]);
-  if (state.size === "40") notes.push(["40 % has no number or F-key row: digits, F-keys and some symbols go on the Fn layer. ISO adds the < key; the ISO enter does not fit.", "warn"]);
-  if (state.size === "40" || state.size === "60") notes.push(["The generator checks that the core board (50 × 32 mm) and the battery fit under this size before it builds anything.", "warn"]);
-  if (rows > 8) notes.push(["More than 8 physical rows: the generator folds them into 8 matrix rows.", "warn"]);
-  const unassigned = g.extras.length - assigned;
-  if (unassigned) notes.push([`${unassigned} extra key${unassigned > 1 ? "s are" : " is"} not assigned yet; they ship as blank keys you can map later in the KO app.`, ""]);
+  if (state.size === "40") notes.push("40 %: digits and F-keys go on the Fn layer.");
+  if (state.size === "40" || state.size === "60") notes.push("The generator checks that the core board and battery fit under this size.");
+  if (rows > 8) notes.push("More than 8 rows: the generator folds them into 8 matrix rows.");
   const ul = document.getElementById("notes");
-  ul.replaceChildren(...notes.map(([t, c]) => { const li = document.createElement("li"); li.textContent = t; if (c) li.className = c; return li; }));
+  ul.replaceChildren(...notes.map(t => { const li = document.createElement("li"); li.textContent = t; li.className = "warn"; return li; }));
   document.getElementById("json-out").value = fileText();
 }
 
@@ -803,7 +849,24 @@ function seg(id, options, get, set) {
 seg("seg-size", SIZES, () => state.size, v => { state.size = v; });
 seg("seg-std", STANDARDS, () => state.standard, v => { state.standard = v; });
 seg("seg-conn", CONNS, () => state.connectivity, v => { state.connectivity = v; });
-seg("seg-family", FAMILIES, () => state.family, v => { state.family = v; });
+seg("seg-style", STYLES, () => state.style, v => { state.style = v; });
+seg("seg-glow", [{ id: "on", label: "On" }, { id: "off", label: "Off" }], () => state.underglow ? "on" : "off", v => { state.underglow = v === "on"; });
+// Switches: several at once. The universal board takes MX, Choc v1 and Choc v2 sockets at every key.
+(function () {
+  const box = document.getElementById("seg-switches");
+  for (const o of SWITCHES) {
+    const b = document.createElement("button"); b.type = "button"; b.dataset.value = o.id; b.title = o.title; b.append(o.label);
+    if (o.later) { const sm = document.createElement("small"); sm.textContent = "later"; b.append(sm); b.disabled = true; }
+    b.addEventListener("click", () => {
+      const on = state.fitted.includes(o.id);
+      if (on && state.fitted.length === 1) { toast("Keep at least one switch type."); return; }
+      state.fitted = on ? state.fitted.filter(f => f !== o.id) : [...state.fitted, o.id];
+      syncControls(); render();
+    });
+    box.appendChild(b);
+  }
+  box._sync = () => { for (const b of box.children) b.setAttribute("aria-pressed", String(state.fitted.includes(b.dataset.value))); };
+})();
 seg("seg-feel", FEELS, () => state.feel, v => { state.feel = v; });
 seg("seg-rgb", [{ id: "on", label: "On" }, { id: "off", label: "Off" }], () => state.rgb ? "on" : "off", v => { state.rgb = v === "on"; });
 seg("seg-format", [{ id: "ko", label: "KO layout" }, { id: "kle", label: "KLE" }], () => format, v => { format = v; });
@@ -811,10 +874,10 @@ seg("seg-format", [{ id: "ko", label: "KO layout" }, { id: "kle", label: "KLE" }
 function autoName() {
   if (state.nameAuto === false) return;
   const si = stdInfo();
-  state.name = `KO ${state.size === "tkl" ? "TKL" : state.size} ${si.std}-${si.lang}${state.connectivity === "wired" ? " wired" : ""}`;
+  state.name = `KO ${state.size === "tkl" ? "TKL" : state.size} ${si.std}-${si.lang}${state.style === "grid" ? " grid" : ""}${state.connectivity === "wired" ? " wired" : ""}`;
 }
 function syncControls() {
-  for (const id of ["seg-size", "seg-std", "seg-conn", "seg-family", "seg-feel", "seg-rgb", "seg-format"]) document.getElementById(id)._sync();
+  for (const id of ["seg-size", "seg-style", "seg-std", "seg-conn", "seg-switches", "seg-feel", "seg-rgb", "seg-glow", "seg-format"]) document.getElementById(id)._sync();
   document.getElementById("build-name").value = state.name;
 }
 const nameIn = document.getElementById("build-name");
@@ -863,14 +926,14 @@ document.getElementById("file-in").addEventListener("change", e => {
 const savedList = document.getElementById("saved-list"), savedStatus = document.getElementById("saved-status");
 function summaryText(cfg) {
   const sz = SIZES.find(s => s.id === cfg.layout.size)?.label || cfg.layout.size;
-  const fam = FAMILIES.find(f => f.id === cfg.switch.family)?.label || cfg.switch.family;
-  return `${sz} · ${cfg.layout.standard} ${cfg.layout.language} · ${cfg.connectivity} · ${fam} ${cfg.switch.feel} · ${cfg.keys.length} keys`;
+  const sw = (cfg.switch.fitted || [cfg.switch.family]).map(f => SWITCHES.find(w => w.id === f)?.label || f).join(" + ");
+  return `${sz}${cfg.layout.style === "grid" ? " grid" : ""} · ${cfg.layout.standard} ${cfg.layout.language} · ${cfg.connectivity} · ${sw} · ${cfg.keys.length} keys`;
 }
 function renderSaved(docs) {
   savedList.replaceChildren();
   if (!docs.length) {
     const li = document.createElement("li"); li.className = "empty"; li.style.display = "block";
-    li.textContent = "No saved builds yet. Press Save build to keep this one here for the generator.";
+    li.textContent = "No saved builds yet.";
     savedList.appendChild(li); return;
   }
   for (const d of docs) {
