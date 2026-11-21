@@ -1,6 +1,6 @@
 # Contract: Generator
 
-**ID prefix:** `GEN` · **Status:** draft v0.1 · **First phase:** P1 (switch board), P7 (full package) · **License:** GPL-3.0-or-later
+**ID prefix:** `GEN` · **Status:** draft v0.2 · **First phase:** P1 (switch board), P7 (full package) · **License:** GPL-3.0-or-later
 
 ## Purpose
 
@@ -12,12 +12,34 @@ A local program comes first; a website using the same engine comes later.
 
 | Input | Values |
 |---|---|
-| Layout | KLE JSON or KO YAML |
+| Layout | **KO layout file v1** (below), written by the layout builder; or KLE JSON (key positions only, the other inputs then come from options) |
 | Size | 40 % up to full size with numpad |
 | Standard | ANSI or ISO (languages differ only in keycaps and OS settings) |
-| Switch family for plate/case | Choc (slim case) or MX (tall case) |
+| Switch family for plate/case | Choc (slim case) or MX (tall case); the feel (linear, tactile, clicky, silent) only goes into the switch order |
+| Connection | Wireless (USB-C and Bluetooth, battery fitted) or wired (USB-C only, no battery fitted); same core board either way |
 | Options | RGB on/off |
+| Extra keys | Up to two extra rows above and two extra columns on each side, each key with a default function (media, Discord, desktop, macros) |
 | Style | Parameters from the owner's final design ([mechanical.md](mechanical.md)) |
+
+## KO layout file (v1)
+
+The interface between the layout builder (`generator/configurator/index.html`) and the generator.
+Schema: `generator/schema/ko-layout-1.schema.json`. Example: `generator/examples/ko-75-iso-ch.json` (the owner's build).
+JSON is also valid YAML, so this file is the "KO YAML" input as well.
+
+**Guarantees (builder → generator)**
+- `format` is `"ko-layout"` and `version` is `1`; any change to the meaning of a field raises `version`.
+- Every key is listed once in `keys` with a unique `id`, its rectangle `x, y, w, h` in units of `unit_mm` = 19.05 mm,
+  origin at the top-left of the whole key area, y towards the user. No two keys overlap.
+- A switch sits at the centre of its key. `shape: "iso-enter"` marks the ISO enter: bounding box 1.5 × 2 u, top part
+  1.5 u wide, lower part 1.25 u wide and right-aligned; its switch sits at (x + 0.875, y + 1).
+- `code` is the default keycode (QMK/Vial name, positional); `label` is only the printed legend.
+- Extra keys carry `block` and `action` (a function id, `"custom"`, or null for a blank key); `blocks` lists their rows and columns.
+- `matrix` is `"auto"`: the generator assigns the matrix (≤ 8 rows, SWB-007).
+
+**Preconditions (generator)**
+- Refuses a file whose `format` or `version` it does not know, and a layout the core board or battery does not fit under (GEN-005).
+- Derives stabilizers itself: keys 2 u or wider, and tall keys except the ISO enter.
 
 ## Output: one folder per keyboard
 
@@ -54,3 +76,5 @@ The core board is not generated. It is a released design, referenced by version.
 | GEN-008 | Run locally with Python 3.12+, KiCad 9+ and build123d on macOS and Linux. | P1 | T |
 | GEN-009 | Define side-module heights for keyboards with fewer than 6 rows (OPEN-17). | P7 | A |
 | GEN-010 | Website front end using the same engine. | Later | D |
+| GEN-011 | A layout builder page shall write KO layout files v1 for every supported size and standard, with connection, switch family, lighting and extra keys, and read them back unchanged. | P1 | T |
+| GEN-012 | The generator shall read KO layout files v1 and reject any other `format` or `version`. | P1 | T |
