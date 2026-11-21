@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ko-layout-3.schema.json",
+  "title": "KO layout file, version 3",
+  "description": "Input to the KO generator (docs/contracts/generator.md). Written by the layout builder (generator/configurator/index.html). JSON is also valid YAML, so a KO YAML file with the same fields is equivalent. Version 3 replaces the switch fields: mounting (hot-swap or soldered) and any set of switch types that generator/switches/compat.py allows on one footprint; the page still reads versions 1 and 2.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "name",
+    "layout",
+    "connectivity",
+    "switch",
+    "lighting",
+    "unit_mm",
+    "matrix",
+    "blocks",
+    "keys"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "ko-layout"
+    },
+    "version": {
+      "const": 3
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "layout": {
+      "type": "object",
+      "required": [
+        "size",
+        "style",
+        "standard",
+        "language"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "size": {
+          "enum": [
+            "40",
+            "60",
+            "65",
+            "75",
+            "tkl",
+            "96",
+            "100"
+          ]
+        },
+        "style": {
+          "description": "staggered: usual row stagger. grid: every key on whole-unit columns (ortholinear); the ISO enter is a 1 x 2 key.",
+          "enum": [
+            "staggered",
+            "grid"
+          ]
+        },
+        "standard": {
+          "enum": [
+            "ANSI",
+            "ISO"
+          ]
+        },
+        "language": {
+          "description": "Legends only; keycodes are positional.",
+          "enum": [
+            "US",
+            "UK",
+            "DE",
+            "CH",
+            "FR"
+          ]
+        }
+      }
+    },
+    "connectivity": {
+      "description": "wireless: USB-C and Bluetooth with battery. wired: USB-C only, no battery fitted.",
+      "enum": [
+        "wireless",
+        "wired"
+      ]
+    },
+    "switch": {
+      "type": "object",
+      "required": [
+        "mount",
+        "types",
+        "turned",
+        "feel",
+        "case"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mount": {
+          "description": "hotswap: a hot-swap socket for every selected type at every key. solder: one footprint with the holes of every selected type.",
+          "enum": [
+            "hotswap",
+            "solder"
+          ]
+        },
+        "types": {
+          "description": "Switch types the board takes, in priority order (the first keeps the per-key LED). The set must be one that generator/switches/compat.py lists as working for this mounting and lighting.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "choc_v1",
+              "choc_v2",
+              "mx",
+              "gateron_lp",
+              "mx_lp",
+              "kh",
+              "alps",
+              "choc_mini",
+              "kailh_x"
+            ]
+          }
+        },
+        "turned": {
+          "description": "Types whose holes or socket are turned 180° to make room; they get no per-key LED.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "choc_v1",
+              "choc_v2",
+              "mx",
+              "gateron_lp",
+              "mx_lp",
+              "kh",
+              "alps",
+              "choc_mini",
+              "kailh_x"
+            ]
+          }
+        },
+        "feel": {
+          "description": "For the switch order only; does not change the PCB.",
+          "enum": [
+            "linear",
+            "tactile",
+            "clicky",
+            "silent"
+          ]
+        },
+        "case": {
+          "description": "tall if any selected type is tall (MX, Kailh KH, Alps), else slim.",
+          "enum": [
+            "slim",
+            "tall"
+          ]
+        }
+      }
+    },
+    "lighting": {
+      "type": "object",
+      "required": [
+        "per_key",
+        "underglow"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "per_key": {
+          "type": "boolean",
+          "description": "Per-key RGB LEDs and LED driver fitted."
+        },
+        "underglow": {
+          "type": "boolean",
+          "description": "RGB LEDs on the underside of the switch board, lighting the desk around the keyboard."
+        }
+      }
+    },
+    "unit_mm": {
+      "const": 19.05
+    },
+    "matrix": {
+      "const": "auto",
+      "description": "The generator assigns rows (at most 8) and shift-register columns."
+    },
+    "blocks": {
+      "description": "Extra key rows (top) and columns (left, right) added in the builder. Index 1 is next to the main block.",
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "side",
+          "count"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(top|left|right)-[12]$"
+          },
+          "side": {
+            "enum": [
+              "top",
+              "left",
+              "right"
+            ]
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 22
+          }
+        }
+      }
+    },
+    "keys": {
+      "description": "Every key. Positions and sizes in units of unit_mm; origin at the top-left of the whole key area, y grows towards the user. A key's switch sits at the centre of its rectangle; for shape iso-enter (bounding box 1.5 x 2 u, top part 1.5 u wide, lower part 1.25 u wide and right-aligned) the switch sits at (x + 0.875, y + 1). Keys 2 u or wider, and tall keys other than the ISO enter, get stabilizers.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "x",
+          "y",
+          "w",
+          "h",
+          "label",
+          "code"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$|^(top|left|right)-[12]-[0-9]{2}$"
+          },
+          "x": {
+            "type": "number",
+            "minimum": 0
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0
+          },
+          "w": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 7
+          },
+          "h": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "shape": {
+            "const": "iso-enter"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 12
+          },
+          "code": {
+            "description": "Default keycode, QMK/Vial name; null for an unassigned or custom extra key.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "block": {
+            "type": "string",
+            "pattern": "^(top|left|right)-[12]$"
+          },
+          "action": {
+            "description": "Extra keys only: the function chosen in the builder, or custom (label set by the user, macro recorded later), or null (blank key).",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

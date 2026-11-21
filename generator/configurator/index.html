@@ -121,6 +121,39 @@ svg .ctl.small path { stroke-width: 3; }
 .pop-foot { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
 .pop-foot .muted { font-size: 12px; }
 
+/* switch chips: fit state */
+.seg button .mark { margin-left: 5px; font-size: 11px; color: var(--faint); }
+.seg button.no { color: var(--faint); }
+.seg button.no .mark { color: #c97a6f; }
+.seg button.turn .mark { color: var(--warn); }
+.seg button.own { color: var(--faint); cursor: not-allowed; }
+
+/* switch fit overview */
+.fit { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.fit-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.fit-status { font-size: 13px; color: var(--muted); }
+.fit-body { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 720px) { .fit-body { grid-template-columns: minmax(0, 1fr); } }
+.fit-fp { margin: 0; display: grid; gap: 8px; justify-items: center; }
+.fit-fp svg { width: 100%; max-width: 240px; height: auto; display: block; }
+.fit-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); justify-content: center; }
+.fit-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.fit-matrix { overflow-x: auto; min-width: 0; }
+.fit-matrix table { border-collapse: separate; border-spacing: 3px; min-width: 0; width: auto; font-size: 12px; }
+.fit-matrix th, .fit-matrix td { border: 0; padding: 0; text-align: center; background: transparent; position: static; letter-spacing: 0; text-transform: none; }
+.fit-matrix th { color: var(--muted); font-weight: 500; font-size: 11.5px; padding: 0 4px; white-space: nowrap; }
+.fit-matrix th.row { text-align: right; padding-right: 8px; }
+.fit-matrix td { width: 34px; height: 28px; border-radius: 6px; background: var(--bg); font-size: 14px; }
+.fit-matrix td.yes { color: #9fd3b0; }
+.fit-matrix td.turn { color: var(--warn); }
+.fit-matrix td.no { color: #6d5452; }
+.fit-matrix td.self { color: var(--faint); }
+.fit-matrix .sel { background: var(--key-mod); color: var(--ink); }
+.fit-matrix td.sel.yes { background: #36463d; }
+.fit-matrix td.sel.turn { background: #4a4131; }
+.fit-matrix td.sel.no { background: #4a3533; color: #e29a90; }
+.fit-key { font-size: 12px; color: var(--faint); margin-top: 8px; }
+
 /* stats */
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; display: grid; gap: 2px; }
@@ -181,7 +214,8 @@ code { font-family: var(--font-mono); font-size: 12px; background: var(--bg); pa
     <div class="group"><span class="label" id="lbl-style">Layout</span><div class="seg" role="group" aria-labelledby="lbl-style" id="seg-style"></div></div>
     <div class="group"><span class="label" id="lbl-std">Standard and legends</span><div class="seg" role="group" aria-labelledby="lbl-std" id="seg-std"></div></div>
     <div class="group"><span class="label" id="lbl-conn">Connection</span><div class="seg" role="group" aria-labelledby="lbl-conn" id="seg-conn"></div></div>
-    <div class="group"><span class="label" id="lbl-sw">Switches · hot-swap, mix per key</span><div class="seg" role="group" aria-labelledby="lbl-sw" id="seg-switches"></div></div>
+    <div class="group"><span class="label" id="lbl-mount">Mounting</span><div class="seg" role="group" aria-labelledby="lbl-mount" id="seg-mount"></div></div>
+    <div class="group"><span class="label" id="lbl-sw">Switches</span><div class="seg" role="group" aria-labelledby="lbl-sw" id="seg-switches"></div></div>
     <div class="group"><span class="label" id="lbl-feel">Feel</span><div class="seg" role="group" aria-labelledby="lbl-feel" id="seg-feel"></div></div>
     <div class="group"><span class="label" id="lbl-rgb">Per-key light</span><div class="seg" role="group" aria-labelledby="lbl-rgb" id="seg-rgb"></div></div>
     <div class="group"><span class="label" id="lbl-glow">Underglow</span><div class="seg" role="group" aria-labelledby="lbl-glow" id="seg-glow"></div></div>
@@ -195,6 +229,17 @@ code { font-family: var(--font-mono); font-size: 12px; background: var(--bg); pa
 
   <section class="stats" id="stats" aria-label="Summary"></section>
   <ul class="notes" id="notes"></ul>
+
+  <section class="fit" aria-labelledby="fit-h">
+    <div class="fit-head"><h2 id="fit-h">Switch fit</h2><p class="fit-status" id="fit-status"></p></div>
+    <div class="fit-body">
+      <figure class="fit-fp"><div id="fit-fp"></div><figcaption class="fit-legend" id="fit-legend"></figcaption></figure>
+      <div class="fit-matrix">
+        <table id="fit-matrix" aria-label="Which switch types fit together"></table>
+        <p class="fit-key">✓ fit together · ↻ fit with one turned 180° (no per-key light for it) · ✕ do not fit</p>
+      </div>
+    </div>
+  </section>
 
   <section class="lower">
     <div class="card">
@@ -279,13 +324,36 @@ const SIZES = [
   { id: "40", label: "40 %" }, { id: "60", label: "60 %" }, { id: "65", label: "65 %" }, { id: "75", label: "75 %" },
   { id: "tkl", label: "TKL" }, { id: "96", label: "96 %" }, { id: "100", label: "100 %" },
 ];
-const SWITCHES = [
-  { id: "mx", label: "MX", title: "Cherry MX and MX-style switches (Gateron, Kailh Box, Akko …)" },
-  { id: "choc_v1", label: "Choc v1", title: "Kailh Choc v1 low profile" },
-  { id: "choc_v2", label: "Choc v2", title: "Kailh Choc v2 low profile (MX keycap stem)" },
-  { id: "gateron_lp", label: "Gateron LP", later: true, title: "Needs its own switch board (different pins)" },
-  { id: "hall", label: "Hall effect", later: true, title: "Needs its own switch board (magnetic sensors)" },
-];
+// Which switch types share a key position: computed by generator/switches/compat.py from the footprint geometry
+// (holes, copper, hot-swap sockets, LED window). Regenerate with that script; do not edit by hand.
+const COMPAT = /*COMPAT-BEGIN*/{"rules":{"copper_mm":0.2,"hole_mm":0.25,"ring_mm":0.3},"types":{"choc_v1":{"label":"Choc v1","height":"slim","pins":[[0,-5.9,1.2],[5.0,-3.8,1.2]],"holes":[[0,0,3.45],[-5.5,0,1.9],[5.5,0,1.9]],"socket":"choc"},"choc_v2":{"label":"Choc v2","height":"slim","pins":[[0,-5.9,1.2],[5.0,-3.8,1.2]],"holes":[[0,0,5.05],[-5.0,5.15,1.6]],"socket":"choc"},"mx":{"label":"MX","height":"tall","pins":[[-3.81,-2.54,1.5],[2.54,-5.08,1.5]],"holes":[[0,0,4.0],[-5.08,0,1.75],[5.08,0,1.75]],"socket":"mx"},"gateron_lp":{"label":"Gateron LP","height":"slim","pins":[[4.4,-4.7,1.5],[-2.6,-5.75,1.5]],"holes":[[0,0,5.25]],"socket":"gateron_lp"},"mx_lp":{"label":"MX Low Profile","height":"slim","pins":[[0,-6.05,1.2],[-4.13,-3.3,1.2]],"holes":[[0,0,6.25],[0,-3.7,2.3]],"socket":null},"kh":{"label":"Kailh KH","height":"tall","pins":[[-3.8,-2.55,1.5],[3.0,-5.12,1.5]],"holes":[[0,0,4.0],[-4.5,0,1.5],[4.5,0,1.5]],"socket":null},"alps":{"label":"Alps / Matias","height":"tall","pins":[[-2.5,-4.0,1.5],[2.5,-4.5,1.5]],"holes":[],"socket":null},"choc_mini":{"label":"Choc mini","height":"slim","pins":[[2.0,5.4,1.2],[-4.58,5.1,1.2]],"holes":[[-5.29,-4.75,1.2],[5.29,-4.75,1.2]],"socket":null},"kailh_x":{"label":"Kailh X (PG1425)","height":"slim","pins":[[-2.0,-3.4,1.1],[2.9,-3.4,1.1]],"holes":[[5.5,-5.5,1.3],[-5.5,5.5,1.3]],"socket":null}},"sockets":{"mx":{"sleeves":3.05,"pads":[[-7.085,-2.54,2.55,2.5],[5.842,-5.08,2.55,2.5]],"body":[-6.0,-6.8,4.8,-0.8]},"choc":{"sleeves":3.05,"pads":[[-3.5,-6.0,2.55,2.5],[8.5,-3.8,2.55,2.5]],"body":[-2.45,-8.45,7.75,-1.25]},"gateron_lp":{"sleeves":3.0,"pads":[[8.075,-4.7,2.5,2.55],[-6.275,-5.75,2.5,2.55]],"body":[-5.03,-7.92,6.82,-2.52]}},"modes":{"solder":{"light":{"pairs":{"choc_v1|choc_v2":{"ok":"yes","turned":[]},"choc_v1|mx":{"ok":"yes","turned":[]},"choc_v1|gateron_lp":{"ok":"yes","turned":[]},"choc_v1|mx_lp":{"ok":"no","why":"a pin sits in the LED window"},"choc_v1|kh":{"ok":"yes","turned":[]},"choc_v1|alps":{"ok":"yes","turned":[]},"choc_v1|choc_mini":{"ok":"turn","turned":["choc_mini"]},"choc_v1|kailh_x":{"ok":"no","why":"a pin sits in the LED window"},"choc_v2|mx":{"ok":"yes","turned":[]},"choc_v2|gateron_lp":{"ok":"yes","turned":[]},"choc_v2|mx_lp":{"ok":"no","why":"a pin sits in the LED window"},"choc_v2|kh":{"ok":"yes","turned":[]},"choc_v2|alps":{"ok":"yes","turned":[]},"choc_v2|choc_mini":{"ok":"turn","turned":["choc_mini"]},"choc_v2|kailh_x":{"ok":"no","why":"a pin sits in the LED window"},"mx|gateron_lp":{"ok":"yes","turned":[]},"mx|mx_lp":{"ok":"yes","turned":[]},"mx|kh":{"ok":"yes","turned":[]},"mx|alps":{"ok":"yes","turned":[]},"mx|choc_mini":{"ok":"turn","turned":["choc_mini"]},"mx|kailh_x":{"ok":"yes","turned":[]},"gateron_lp|mx_lp":{"ok":"yes","turned":[]},"gateron_lp|kh":{"ok":"yes","turned":[]},"gateron_lp|alps":{"ok":"yes","turned":[]},"gateron_lp|choc_mini":{"ok":"turn","turned":["choc_mini"]},"gateron_lp|kailh_x":{"ok":"no","why":"pins of different contacts 0.08 mm apart"},"mx_lp|kh":{"ok":"yes","turned":[]},"mx_lp|alps":{"ok":"yes","turned":[]},"mx_lp|choc_mini":{"ok":"yes","turned":[]},"mx_lp|kailh_x":{"ok":"no","why":"a hole 0.00 mm from a pin"},"kh|alps":{"ok":"yes","turned":[]},"kh|choc_mini":{"ok":"yes","turned":[]},"kh|kailh_x":{"ok":"yes","turned":[]},"alps|choc_mini":{"ok":"yes","turned":[]},"alps|kailh_x":{"ok":"yes","turned":[]},"choc_mini|kailh_x":{"ok":"no","why":"a hole 0.00 mm from a pin"}},"sets":{"choc_v1":{"turned":[],"swap":[]},"choc_v2":{"turned":[],"swap":[]},"mx":{"turned":[],"swap":[]},"gateron_lp":{"turned":[],"swap":[],"led":"unverified"},"mx_lp":{"turned":[],"swap":[],"led":"unverified"},"kh":{"turned":[],"swap":[],"led":"unverified"},"alps":{"turned":[],"swap":[],"led":"unverified"},"choc_mini":{"turned":[],"swap":[],"led":"unverified"},"kailh_x":{"turned":[],"swap":[],"led":"unverified"},"choc_v1,choc_v2":{"turned":[],"swap":[]},"choc_v1,mx":{"turned":[],"swap":[]},"choc_v1,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,kh":{"turned":[],"swap":[]},"choc_v1,alps":{"turned":[],"swap":[]},"choc_v1,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx":{"turned":[],"swap":[]},"choc_v2,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v2,kh":{"turned":[],"swap":[]},"choc_v2,alps":{"turned":[],"swap":[]},"choc_v2,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"mx,mx_lp":{"turned":[],"swap":["mx_lp"]},"mx,kh":{"turned":[],"swap":[]},"mx,alps":{"turned":[],"swap":[]},"mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp":{"turned":[],"swap":[],"led":"unverified"},"gateron_lp,kh":{"turned":[],"swap":["kh"],"led":"unverified"},"gateron_lp,alps":{"turned":[],"swap":["alps"],"led":"unverified"},"gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["choc_mini"],"led":"unverified"},"mx_lp,kh":{"turned":[],"swap":["kh"],"led":"unverified"},"mx_lp,alps":{"turned":[],"swap":["alps"],"led":"unverified"},"mx_lp,choc_mini":{"turned":[],"swap":[],"led":"unverified"},"kh,alps":{"turned":[],"swap":[],"led":"unverified"},"kh,choc_mini":{"turned":[],"swap":[],"led":"unverified"},"kh,kailh_x":{"turned":[],"swap":[],"led":"unverified"},"alps,choc_mini":{"turned":[],"swap":[],"led":"unverified"},"alps,kailh_x":{"turned":[],"swap":[],"led":"unverified"},"choc_v1,choc_v2,mx":{"turned":[],"swap":[]},"choc_v1,choc_v2,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,kh":{"turned":[],"swap":[]},"choc_v1,choc_v2,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,kh":{"turned":[],"swap":[]},"choc_v1,mx,alps":{"turned":[],"swap":[]},"choc_v1,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,kh,alps":{"turned":[],"swap":[]},"choc_v1,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,kh":{"turned":[],"swap":[]},"choc_v2,mx,alps":{"turned":[],"swap":[]},"choc_v2,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,kh,alps":{"turned":[],"swap":[]},"choc_v2,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,alps":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["mx_lp"]},"mx,kh,alps":{"turned":[],"swap":[]},"mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,kh,kailh_x":{"turned":[],"swap":[]},"mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,alps,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp,kh":{"turned":[],"swap":["kh"],"led":"unverified"},"gateron_lp,mx_lp,alps":{"turned":[],"swap":["alps"],"led":"unverified"},"gateron_lp,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["choc_mini"],"led":"unverified"},"gateron_lp,kh,alps":{"turned":[],"swap":["kh","alps"],"led":"unverified"},"gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["kh","choc_mini"],"led":"unverified"},"gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["alps","choc_mini"],"led":"unverified"},"mx_lp,kh,alps":{"turned":[],"swap":["kh","alps"],"led":"unverified"},"mx_lp,kh,choc_mini":{"turned":[],"swap":["kh"],"led":"unverified"},"mx_lp,alps,choc_mini":{"turned":[],"swap":["alps"],"led":"unverified"},"kh,alps,choc_mini":{"turned":[],"swap":[],"led":"unverified"},"kh,alps,kailh_x":{"turned":[],"swap":[],"led":"unverified"},"choc_v1,choc_v2,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,kh":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,kh,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,kh,alps":{"turned":[],"swap":[]},"choc_v1,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,kh,alps":{"turned":[],"swap":[]},"choc_v2,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp,kh":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,alps":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh,alps":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["mx_lp"]},"mx,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["mx_lp"]},"mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,kh,alps,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp,kh,alps":{"turned":[],"swap":["kh","alps"],"led":"unverified"},"gateron_lp,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["kh","choc_mini"],"led":"unverified"},"gateron_lp,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["alps","choc_mini"],"led":"unverified"},"gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["kh","alps","choc_mini"],"led":"unverified"},"mx_lp,kh,alps,choc_mini":{"turned":[],"swap":["kh","alps"],"led":"unverified"},"choc_v1,choc_v2,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,kh,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,mx_lp,kh,alps":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["mx_lp"]},"gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["kh","alps","choc_mini"],"led":"unverified"},"choc_v1,choc_v2,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]}}},"dark":{"pairs":{"choc_v1|choc_v2":{"ok":"yes","turned":[]},"choc_v1|mx":{"ok":"yes","turned":[]},"choc_v1|gateron_lp":{"ok":"yes","turned":[]},"choc_v1|mx_lp":{"ok":"turn","turned":["mx_lp"]},"choc_v1|kh":{"ok":"yes","turned":[]},"choc_v1|alps":{"ok":"yes","turned":[]},"choc_v1|choc_mini":{"ok":"turn","turned":["choc_mini"]},"choc_v1|kailh_x":{"ok":"no","why":"a hole 0.22 mm from a pin"},"choc_v2|mx":{"ok":"yes","turned":[]},"choc_v2|gateron_lp":{"ok":"yes","turned":[]},"choc_v2|mx_lp":{"ok":"turn","turned":["mx_lp"]},"choc_v2|kh":{"ok":"yes","turned":[]},"choc_v2|alps":{"ok":"yes","turned":[]},"choc_v2|choc_mini":{"ok":"turn","turned":["choc_mini"]},"choc_v2|kailh_x":{"ok":"no","why":"a hole 0.22 mm from a pin"},"mx|gateron_lp":{"ok":"yes","turned":[]},"mx|mx_lp":{"ok":"yes","turned":[]},"mx|kh":{"ok":"yes","turned":[]},"mx|alps":{"ok":"yes","turned":[]},"mx|choc_mini":{"ok":"yes","turned":[]},"mx|kailh_x":{"ok":"yes","turned":[]},"gateron_lp|mx_lp":{"ok":"yes","turned":[]},"gateron_lp|kh":{"ok":"yes","turned":[]},"gateron_lp|alps":{"ok":"yes","turned":[]},"gateron_lp|choc_mini":{"ok":"turn","turned":["choc_mini"]},"gateron_lp|kailh_x":{"ok":"no","why":"pins of different contacts 0.08 mm apart"},"mx_lp|kh":{"ok":"yes","turned":[]},"mx_lp|alps":{"ok":"yes","turned":[]},"mx_lp|choc_mini":{"ok":"yes","turned":[]},"mx_lp|kailh_x":{"ok":"no","why":"a hole 0.00 mm from a pin"},"kh|alps":{"ok":"yes","turned":[]},"kh|choc_mini":{"ok":"yes","turned":[]},"kh|kailh_x":{"ok":"yes","turned":[]},"alps|choc_mini":{"ok":"yes","turned":[]},"alps|kailh_x":{"ok":"yes","turned":[]},"choc_mini|kailh_x":{"ok":"no","why":"a hole 0.00 mm from a pin"}},"sets":{"choc_v1":{"turned":[],"swap":[]},"choc_v2":{"turned":[],"swap":[]},"mx":{"turned":[],"swap":[]},"gateron_lp":{"turned":[],"swap":[]},"mx_lp":{"turned":[],"swap":[]},"kh":{"turned":[],"swap":[]},"alps":{"turned":[],"swap":[]},"choc_mini":{"turned":[],"swap":[]},"kailh_x":{"turned":[],"swap":[]},"choc_v1,choc_v2":{"turned":[],"swap":[]},"choc_v1,mx":{"turned":[],"swap":[]},"choc_v1,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v1,kh":{"turned":[],"swap":[]},"choc_v1,alps":{"turned":[],"swap":[]},"choc_v1,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx":{"turned":[],"swap":[]},"choc_v2,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v2,kh":{"turned":[],"swap":[]},"choc_v2,alps":{"turned":[],"swap":[]},"choc_v2,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"mx,mx_lp":{"turned":[],"swap":["mx_lp"]},"mx,kh":{"turned":[],"swap":[]},"mx,alps":{"turned":[],"swap":[]},"mx,choc_mini":{"turned":[],"swap":[]},"mx,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp":{"turned":[],"swap":[]},"gateron_lp,kh":{"turned":[],"swap":["kh"]},"gateron_lp,alps":{"turned":[],"swap":["alps"]},"gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["choc_mini"]},"mx_lp,kh":{"turned":[],"swap":["kh"]},"mx_lp,alps":{"turned":[],"swap":["alps"]},"mx_lp,choc_mini":{"turned":[],"swap":[]},"kh,alps":{"turned":[],"swap":[]},"kh,choc_mini":{"turned":[],"swap":[]},"kh,kailh_x":{"turned":[],"swap":[]},"alps,choc_mini":{"turned":[],"swap":[]},"alps,kailh_x":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx":{"turned":[],"swap":[]},"choc_v1,choc_v2,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,kh":{"turned":[],"swap":[]},"choc_v1,choc_v2,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx,kh":{"turned":[],"swap":[]},"choc_v1,mx,alps":{"turned":[],"swap":[]},"choc_v1,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,kh,alps":{"turned":[],"swap":[]},"choc_v1,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx,kh":{"turned":[],"swap":[]},"choc_v2,mx,alps":{"turned":[],"swap":[]},"choc_v2,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,kh,alps":{"turned":[],"swap":[]},"choc_v2,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,alps":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,choc_mini":{"turned":[],"swap":["mx_lp"]},"mx,kh,alps":{"turned":[],"swap":[]},"mx,kh,choc_mini":{"turned":[],"swap":[]},"mx,kh,kailh_x":{"turned":[],"swap":[]},"mx,alps,choc_mini":{"turned":[],"swap":[]},"mx,alps,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp,kh":{"turned":[],"swap":["kh"]},"gateron_lp,mx_lp,alps":{"turned":[],"swap":["alps"]},"gateron_lp,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["choc_mini"]},"gateron_lp,kh,alps":{"turned":[],"swap":["kh","alps"]},"gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["kh","choc_mini"]},"gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["alps","choc_mini"]},"mx_lp,kh,alps":{"turned":[],"swap":["kh","alps"]},"mx_lp,kh,choc_mini":{"turned":[],"swap":["kh"]},"mx_lp,alps,choc_mini":{"turned":[],"swap":["alps"]},"kh,alps,choc_mini":{"turned":[],"swap":[]},"kh,alps,kailh_x":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx,kh":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,kh,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx,kh,alps":{"turned":[],"swap":[]},"choc_v1,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx,kh,alps":{"turned":[],"swap":[]},"choc_v2,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp,kh":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,alps":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh,alps":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,kh,choc_mini":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,alps,choc_mini":{"turned":[],"swap":["mx_lp"]},"mx,kh,alps,choc_mini":{"turned":[],"swap":[]},"mx,kh,alps,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp,kh,alps":{"turned":[],"swap":["kh","alps"]},"gateron_lp,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["kh","choc_mini"]},"gateron_lp,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["alps","choc_mini"]},"gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["kh","alps","choc_mini"]},"mx_lp,kh,alps,choc_mini":{"turned":[],"swap":["kh","alps"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,kh,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp,kh,alps":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh,alps,choc_mini":{"turned":[],"swap":["mx_lp"]},"gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["kh","alps","choc_mini"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]}}}},"hotswap":{"light":{"pairs":{"choc_v1|choc_v2":{"ok":"yes","turned":[]},"choc_v1|mx":{"ok":"no","why":"a socket sits on the LED window"},"choc_v1|gateron_lp":{"ok":"no","why":"a socket sits on the LED window"},"choc_v1|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"choc_v1|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"choc_v1|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_v1|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"choc_v1|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"choc_v2|mx":{"ok":"no","why":"a socket sits on the LED window"},"choc_v2|gateron_lp":{"ok":"no","why":"a socket sits on the LED window"},"choc_v2|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"choc_v2|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"choc_v2|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_v2|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"choc_v2|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"mx|gateron_lp":{"ok":"no","why":"a socket sits on the LED window"},"mx|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"mx|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"mx|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"mx|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"gateron_lp|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"gateron_lp|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"gateron_lp|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"gateron_lp|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"gateron_lp|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"mx_lp|kh":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|alps":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|choc_mini":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|kailh_x":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"kh|alps":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"kh|choc_mini":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"kh|kailh_x":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"alps|choc_mini":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"alps|kailh_x":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_mini|kailh_x":{"ok":"no","why":"Choc mini has no hot-swap socket"}},"sets":{"choc_v1":{"turned":[],"swap":[]},"choc_v2":{"turned":[],"swap":[]},"mx":{"turned":[],"swap":[]},"gateron_lp":{"turned":[],"swap":[],"led":"unverified"},"choc_v1,choc_v2":{"turned":[],"swap":[]}}},"dark":{"pairs":{"choc_v1|choc_v2":{"ok":"yes","turned":[]},"choc_v1|mx":{"ok":"turn","turned":["mx"]},"choc_v1|gateron_lp":{"ok":"turn","turned":["gateron_lp"]},"choc_v1|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"choc_v1|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"choc_v1|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_v1|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"choc_v1|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"choc_v2|mx":{"ok":"no","why":"a hole cuts a socket pad"},"choc_v2|gateron_lp":{"ok":"turn","turned":["gateron_lp"]},"choc_v2|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"choc_v2|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"choc_v2|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_v2|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"choc_v2|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"mx|gateron_lp":{"ok":"turn","turned":["gateron_lp"]},"mx|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"mx|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"mx|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"mx|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"gateron_lp|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"gateron_lp|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"gateron_lp|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"gateron_lp|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"gateron_lp|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"mx_lp|kh":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|alps":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|choc_mini":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|kailh_x":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"kh|alps":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"kh|choc_mini":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"kh|kailh_x":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"alps|choc_mini":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"alps|kailh_x":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_mini|kailh_x":{"ok":"no","why":"Choc mini has no hot-swap socket"}},"sets":{"choc_v1":{"turned":[],"swap":[]},"choc_v2":{"turned":[],"swap":[]},"mx":{"turned":[],"swap":[]},"gateron_lp":{"turned":[],"swap":[]},"choc_v1,choc_v2":{"turned":[],"swap":[]},"choc_v1,mx":{"turned":["mx"],"swap":[]},"choc_v1,gateron_lp":{"turned":["gateron_lp"],"swap":[]},"choc_v2,gateron_lp":{"turned":["gateron_lp"],"swap":[]},"mx,gateron_lp":{"turned":["gateron_lp"],"swap":[]},"choc_v1,choc_v2,gateron_lp":{"turned":["gateron_lp"],"swap":[]}}}}}}/*COMPAT-END*/;
+const SW_IDS = Object.keys(COMPAT.types);            // also the priority order: the first selected keeps the LED
+const SW_SHORT = { choc_v1: "Choc v1", choc_v2: "Choc v2", mx: "MX", gateron_lp: "Gat. LP", mx_lp: "MX LP", kh: "KH",
+  alps: "Alps", choc_mini: "Mini", kailh_x: "X" };
+const SW_COLOR = { choc_v1: "#7fb2ff", choc_v2: "#5fd0e0", mx: "#f0a35e", gateron_lp: "#b98cf2", mx_lp: "#f07f95", kh: "#e3cf6a",
+  alps: "#8fd3a0", choc_mini: "#6fe0c0", kailh_x: "#d9a0e6" };
+const OWN_BOARD = [{ id: "hall", label: "Hall effect" }, { id: "optical", label: "Optical" }, { id: "topre", label: "Topre / EC" }];
+const MOUNTS = [{ id: "hotswap", label: "Hot-swap" }, { id: "solder", label: "Soldered" }];
+const swSort = types => SW_IDS.filter(t => types.includes(t));
+const swLabel = t => COMPAT.types[t]?.label || t;
+function fitTable() { return COMPAT.modes[state.mount][state.rgb ? "light" : "dark"]; }
+function fitOf(types) { return types.length ? fitTable().sets[swSort(types).join(",")] || null : null; }
+function pairInfo(a, b) { const p = fitTable().pairs; return p[a + "|" + b] || p[b + "|" + a]; }
+function whyNot(types, t) {
+  if (state.mount === "hotswap" && !COMPAT.types[t].socket) return `${swLabel(t)} has no hot-swap socket.`;
+  for (const o of types) { const p = pairInfo(o, t); if (p && p.ok === "no") return `${swLabel(t)} and ${swLabel(o)}: ${p.why}.`; }
+  return `${swLabel(t)} does not fit together with all of ${types.map(swLabel).join(", ")}.`;
+}
+// Keep the selection buildable after the mounting or the light changes: drop types in reverse priority.
+function reconcileSwitches() {
+  if (fitOf(state.types)) return [];
+  const keep = [];
+  for (const t of swSort(state.types)) if (fitOf([...keep, t])) keep.push(t);
+  if (!keep.length) keep.push(SW_IDS.find(t => fitOf([t])));
+  const removed = state.types.filter(t => !keep.includes(t));
+  state.types = keep;
+  return removed;
+}
 const STYLES = [{ id: "staggered", label: "Staggered" }, { id: "grid", label: "Grid" }];
 const FEELS = [{ id: "linear", label: "Linear" }, { id: "tactile", label: "Tactile" }, { id: "clicky", label: "Clicky" }, { id: "silent", label: "Silent" }];
 const CONNS = [{ id: "wireless", label: "Wireless" }, { id: "wired", label: "Wired" }];
@@ -443,7 +511,7 @@ const LIMITS = { top: 2, left: 2, right: 2 };
 const DEFAULT_STATE = {
   name: "KO 65 ISO-CH", nameAuto: true,
   size: "65", style: "staggered", standard: "iso-ch", connectivity: "wireless",
-  fitted: ["choc_v1"], feel: "linear", rgb: true, underglow: false,
+  mount: "hotswap", types: ["choc_v1"], feel: "linear", rgb: true, underglow: false,
   extra: { top: [], left: [], right: [] },
 };
 let state = load() || structuredClone(DEFAULT_STATE);
@@ -451,9 +519,9 @@ let format = "ko";
 let selected = null;     // {side, bi, ki}
 
 function load() {
-  try { const s = JSON.parse(localStorage.getItem("ko-layout-draft-v2") || "null"); return s && s.extra && s.size && s.style && Array.isArray(s.fitted) && s.fitted.length ? s : null; } catch (e) { return null; }
+  try { const s = JSON.parse(localStorage.getItem("ko-layout-draft-v3") || "null"); return s && s.extra && s.size && s.style && Array.isArray(s.types) && s.types.length && s.mount ? s : null; } catch (e) { return null; }
 }
-function persist() { try { localStorage.setItem("ko-layout-draft-v2", JSON.stringify(state)); } catch (e) {} }
+function persist() { try { localStorage.setItem("ko-layout-draft-v3", JSON.stringify(state)); } catch (e) {} }
 const stdInfo = () => STANDARDS.find(s => s.id === state.standard) || STANDARDS[0];
 
 /* ------------------------------------------------------------------ geometry */
@@ -534,6 +602,8 @@ function control(parent, cx, cy, r, kind, label, onClick, small) {
 }
 
 function render() {
+  const dropped = reconcileSwitches();
+  if (dropped.length) toast(`${dropped.map(swLabel).join(", ")} removed: ${state.mount === "hotswap" ? "no room for their sockets here" : "no room for their holes here"}.`);
   clampBlocks();
   const g = geometry();
   const all = [...g.main, ...g.extras];
@@ -606,6 +676,7 @@ function render() {
   const scroll = document.getElementById("stage-scroll");
   scroll.replaceChildren(svg);
   renderInfo(g);
+  document.getElementById("seg-switches")._sync?.();
   persist();
   if (selected) requestAnimationFrame(positionPicker);
 }
@@ -722,23 +793,22 @@ function exportKO() {
   const blocks = [];
   for (const side of ["top", "left", "right"]) state.extra[side].forEach((b, i) => blocks.push({ id: `${side}-${i + 1}`, side, count: b.keys.length }));
   return {
-    format: "ko-layout", version: 2, name: state.name.trim() || "KO build",
+    format: "ko-layout", version: 3, name: state.name.trim() || "KO build",
     layout: { size: state.size, style: state.style, standard: si.std, language: si.lang },
     connectivity: state.connectivity,
-    switch: { sockets: "mx-choc", fitted: fittedList(), feel: state.feel, case: caseFor(fittedList()) },
+    switch: { mount: state.mount, types: swSort(state.types), turned: fitOf(state.types)?.turned || [], feel: state.feel, case: caseFor(state.types) },
     lighting: { per_key: state.rgb, underglow: state.underglow },
     unit_mm: 19.05,
     matrix: "auto",
     blocks, keys,
   };
 }
-function fittedList() { return SWITCHES.filter(w => !w.later && state.fitted.includes(w.id)).map(w => w.id); }
-function caseFor(fitted) { return fitted.includes("mx") ? "tall" : "slim"; }   // MX does not fit the slim case
+function caseFor(types) { return types.some(t => COMPAT.types[t]?.height === "tall") ? "tall" : "slim"; }   // tall switches need the tall case
 function exportKLE() {
   const ko = exportKO();
   const rows = new Map();
   for (const k of ko.keys) { const key = k.y.toFixed(4); if (!rows.has(key)) rows.set(key, []); rows.get(key).push(k); }
-  const out = [{ name: ko.name, notes: "Exported from the KO layout builder (ko-layout v2)" }];
+  const out = [{ name: ko.name, notes: "Exported from the KO layout builder (ko-layout v3)" }];
   let prevY = -1, first = true;
   for (const ky of [...rows.keys()].sort((a, b) => a - b)) {
     const y = +ky, row = [], keys = rows.get(ky).sort((a, b) => a.x - b.x);
@@ -774,19 +844,20 @@ function importKO(text) {
   let o;
   try { o = JSON.parse(text); } catch (e) { throw new Error("This is not valid JSON."); }
   if (!o || o.format !== "ko-layout") throw new Error("Not a KO layout file (\"format\" must be \"ko-layout\").");
-  if (o.version !== 1 && o.version !== 2) throw new Error(`Layout file version ${o.version} is not supported here; this page reads versions 1 and 2.`);
+  if (![1, 2, 3].includes(o.version)) throw new Error(`Layout file version ${o.version} is not supported here; this page reads versions 1 to 3.`);
   const std = STANDARDS.find(s => s.std === o.layout?.standard && s.lang === o.layout?.language);
   if (!SIZES.some(s => s.id === o.layout?.size) || !std) throw new Error("Unknown size or standard in the file.");
-  const usable = SWITCHES.filter(w => !w.later).map(w => w.id);
-  let fitted = o.version === 1 ? (o.switch?.family === "mx" ? ["mx"] : ["choc_v1"])
-    : (Array.isArray(o.switch?.fitted) ? o.switch.fitted.filter(f => usable.includes(f)) : []);
-  if (!fitted.length) fitted = ["choc_v1"];
+  let types = o.version === 1 ? (o.switch?.family === "mx" ? ["mx"] : ["choc_v1"])
+    : (Array.isArray(o.version === 2 ? o.switch?.fitted : o.switch?.types) ? (o.version === 2 ? o.switch.fitted : o.switch.types) : []);
+  types = types.filter(t => t in COMPAT.types);
+  if (!types.length) types = ["choc_v1"];
+  const mount = o.version === 3 && MOUNTS.some(m => m.id === o.switch?.mount) ? o.switch.mount : "hotswap";
   const next = { name: o.name || "KO build", nameAuto: false, size: o.layout.size, standard: std.id,
-    style: o.version === 2 && STYLES.some(t => t.id === o.layout.style) ? o.layout.style : "staggered",
+    style: o.version >= 2 && STYLES.some(t => t.id === o.layout.style) ? o.layout.style : "staggered",
     connectivity: CONNS.some(c => c.id === o.connectivity) ? o.connectivity : "wireless",
-    fitted, feel: FEELS.some(f => f.id === o.switch?.feel) ? o.switch.feel : "linear",
+    mount, types, feel: FEELS.some(f => f.id === o.switch?.feel) ? o.switch.feel : "linear",
     rgb: o.version === 1 ? o.rgb !== false : o.lighting?.per_key !== false,
-    underglow: o.version === 2 && o.lighting?.underglow === true,
+    underglow: o.version >= 2 && o.lighting?.underglow === true,
     extra: { top: [], left: [], right: [] } };
   for (const b of o.blocks || []) {
     if (!LIMITS[b.side] || next.extra[b.side].length >= LIMITS[b.side]) continue;
@@ -804,6 +875,80 @@ function importKO(text) {
 function applyState(next) { state = next; closePicker(); syncControls(); render(); }
 
 /* ------------------------------------------------------------------ info, notes */
+function renderFit() {
+  const fit = fitOf(state.types) || { turned: [] };
+  const sel = swSort(state.types), turned = fit.turned;
+  const mountLabel = state.mount === "hotswap" ? "Hot-swap" : "Soldered";
+  let status = `${mountLabel}: ${sel.map(swLabel).join(" + ")} ${sel.length > 1 ? "fit on one footprint" : "only"}.`;
+  if (turned.length) status += ` ${turned.map(swLabel).join(", ")} turned 180°${state.rgb ? ", without per-key light" : ""}.`;
+  if (fit.led === "unverified") status += ` Light position for ${swLabel(sel[0])} not yet checked.`;
+  document.getElementById("fit-status").textContent = status;
+
+  // one key position, seen from the top (mm)
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "-10.3 -10.3 20.6 20.6");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "Holes and sockets of one key position for the selected switches");
+  const add = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); parent.appendChild(e); return e; };
+  add("rect", { x: -9.525, y: -9.525, width: 19.05, height: 19.05, rx: 1.2, fill: "#2a2b2f", stroke: "#4d4f55", "stroke-width": 0.15 });
+  const tr = (x, y, rot) => rot ? [-x, -y] : [x, y];
+  if (state.rgb && ["choc_v1", "choc_v2", "mx"].includes(sel[0]))
+    add("rect", { x: -1.8, y: 3.4, width: 3.6, height: 3.0, rx: 0.3, fill: "none", stroke: "#e8cf73", "stroke-width": 0.18, "stroke-dasharray": "0.5 0.35" });
+  const hot = state.mount === "hotswap", drawnSockets = new Set();
+  for (const t of sel) {
+    const T = COMPAT.types[t], rot = turned.includes(t), col = SW_COLOR[t];
+    if (hot && !drawnSockets.has(T.socket)) {
+      drawnSockets.add(T.socket);
+      const S = COMPAT.sockets[T.socket];
+      const [ax, ay] = tr(S.body[0], S.body[1], rot), [bx, by] = tr(S.body[2], S.body[3], rot);
+      add("rect", { x: Math.min(ax, bx), y: Math.min(ay, by), width: Math.abs(bx - ax), height: Math.abs(by - ay), rx: 0.3,
+        fill: col, "fill-opacity": 0.14, stroke: col, "stroke-opacity": 0.6, "stroke-width": 0.12 });
+      for (const [x, y, w, h] of S.pads) { const [px, py] = tr(x, y, rot);
+        add("rect", { x: px - w / 2, y: py - h / 2, width: w, height: h, rx: 0.2, fill: col, "fill-opacity": 0.45 }); }
+    }
+    for (const [x, y, d] of T.holes) { const [hx, hy] = tr(x, y, rot);
+      add("circle", { cx: hx, cy: hy, r: d / 2, fill: "none", stroke: "#d9d9d6", "stroke-opacity": 0.75, "stroke-width": 0.12 }); }
+    for (const [x, y, d] of T.pins) { const [hx, hy] = tr(x, y, rot);
+      if (hot) add("circle", { cx: hx, cy: hy, r: COMPAT.sockets[T.socket].sleeves / 2, fill: "none", stroke: col, "stroke-width": 0.2 });
+      else { add("circle", { cx: hx, cy: hy, r: d / 2 + COMPAT.rules.ring_mm, fill: col });
+        add("circle", { cx: hx, cy: hy, r: d / 2, fill: "#2a2b2f" }); } }
+  }
+  add("path", { d: "M-0.6 0H0.6M0 -0.6V0.6", stroke: "#6d7075", "stroke-width": 0.12 });
+  document.getElementById("fit-fp").replaceChildren(svg);
+  const legend = sel.map(t => { const s = document.createElement("span"); const i = document.createElement("i"); i.style.background = SW_COLOR[t];
+    s.append(i, swLabel(t) + (turned.includes(t) ? " ↻" : "")); return s; });
+  if (state.rgb && ["choc_v1", "choc_v2", "mx"].includes(sel[0])) { const s = document.createElement("span"); const i = document.createElement("i");
+    i.style.border = "1px dashed #e8cf73"; s.append(i, "LED window"); legend.push(s); }
+  document.getElementById("fit-legend").replaceChildren(...legend);
+
+  // matrix for the current mounting and light
+  const tbl = document.getElementById("fit-matrix");
+  tbl.replaceChildren();
+  const head = document.createElement("tr"); head.appendChild(document.createElement("th"));
+  for (const b of SW_IDS) { const th = document.createElement("th"); th.textContent = SW_SHORT[b]; th.title = swLabel(b); if (sel.includes(b)) th.className = "sel"; head.appendChild(th); }
+  tbl.appendChild(head);
+  for (const a of SW_IDS) {
+    const tr2 = document.createElement("tr");
+    const th = document.createElement("th"); th.className = "row" + (sel.includes(a) ? " sel" : ""); th.textContent = swLabel(a); tr2.appendChild(th);
+    for (const b of SW_IDS) {
+      const td = document.createElement("td");
+      const hl = sel.includes(a) && sel.includes(b) ? " sel" : "";
+      if (a === b) {
+        const alone = !!fitTable().sets[a];
+        td.className = (alone ? "self" : "no") + hl; td.textContent = alone ? "·" : "✕";
+        td.title = alone ? swLabel(a) : whyNot([], a);
+      } else {
+        const p = pairInfo(a, b);
+        td.className = p.ok + hl; td.textContent = { yes: "✓", turn: "↻", no: "✕" }[p.ok];
+        td.title = p.ok === "no" ? `${swLabel(a)} + ${swLabel(b)}: ${p.why}` : p.ok === "turn" ? `${p.turned.map(swLabel).join(", ")} turned 180°` : `${swLabel(a)} + ${swLabel(b)} fit`;
+      }
+      tr2.appendChild(td);
+    }
+    tbl.appendChild(tr2);
+  }
+}
+
 function renderInfo(g) {
   const all = [...g.main, ...g.extras];
   const w = Math.max(...all.map(k => k.x + k.w)) - Math.min(...all.map(k => k.x));
@@ -818,7 +963,7 @@ function renderInfo(g) {
     [`${Math.round(w * 19.05)} × ${Math.round(d * 19.05)} mm`, "key area"],
     [String(stabs), "stabilizers"],
     [`${rows} × ${cols}`, "matrix"],
-    [caseFor(fittedList()) === "tall" ? "Tall" : "Slim", "case"],
+    [caseFor(state.types) === "tall" ? "Tall" : "Slim", "case"],
   ];
   const box = document.getElementById("stats");
   box.replaceChildren(...stats.map(([v, l]) => { const s = document.createElement("div"); s.className = "stat";
@@ -829,6 +974,7 @@ function renderInfo(g) {
   if (state.size === "40" || state.size === "60") notes.push("The generator checks that the core board and battery fit under this size.");
   if (rows > 8) notes.push("More than 8 rows: the generator folds them into 8 matrix rows.");
   const ul = document.getElementById("notes");
+  renderFit();
   ul.replaceChildren(...notes.map(t => { const li = document.createElement("li"); li.textContent = t; li.className = "warn"; return li; }));
   document.getElementById("json-out").value = fileText();
 }
@@ -851,21 +997,46 @@ seg("seg-std", STANDARDS, () => state.standard, v => { state.standard = v; });
 seg("seg-conn", CONNS, () => state.connectivity, v => { state.connectivity = v; });
 seg("seg-style", STYLES, () => state.style, v => { state.style = v; });
 seg("seg-glow", [{ id: "on", label: "On" }, { id: "off", label: "Off" }], () => state.underglow ? "on" : "off", v => { state.underglow = v === "on"; });
-// Switches: several at once. The universal board takes MX, Choc v1 and Choc v2 sockets at every key.
+seg("seg-mount", MOUNTS, () => state.mount, v => { state.mount = v; });
+// Switch types: chips show live whether a type still fits with the ones already chosen.
 (function () {
   const box = document.getElementById("seg-switches");
-  for (const o of SWITCHES) {
-    const b = document.createElement("button"); b.type = "button"; b.dataset.value = o.id; b.title = o.title; b.append(o.label);
-    if (o.later) { const sm = document.createElement("small"); sm.textContent = "later"; b.append(sm); b.disabled = true; }
+  for (const t of SW_IDS) {
+    const b = document.createElement("button"); b.type = "button"; b.dataset.value = t;
+    const mark = document.createElement("span"); mark.className = "mark";
+    b.append(swLabel(t), mark);
     b.addEventListener("click", () => {
-      const on = state.fitted.includes(o.id);
-      if (on && state.fitted.length === 1) { toast("Keep at least one switch type."); return; }
-      state.fitted = on ? state.fitted.filter(f => f !== o.id) : [...state.fitted, o.id];
-      syncControls(); render();
+      const on = state.types.includes(t);
+      if (on) {
+        if (state.types.length === 1) { toast("Keep at least one switch type."); return; }
+        state.types = state.types.filter(x => x !== t);
+      } else {
+        if (!fitOf([...state.types, t])) { toast(whyNot(state.types, t)); return; }
+        state.types = [...state.types, t];
+      }
+      render();
     });
     box.appendChild(b);
   }
-  box._sync = () => { for (const b of box.children) b.setAttribute("aria-pressed", String(state.fitted.includes(b.dataset.value))); };
+  for (const o of OWN_BOARD) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "own"; b.disabled = true;
+    b.title = "Needs its own switch board: no pins, a sensor under every key";
+    const sm = document.createElement("small"); sm.textContent = "own board"; b.append(o.label, sm); box.appendChild(b);
+  }
+  box._sync = () => {
+    const fit = fitOf(state.types) || { turned: [] };
+    for (const b of box.children) {
+      const t = b.dataset.value; if (!t) continue;
+      const on = state.types.includes(t);
+      const next = on ? fit : fitOf([...state.types, t]);
+      const status = !next ? "no" : next.turned.includes(t) ? "turn" : "yes";
+      b.setAttribute("aria-pressed", String(on));
+      b.classList.toggle("no", !on && status === "no");
+      b.classList.toggle("turn", status === "turn");
+      b.querySelector(".mark").textContent = status === "no" && !on ? "✕" : status === "turn" ? "↻" : "";
+      b.title = status === "no" && !on ? whyNot(state.types, t) : status === "turn" ? `${swLabel(t)}: turned 180°${state.rgb ? ", no per-key light" : ""}` : swLabel(t);
+    }
+  };
 })();
 seg("seg-feel", FEELS, () => state.feel, v => { state.feel = v; });
 seg("seg-rgb", [{ id: "on", label: "On" }, { id: "off", label: "Off" }], () => state.rgb ? "on" : "off", v => { state.rgb = v === "on"; });
@@ -877,7 +1048,7 @@ function autoName() {
   state.name = `KO ${state.size === "tkl" ? "TKL" : state.size} ${si.std}-${si.lang}${state.style === "grid" ? " grid" : ""}${state.connectivity === "wired" ? " wired" : ""}`;
 }
 function syncControls() {
-  for (const id of ["seg-size", "seg-style", "seg-std", "seg-conn", "seg-switches", "seg-feel", "seg-rgb", "seg-glow", "seg-format"]) document.getElementById(id)._sync();
+  for (const id of ["seg-size", "seg-style", "seg-std", "seg-conn", "seg-mount", "seg-switches", "seg-feel", "seg-rgb", "seg-glow", "seg-format"]) document.getElementById(id)._sync();
   document.getElementById("build-name").value = state.name;
 }
 const nameIn = document.getElementById("build-name");
@@ -926,7 +1097,7 @@ document.getElementById("file-in").addEventListener("change", e => {
 const savedList = document.getElementById("saved-list"), savedStatus = document.getElementById("saved-status");
 function summaryText(cfg) {
   const sz = SIZES.find(s => s.id === cfg.layout.size)?.label || cfg.layout.size;
-  const sw = (cfg.switch.fitted || [cfg.switch.family]).map(f => SWITCHES.find(w => w.id === f)?.label || f).join(" + ");
+  const sw = (cfg.switch.types || cfg.switch.fitted || [cfg.switch.family]).map(swLabel).join(" + ") + (cfg.switch.mount === "solder" ? " soldered" : " hot-swap");
   return `${sz}${cfg.layout.style === "grid" ? " grid" : ""} · ${cfg.layout.standard} ${cfg.layout.language} · ${cfg.connectivity} · ${sw} · ${cfg.keys.length} keys`;
 }
 function renderSaved(docs) {
@@ -995,6 +1166,6 @@ async function connectRuntime() {
 syncControls();
 render();
 connectRuntime();
-window.__ko = { geometry, exportKO, exportKLE, importKO, applyState, fileText, get state() { return state; }, SIZES, STANDARDS };
+window.__ko = { geometry, exportKO, exportKLE, importKO, applyState, fileText, COMPAT, get state() { return state; }, SIZES, STANDARDS };
 </script>
 </body></html>

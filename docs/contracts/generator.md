@@ -1,6 +1,6 @@
 # Contract: Generator
 
-**ID prefix:** `GEN` · **Status:** draft v0.3 · **First phase:** P1 (switch board), P7 (full package) · **License:** GPL-3.0-or-later
+**ID prefix:** `GEN` · **Status:** draft v0.4 · **First phase:** P1 (switch board), P7 (full package) · **License:** GPL-3.0-or-later
 
 ## Purpose
 
@@ -12,25 +12,26 @@ A local program comes first; a website using the same engine comes later.
 
 | Input | Values |
 |---|---|
-| Layout | **KO layout file v2** (below; v1 files are read and converted), written by the layout builder; or KLE JSON (key positions only, the other inputs then come from options) |
+| Layout | **KO layout file v3** (below; v1 and v2 files are read and converted), written by the layout builder; or KLE JSON (key positions only, the other inputs then come from options) |
 | Size | 40 % up to full size with numpad |
 | Layout style | Staggered (usual row stagger) or grid (ortholinear: every key on whole-unit columns, ISO enter as a 1 × 2 key) |
 | Standard | ANSI or ISO (languages differ only in keycaps and OS settings) |
-| Switches | Types to fit, several at once: MX-style, Kailh Choc v1, Choc v2 (one combined hot-swap footprint, SWB-001). The case follows: tall if MX is fitted, else slim. Gateron low profile and Hall effect need their own switch boards (variants, later). The feel (linear, tactile, clicky, silent) only goes into the switch order |
+| Switches | Mounting (hot-swap or soldered) and any set of switch types that share one key position: Choc v1, Choc v2, MX-style, Gateron Low Profile, Cherry MX Low Profile, Kailh KH, Alps/Matias, Choc mini, Kailh X. Which sets work, and which type is turned 180° to make room, comes from `generator/switches/compat.py` (footprint geometry, project DRC rules, hot-swap socket bodies, the per-key LED window). The case follows: tall if MX, Kailh KH or Alps is selected, else slim. Hall effect, optical and Topre have no pins and need their own switch boards. The feel only goes into the switch order |
 | Connection | Wireless (USB-C and Bluetooth, battery fitted) or wired (USB-C only, no battery fitted); same core board either way |
 | Lighting | Per-key RGB on/off; underglow (LEDs on the underside of the switch board) on/off. Both run from `LED_5V` and are off by default on battery |
 | Extra keys | Up to two extra rows above and two extra columns on each side, each key with a default function (media, Discord, desktop, macros) |
 | Style | Parameters from the owner's final design ([mechanical.md](mechanical.md)) |
 
-## KO layout file (v2)
+## KO layout file (v3)
 
 The interface between the layout builder (`generator/configurator/index.html`) and the generator.
-Schema: `generator/schema/ko-layout-2.schema.json` (v1: `ko-layout-1.schema.json`). Example: `generator/examples/ko-75-iso-ch.json` (the owner's build).
+Schema: `generator/schema/ko-layout-3.schema.json` (older: `ko-layout-1`, `ko-layout-2`). Example: `generator/examples/ko-75-iso-ch.json` (the owner's build).
 JSON is also valid YAML, so this file is the "KO YAML" input as well.
 
 **Guarantees (builder → generator)**
-- `format` is `"ko-layout"` and `version` is `2`; any change to the meaning of a field raises `version`.
-- `layout.style` is `staggered` or `grid`; `switch.fitted` lists one or more of `mx`, `choc_v1`, `choc_v2` and `switch.case` follows from it; `lighting` holds `per_key` and `underglow`.
+- `format` is `"ko-layout"` and `version` is `3`; any change to the meaning of a field raises `version`.
+- `layout.style` is `staggered` or `grid`; `lighting` holds `per_key` and `underglow`.
+- `switch.mount` is `hotswap` or `solder`; `switch.types` is a set that `compat.py` lists as working for that mounting and lighting, in priority order (the first keeps the per-key LED); `switch.turned` names the types turned 180°; `switch.case` follows from the types.
 - Every key is listed once in `keys` with a unique `id`, its rectangle `x, y, w, h` in units of `unit_mm` = 19.05 mm,
   origin at the top-left of the whole key area, y towards the user. No two keys overlap.
 - A switch sits at the centre of its key. `shape: "iso-enter"` marks the ISO enter: bounding box 1.5 × 2 u, top part
@@ -78,7 +79,8 @@ The core board is not generated. It is a released design, referenced by version.
 | GEN-008 | Run locally with Python 3.12+, KiCad 9+ and build123d on macOS and Linux. | P1 | T |
 | GEN-009 | Define side-module heights for keyboards with fewer than 6 rows (OPEN-17). | P7 | A |
 | GEN-010 | Website front end using the same engine. | Later | D |
-| GEN-011 | A layout builder page shall write KO layout files v2 for every supported size, standard and layout style (staggered, grid), with connection, switch types, lighting and extra keys, and read them back unchanged. | P1 | T |
-| GEN-012 | The generator shall read KO layout files v2 (and v1, converted) and reject any other `format` or `version`. | P1 | T |
+| GEN-011 | A layout builder page shall write KO layout files v3 for every supported size, standard and layout style (staggered, grid), with connection, mounting, switch types, lighting and extra keys, read them back unchanged, and offer only switch combinations that fit. | P1 | T |
+| GEN-012 | The generator shall read KO layout files v3 (v1 and v2 converted) and reject any other `format` or `version`. | P1 | T |
+| GEN-015 | The generator shall build the key footprint for any switch set `compat.py` allows (soldered: all holes in one footprint; hot-swap: every socket), with the turned types turned, and refuse other sets. | P7 | T |
 | GEN-013 | Grid layouts shall be generated like staggered ones (same switch board rules, 19.05 mm pitch on both axes). | P1 | T |
 | GEN-014 | With underglow selected, the switch board shall carry RGB LEDs on its underside, driven and powered like the per-key LEDs (switched `LED_5V`, off by default). | P1 | I |

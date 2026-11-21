@@ -7,8 +7,9 @@ The Python generator itself comes next in P1 (GEN-001); what exists today is its
 |---|---|
 | `configurator/check_builder.js`, `check_schema.py` | Checks for the page and for layout files |
 | `configurator/index.html` | Layout builder: one self-contained web page. Pick size, staggered or grid, standard and legends, connection, switch types (several at once), per-key light and underglow, add extra key rows or columns with functions, then save or copy the KO layout file |
-| `schema/ko-layout-2.schema.json` | JSON Schema of the KO layout file v2, the generator's input (`ko-layout-1.schema.json`: the older v1) |
-| `examples/ko-75-iso-ch.json` | The owner's build as in SYS-01: 75 %, ISO-CH, staggered, wireless, Choc v1, per-key RGB (file v2) |
+| `schema/ko-layout-3.schema.json` | JSON Schema of the KO layout file v3, the generator's input (`ko-layout-1`, `-2`: older versions) |
+| `switches/compat.py`, `compat.json` | Which switch types share a key position (soldered or hot-swap, with or without the per-key LED), from the footprint geometry. Running it also refreshes the data inside the layout builder page |
+| `examples/ko-75-iso-ch.json` | The owner's build as in SYS-01: 75 %, ISO-CH, staggered, wireless, hot-swap Choc v1, per-key RGB (file v3) |
 
 ## Using the layout builder
 

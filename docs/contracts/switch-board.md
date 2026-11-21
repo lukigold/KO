@@ -15,6 +15,7 @@ There is one switch board per layout and variant. All of them plug into the same
 | Variant | Status | Notes |
 |---|---|---|
 | MX + Choc hot-swap (combined footprint), per-key RGB | **v1** | Same approach as Zack Freedman's MiRage Mk2. v1 is built with Choc switches in the slim case |
+| Soldered multi-footprint | Later (generator, GEN-015) | Holes for every selected switch type in one footprint, e.g. Choc v1 + v2 + MX + Gateron LP + Alps; switches are soldered |
 | Hall-effect | Later | Own board, same interface (uses the reserved lines) |
 | Gateron low-profile | Later | Own board, same interface |
 

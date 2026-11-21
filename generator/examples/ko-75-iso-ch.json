@@ -1,6 +1,6 @@
 {
   "format": "ko-layout",
-  "version": 2,
+  "version": 3,
   "name": "KO 75 ISO-CH",
   "layout": {
     "size": "75",
@@ -10,10 +10,11 @@
   },
   "connectivity": "wireless",
   "switch": {
-    "sockets": "mx-choc",
-    "fitted": [
+    "mount": "hotswap",
+    "types": [
       "choc_v1"
     ],
+    "turned": [],
     "feel": "linear",
     "case": "slim"
   },

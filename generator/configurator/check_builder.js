@@ -36,7 +36,7 @@ const path = require("path");
     const fails = [], files = [];
     for (const style of ["staggered", "grid"]) for (const sz of __ko.SIZES) for (const st of __ko.STANDARDS) {
       const s = __ko.state; s.size = sz.id; s.standard = st.id; s.style = style;
-      s.fitted = ["mx", "choc_v1", "choc_v2"]; s.underglow = style === "grid";
+      s.mount = "solder"; s.types = ["choc_v1", "mx", "alps"]; s.underglow = style === "grid";
       s.extra = { top: [{ keys: Array.from({ length: 30 }, (_, i) => ({ fn: i % 3 ? "play_pause" : (i % 2 ? "custom" : null), label: "obs" })) }],
         left: [{ keys: Array.from({ length: 8 }, () => ({ fn: "stealth" })) }], right: [{ keys: [{ fn: "mute" }] }] };
       __ko.applyState(s);
@@ -54,12 +54,34 @@ const path = require("path");
       const back = __ko.importKO(JSON.stringify(ko)); __ko.applyState(back);
       if (JSON.stringify(__ko.exportKO()) !== JSON.stringify(ko)) fails.push(`${tag}: KO file does not read back unchanged`);
     }
-    return { fails, files };
+    // every switch combination the compatibility tables allow, and that impossible picks are reduced
+    let nsets = 0;
+    for (const mount of ["solder", "hotswap"]) for (const light of [true, false]) {
+      const sets = __ko.COMPAT.modes[mount][light ? "light" : "dark"].sets;
+      for (const [k, v] of Object.entries(sets)) {
+        const s = __ko.state; s.size = "65"; s.style = "staggered"; s.standard = "iso-ch"; s.mount = mount; s.rgb = light;
+        s.types = k.split(","); s.extra = { top: [], left: [], right: [] };
+        __ko.applyState(s);
+        const ko = __ko.exportKO(), tag = `${mount}/${light ? "light" : "dark"}/${k}`;
+        if (ko.switch.types.join(",") !== k) fails.push(`${tag}: selection changed to ${ko.switch.types}`);
+        if (JSON.stringify(ko.switch.turned) !== JSON.stringify(v.turned)) fails.push(`${tag}: turned ${ko.switch.turned} instead of ${v.turned}`);
+        const back = __ko.importKO(JSON.stringify(ko)); __ko.applyState(back);
+        if (JSON.stringify(__ko.exportKO()) !== JSON.stringify(ko)) fails.push(`${tag}: does not read back unchanged`);
+        files.push(ko); nsets++;
+      }
+    }
+    for (const [mount, light, pick] of [["hotswap", true, ["choc_v1", "mx"]], ["hotswap", false, ["choc_v2", "mx"]], ["solder", true, ["choc_v1", "kailh_x"]], ["hotswap", false, ["alps"]]]) {
+      const s = __ko.state; s.mount = mount; s.rgb = light; s.types = pick; __ko.applyState(s);
+      const left = __ko.exportKO().switch.types;
+      const ok = __ko.COMPAT.modes[mount][light ? "light" : "dark"].sets[left.join(",")];
+      if (!ok || JSON.stringify(left) === JSON.stringify(pick)) fails.push(`impossible ${mount}/${light}/${pick} was not reduced (left ${left})`);
+    }
+    return { fails, files, nsets };
   });
   if (process.argv[2]) fs.writeFileSync(process.argv[2], JSON.stringify(result.files));
   await browser.close();
   const fails = [...result.fails, ...errors.map(e => "page error: " + e)];
-  console.log(`${result.files.length} style/size/standard combinations checked`);
+  console.log(`70 style/size/standard combinations and ${result.nsets} switch combinations checked`);
   for (const f of fails) console.log("FAIL " + f);
   console.log(fails.length ? "RESULT: FAIL" : "RESULT: PASS");
   process.exit(fails.length ? 1 : 0);
