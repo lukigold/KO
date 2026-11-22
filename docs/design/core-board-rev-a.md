@@ -80,6 +80,14 @@ Switch-board parts, for the matching interface ([switch-board.md](../contracts/s
 | Column shift registers | TI SN74HC595PWR (TSSOP-16) | C273642 | 145,649 | 0.24 |
 | Descriptor EEPROM | 24C32 class (4 KB; 2 Kbit is too small for a full-size map) | chosen in SWB design | — | — |
 | RGB LED driver | Lumissil IS31FL3741A (39 × 9 matrix = 117 RGB LEDs) | C2940604 | 443 | 3.67 |
+| Per-key RGB LED | EKINGLUX **E6CC1205RGBC3UDA** (reverse mount, 3.2 × 1.25 × 1.1 mm, **common anode**: pin 2 +, R/G/B on 1/3/4). Recommended footprint: four 0.75 × 0.7 mm pads, 3.6 mm across, light hole 2.0 mm wide (≈ 3.9 mm long, read from the drawing) | C2802677 | 9,234 (2026-11-22) | 0.03–0.05 |
+| Per-key LED, second source | A-SP1513R6GHB1C-A01-2A (reverse mount, common anode, 3.2 × 1.3 mm per LCSC; datasheet still to check) | C5355463 | 14,550 | 0.07–0.13 |
+
+The IS31FL3741A drives common-anode RGB LEDs: each SW line feeds the anodes, the CS lines sink the red, green and
+blue cathodes through series resistors (datasheet RGB example at 5 V: 51 Ω red, 20 Ω green and blue; final values in
+the switch-board design). The per-key LED sits 4.9 mm south of the switch centre, between the Choc (4.7 mm) and MX
+(5.08 mm) light windows. Underglow candidate (not chosen): XINGLIGHT XL-1615RGBC-RF, top-mount common-anode RGB,
+1.6 × 1.5 mm, C965840, mounted on the underside so it shines on the desk; datasheet still to check.
 
 **Preview of later revisions** (checked now, so nothing blocks later):
 

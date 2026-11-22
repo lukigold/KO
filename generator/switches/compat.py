@@ -17,9 +17,11 @@ Two ways to mount:
 Any type except the first one in PRIORITY may be turned 180° to make room; a turned type loses the per-key
 LED position (its light window then faces the other way). Choc comes first (SWB-004: the LED serves Choc).
 
-Per-key light: with it on, the first type (Choc, else MX) keeps a reverse-mount LED cut-out south of the centre,
-3.6 x 3.0 mm at (0, 4.9), which covers the Choc (4.7) and MX (5.08) light windows. No other type's pin, pad or
-socket may sit there. For a first type other than Choc or MX the LED position is not verified ("led": "unverified").
+Per-key light: with it on, the first type (Choc, else MX) keeps the per-key LED south of the centre, at (0, 4.9),
+between the Choc (4.7) and MX (5.08) light windows. The LED is the EKINGLUX E6CC1205RGBC3UDA (reverse mount,
+3.2 x 1.25 mm, common anode); its recommended footprint (four 0.75 x 0.7 mm pads 3.6 mm across, light hole 2.0 mm
+wide and about 3.9 mm long, read from the datasheet drawing) takes 3.6 x 3.9 mm. No other type's pin, pad or socket
+may sit there. For a first type other than Choc or MX the LED position is not verified ("led": "unverified").
 
 Rules (project DRC, hardware/core/ko-core.kicad_dru): copper to copper 0.2 mm, hole to hole 0.25 mm,
 hole to copper 0.25 mm; plated pins get a 0.3 mm annular ring. Overlapping non-plated holes merge into one
@@ -46,7 +48,7 @@ TYPES = {
 }
 PRIORITY = list(TYPES)          # first selected type in this order keeps its orientation
 LED_KNOWN = {"choc_v1", "choc_v2", "mx"}
-LED_CUT = (-1.8, 3.4, 1.8, 6.4)  # x0, y0, x1, y1
+LED_CUT = (-1.8, 4.9 - 1.95, 1.8, 4.9 + 1.95)  # E6CC1205RGBC3UDA footprint envelope: x0, y0, x1, y1
 # hot-swap sockets: sleeve holes (one per pin, same order as the pins), bottom pads (w, h) per pin, body rectangle
 SOCKETS = {
     "mx":         {"sleeves": 3.05, "pads": [(-7.085, -2.54, 2.55, 2.5), (5.842, -5.08, 2.55, 2.5)], "body": (-6.0, -6.8, 4.8, -0.8)},
