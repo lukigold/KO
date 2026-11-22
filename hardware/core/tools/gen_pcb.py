@@ -107,6 +107,11 @@ PLACEMENT = {
     "C402": (38.6, 25.8, 0, "T"),
     # --- bottom side: service
     "J501": (44.5, 24.0, 0, "B"),      # SWD
+    # --- underglow strip port (D-40), top side, right of the FFC, cable leaves the front edge like J102
+    "J504": (46.0, 28.6, 0, "T"),
+    "U501": (40.8, 29.0, 0, "T"),      # 5 V data buffer, fed from LED_5V
+    "C501": (40.8, 27.15, 0, "T"),
+    "R501": (40.8, 31.2, 0, "T"),      # series resistor at the strip's data input
     "J502": (39.5, 14.1, 90, "B"),     # expansion (DNP), under the module next to its EXP pins
     "J503": (28.6, 9.6, 0, "B"),       # haptic (DNP)
 }

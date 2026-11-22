@@ -122,6 +122,7 @@ Firmware board support must use exactly this map.
 | USB | USB_D+, USB_D− (68, 67); VBUS (66) | Direct to port A in rev A |
 | SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39) | 2×5 1.27 mm header; pin 6 (SWO) not connected: probe-rs and defmt use RTT over SWD (D-35) |
 | Expansion header | P0.19 TX, P0.20 RX, P0.22 SCK, P0.23 MOSI, P0.24 MISO, P0.21 CS, P0.25/P0.26/P0.27 IO1–3, P1.09 IO4 (LF), P0.29 AIN1 (LF) | J502, unpopulated; pin order set for routing under the module, pin 12 = GND (D-35) |
+| Underglow strip data | P0.26 (EXP_IO2, shared with J502 pin 2) | Through U501 (74AHCT1G125, 5 V) and R501 330 Ω to J504 pin 2; WS2812 timing from the nRF52840 PWM or I2S peripheral (D-40) |
 | Spare (test pads) | P0.04/AIN2, P0.05/AIN3 (20, 21) | Full-speed, analog-capable; for rev C prototyping |
 | Not connected | P0.06, P0.07, P0.09, P0.10, P0.11, P1.00, P1.10, P1.11 | Free for later revisions |
 
@@ -208,7 +209,8 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
   Later additions drawn by hand after the first routing rounds: the USB D+/D− pair (ESD array to module, about 16 mm each, kept off the top layer under the USB-C shell, which is a copper keep-out), CC2 under the receptacle on In2, V5 from the mux to the LED switch on In2 (0.5 mm), and the last part of LED_EN.
   Freerouting (phases in the script) was tried first; it stalled after its first pass and left long, wandering power tracks, so the maze router replaced it for the remaining nets.
   The last open connection, I2C_SDA from module pad 22, had no free path out of the module's pad field. Every free module pad was tried; only pad 28 (P0.12) reaches the rest of the net, so SDA moved there (D-35).
-- **Result (2026-11-20):** 2 186 track segments, 316 vias. `kicad-cli pcb drc --schematic-parity`: 0 violations (warnings included), 0 unconnected items, 0 parity issues. No waivers.
+- **Underglow strip port (D-40, added 2026-11-22):** J504 (JST SH 3-pin, top side, right of the FFC, cable to the front edge like J102): pin 1 LED_5V on a 0.8 mm bottom branch from the LED trunk, pin 2 data, pin 3 GND. The data comes from P0.26 (EXP_IO2), the only free MCU pin the router could bring there (P0.06, P0.07, P0.11, P1.00, EXP_IO1 and EXP_IO3 are walled in). U501 74AHCT1G125 runs from LED_5V, so its TTL inputs take the 3.0 V signal and it is unpowered whenever the rail is off; C501 100 nF; R501 330 Ω at the strip input. The strip shares the LED rail's 1.5 A limit with the switch board (per-key white at full brightness ≈ 0.5 A). Inside the case, so no ESD array.
+- **Result (2026-11-22, with the underglow port):** 2 257 track segments, 320 vias. `kicad-cli pcb drc --schematic-parity`: 0 violations (warnings included), 0 unconnected items, 0 parity issues. No waivers.
 
 ### Ordering at JLCPCB
 
@@ -217,7 +219,7 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
 | File | Use |
 |---|---|
 | `ko-core-rev-a-gerbers.zip` | PCB order: 4 layers, 1.0 mm FR-4, 50 × 32 mm, 1 oz outer copper, standard rules (0.15/0.15 mm, 0.25 mm drill) |
-| `ko-core-rev-a-bom.csv`, `ko-core-rev-a-cpl.csv` | Assembly (PCBA). DNP parts (RT101, J502, J503) and test points are left out |
+| `ko-core-rev-a-bom.csv`, `ko-core-rev-a-cpl.csv` | Assembly (PCBA): 39 BOM lines, 66 placed parts. DNP parts (RT101, J502, J503) and test points are left out |
 | `ko-core-rev-a-fit-1to1.pdf` | Print at 100 % (no "fit to page"): page 1 top, page 2 bottom (mirrored, as seen from below). Check the outline, the USB-C and FFC positions and the switch against the case |
 | `ko-core-rev-a-top.png`, `-bottom.png`, `-iso.png` | Renders |
 

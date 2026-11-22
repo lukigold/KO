@@ -218,5 +218,18 @@
   "kind": "resistor",
   "package": "0402",
   "value": 133000
+ },
+ "R_330_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 330
+ },
+ "U_AHCT125": {
+  "kind": "mpn",
+  "mpn": "SN74AHCT1G125DCKR(UMW)"
+ },
+ "J_UG": {
+  "kind": "mpn",
+  "mpn": "SM03B-SRSS-TB(LF)(SN)"
  }
 }

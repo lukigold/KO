@@ -291,6 +291,16 @@ s.add("J502", "Connector_Generic:Conn_02x08_Odd_Even", "EXPANSION DNP", {
 s.add("J503", "Connector_Generic_MountingPin:Conn_01x06_MountingPin", "HAPTIC DNP", {
     "1": "V5", "2": "3V0", "3": "GND", "4": "I2C_SDA", "5": "I2C_SCL", "6": "HAPTIC_EN", "MP": "GND"},
     footprint="Connector_JST:JST_SH_SM06B-SRSS-TB_1x06-1MP_P1.00mm_Horizontal", dnp=True, **lcsc("J_HAPTIC"))
+# Underglow strip port (D-40): an addressable 5 V strip (WS2812/SK6812 class) on the switched, current-limited LED rail.
+# EXP_IO2 (P0.26) carries the data; the AHCT buffer, powered from LED_5V, lifts the 3.0 V logic to 5 V levels and is
+# unpowered whenever the LED rail is off. (Symbol: the 74LVC1G125 base symbol, same pins as the 74AHCT1G125.)
+s.add("U501", "74xGxx:74LVC1G125", "74AHCT1G125", {"1": "GND", "2": "EXP_IO2", "3": "GND", "4": "UG_BUF", "5": "LED_5V"},
+      footprint="Package_TO_SOT_SMD:SOT-353_SC-70-5", **lcsc("U_AHCT125"))
+C(s, "C501", "100n", "C_100n_0402_16V", "LED_5V")
+R(s, "R501", "330", "R_330_0402", "UG_BUF", "UG_DOUT")
+s.add("J504", "Connector_Generic_MountingPin:Conn_01x03_MountingPin", "UNDERGLOW", {
+    "1": "LED_5V", "2": "UG_DOUT", "3": "GND", "MP": "GND"},
+    footprint="Connector_JST:JST_SH_SM03B-SRSS-TB_1x03-1MP_P1.00mm_Horizontal", **lcsc("J_UG"))
 for i, net in enumerate(["VBUS", "SYS", "VBAT", "3V0", "V5", "VBOOST", "LED_5V", "PWR_EN", "USB_DP", "USB_DN",
                          "I2C_SDA", "I2C_SCL", "SWDIO", "SWCLK", "NRESET", "CHG_QON", "CHG_PG",
                          "SPARE_P004", "SPARE_P005", "GND", "GND"], start=1):

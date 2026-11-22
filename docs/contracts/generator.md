@@ -83,4 +83,4 @@ The core board is not generated. It is a released design, referenced by version.
 | GEN-012 | The generator shall read KO layout files v3 (v1 and v2 converted) and reject any other `format` or `version`. | P1 | T |
 | GEN-015 | The generator shall build the key footprint for any switch set `compat.py` allows (soldered: all holes in one footprint; hot-swap: every socket), with the turned types turned, and refuse other sets. | P7 | T |
 | GEN-013 | Grid layouts shall be generated like staggered ones (same switch board rules, 19.05 mm pitch on both axes). | P1 | T |
-| GEN-014 | With underglow selected, the switch board shall carry RGB LEDs on its underside, driven and powered like the per-key LEDs (switched `LED_5V`, off by default). | P1 | I |
+| GEN-014 | With underglow selected, the switch board shall carry RGB LEDs on its underside, driven and powered like the per-key LEDs (switched `LED_5V`, off by default); per-key and underglow LEDs together stay within the LED drivers' channels (117 RGB per IS31FL3741A). An addressable strip on the core board's underglow port (CORE-065) is independent of this. | P1 | I |

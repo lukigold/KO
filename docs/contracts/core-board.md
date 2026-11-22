@@ -86,6 +86,7 @@ average, so the 3 mA target leaves a large margin for modules and ageing.
 | CORE-062 | The radio module's antenna keep-out shall be respected, and the antenna shall sit at the case's RF path ([mechanical.md](mechanical.md)). | P1 | I |
 | CORE-063 | Every rail, USB, I2C and SWD shall have labelled test points the owner can probe. | P1 | I |
 | CORE-064 | A footprint/connector for a future body haptic driver (I2C) shall be reserved and left unpopulated. | P1 | I |
+| CORE-065 | An underglow strip port shall provide the switched LED rail, GND and a 5 V data line buffered from an MCU pin, for an addressable 5 V LED strip (WS2812/SK6812 class), within the LED rail's 1.5 A; the buffer shall be unpowered while the LED rail is off. | P1 | I/T |
 | CORE-070 | The radio shall be a pre-certified nRF52840 module with integrated antenna. | P1 | I |
 
 ## Not in scope
