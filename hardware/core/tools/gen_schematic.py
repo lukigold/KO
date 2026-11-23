@@ -240,8 +240,10 @@ s.add("U201", "ko:BMD-340", "BMD-340-A-R", {
     # analog pins on the back row
     "13": "XL1", "14": "XL2", "15": "CC1", "19": "NC", "20": "NC", "21": "NC",
     "22": "NC", "23": "NC", "24": "NC", "25": "NC", "26": "NC", "27": "NC", "28": "I2C_SDA",
-    "31": "RSV_MISO", "32": "COL_LAT", "33": "COL_DAT", "34": "COL_CLK", "35": "RSV_INT", "39": "NRESET",
-    "37": "I2C_SCL", "38": "ROW5", "36": "ROW4", "40": "ROW6", "41": "HAPTIC_EN", "42": "ROW7",
+    # front pad row, left to right in the order of contacts 19-33 (rows 7-4, then the column chain), so the
+    # lines to the castellated edge do not cross
+    "31": "ROW7", "32": "ROW6", "33": "ROW5", "34": "ROW4", "35": "RSV_MISO", "36": "COL_LAT", "39": "NRESET",
+    "37": "I2C_SCL", "38": "COL_DAT", "40": "COL_CLK", "41": "HAPTIC_EN", "42": "RSV_INT",
     "6": "NC", "7": "EXP_IO2", "8": "NC", "9": "LED_FAULT", "10": "CC1_B", "11": "CC2_B",
     "12": "CC2",
     "56": "FG_ALRT", "57": "ROW0", "58": "ROW1", "59": "ROW2", "60": "ROW3", "48": "LED_SDB", "49": "LED_EN",

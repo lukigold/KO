@@ -113,9 +113,9 @@ Firmware board support must use exactly this map.
 | Function | nRF52840 pin (BMD-340 pad) | Notes |
 |---|---|---|
 | ROW0–ROW3 | P1.01–P1.04 (57–60) LF | Inputs, internal pull-down, wake (SENSE) |
-| ROW7, ROW6, ROW5, ROW4 | P0.24, P0.22, P0.20, P0.21 (42, 40, 38, 36) | Inputs, internal pull-down, wake (SENSE). Front pad row, towards contacts 19–24 (moved from the left pad column, which sits at the castellated edge on the 16 mm strip, D-43) |
-| RSV_MISO, COL_LAT, COL_DAT, COL_CLK | P0.13, P0.14, P0.15, P0.16 (31–34) | COL_CLK/COL_DAT = SPIM SCK/MOSI, COL_LAT = latch GPIO, RSV_MISO reserved (Hall-effect boards) |
-| RSV_INT | P0.17 (35) | Reserved for Hall-effect switch boards |
+| ROW7, ROW6, ROW5, ROW4 | P0.13, P0.14, P0.15, P0.16 (31–34) | Inputs, internal pull-down, wake (SENSE). Left end of the front pad row: the front row runs left to right in the order of contacts 19–33, so the lines to the castellated edge do not cross (D-43) |
+| RSV_MISO, COL_LAT, COL_DAT, COL_CLK | P0.17, P0.21, P0.20, P0.22 (35, 36, 38, 40) | COL_CLK/COL_DAT = SPIM SCK/MOSI, COL_LAT = latch GPIO, RSV_MISO reserved (Hall-effect boards); full-speed pins |
+| RSV_INT | P0.24 (42) | Reserved for Hall-effect switch boards |
 | I2C_SDA, I2C_SCL | P0.12, P0.19 (28, 37) | TWIM, 4.7 kΩ pull-ups to 3V0. SDA moved from P0.06 (D-35); SCL moved from P0.08 (pad 24, walled in by unused pads) to the outer front row on the strip |
 | LED_SDB, LED_EN, BOOST_EN | P1.05, P1.06, P1.07 (48–50) LF | Static outputs; LED_EN and BOOST_EN have 100 kΩ pull-downs |
 | LED_FAULT, CHG_INT | P0.28 (9), P1.08 (51) | Open-drain inputs, 10 kΩ pull-ups. Moved from P1.10/P1.11 for routing (D-35) |

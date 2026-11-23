@@ -69,7 +69,8 @@ STITCH_VIA = (0.6, 0.3)
 STITCH_PITCH = 2.5
 CLR_VIA = 0.2                  # via copper to other-net copper (net classes ask 0.15)
 CLR_STUB = 0.17
-PRE_GND_PADS = {("U106", "2"), ("U303", "3"), ("U201", "45"), ("C114", "2"), ("C115", "2")}   # U303.3: through the top pour (a via there walls
+PRE_GND_PADS = {("U106", "2"), ("U303", "3"), ("U201", "45"), ("C114", "2"), ("C115", "2"),
+                ("R311", "2"), ("R312", "2")}   # U303.3: through the top pour (a via there walls
 # in OV2); U201.45: hand-routed via clear of SWDIO's only way out   # GND pads tied to a via by the hand routes
 EXTRA_GND_VIAS = {("U101", "15"): 2, ("U103", "2"): 2, ("U104", "4"): 2, ("U106", "2"): 2}
 
@@ -206,6 +207,10 @@ STRIP_TRACKS = [
     ("/USB/USB_SEL", F, 0.15, [(4.95, 2.85), (5.25, 2.6), (5.65, 2.6)]),   # ST pin boxed in: via to In2
     ("GND", F, 0.25, [(11.15, 45.9), (11.2, 46.9), (11.25, 47.45)]),         # module pad 45, beside SWDIO
     ("GND", F, 0.3, [(4.95, 22.4), (4.95, 21.2)]),                           # boost output cap C114, beside VBUS
+    ("CC1_B", F, 0.2, [(1.6, 53.49), (2.65, 53.49)]),                        # port B Rd at the edge: contact 21,
+    ("GND", F, 0.3, [(2.65, 54.51), (2.65, 55.15)]),                         #   its GND via against the edge
+    ("CC2_B", F, 0.2, [(1.6, 57.49), (2.65, 57.49)]),                        #   contact 23
+    ("GND", F, 0.3, [(2.65, 58.51), (2.65, 59.15)]),
     ("GND", F, 0.25, [(5.22, 20.4), (4.95, 21.2)]),                          # and the mux input cap C115
     ("SYS", F, 0.8, [(13.52, 59.25), (12.4, 59.25)]),
     ("SYS", B, 1.0, [(12.4, 59.25), (12.4, 53.6), (10.3, 51.5), (10.3, 31.7), (9.6, 31.0)]),   # clear of the charger's GND vias
@@ -226,6 +231,7 @@ STRIP_VIAS = [
     ("CC2", (9.2, 7.4), 0.5, 0.25), ("CC2", (12.7, 11.65), 0.5, 0.25),
     ("SYS", (12.4, 59.25), 0.8, 0.4), ("SYS", (9.6, 31.0), 0.8, 0.4), ("SYS", (4.9, 30.4), 0.8, 0.4),
     ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (11.25, 47.45), 0.5, 0.25), ("GND", (4.95, 21.2), 0.5, 0.25),
+    ("GND", (2.65, 55.15), 0.5, 0.25), ("GND", (2.65, 59.15), 0.5, 0.25),
 ]
 PRE_TRACKS = _ct + _rt + STRIP_TRACKS
 PRE_VIAS = _cv + _rv + STRIP_VIAS

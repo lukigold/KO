@@ -97,17 +97,17 @@ PLACEMENT = {
     "U201": (8.3, 41.5, 180, "T"),
     "C203": (3.1, 47.6, 0, "T"),       # VBUS 4u7 next to module pad 66
     # --- front: charger (moved block), CC_B Rd at their contacts, LDO, fuel gauge, pull-ups, battery
-    "R311": (3.2, 54.0, 90, "T"),      # CC1_B Rd at contact 21
-    "R312": (3.2, 58.0, 90, "T"),      # CC2_B Rd at contact 23
+    "R311": (2.65, 54.0, 270, "T"),    # CC1_B Rd at contact 21, tucked against the edge (the lane beside it
+    "R312": (2.65, 58.0, 270, "T"),    # CC2_B Rd at contact 23   carries the matrix lines to contacts 24-33)
     "U103": (13.6, 64.1, 0, "T"),      # 3.0 V LDO
     "C110": (10.8, 64.1, 90, "T"),     # SYS input
     "C111": (13.6, 66.9, 0, "T"),      # 3V0 output
     "R107": (10.8, 66.9, 90, "T"),     # PWR_EN pull-down (switch on pads J103)
     "U102": (6.9, 63.4, 180, "T"),     # fuel gauge: VBAT pins towards the VBAT track, I2C towards the pull-ups
     "C109": (7.0, 65.4, 180, "T"),     # VBAT, pin 1 on the VBAT track
-    "R106": (4.4, 63.4, 90, "T"),      # FG_ALRT pull-up
-    "R201": (3.6, 66.4, 0, "T"),       # I2C pull-ups
-    "R202": (3.6, 67.5, 0, "T"),
+    "R106": (7.5, 66.9, 0, "T"),       # FG_ALRT pull-up, out of the edge lane
+    "R201": (5.3, 66.4, 0, "T"),       # I2C pull-ups below the fuel gauge, out of the edge lane
+    "R202": (5.3, 67.5, 0, "T"),
     "J101": (7.4, 74.9, 0, "T"),       # battery, opening to the front edge
     # --- bottom side: solder pads for wires (D-43)
     "J102": (5.7, 69.6, 0, "B"),       # pack NTC          } three rows under the battery connector, right-aligned
