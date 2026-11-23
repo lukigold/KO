@@ -1362,7 +1362,7 @@
 				)
 			)
 		)
-		(property "Footprint" "ko:WirePads_SWD"
+		(property "Footprint" "ko:WireGrid_SWD"
 			(at 40.64 45.72 0)
 			(effects
 				(font
@@ -1642,7 +1642,7 @@
 				)
 			)
 		)
-		(property "Footprint" "ko:WirePads_Haptic"
+		(property "Footprint" "ko:WireGrid_Haptic"
 			(at 68.58 45.72 0)
 			(effects
 				(font

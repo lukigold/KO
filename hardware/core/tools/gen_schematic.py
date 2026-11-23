@@ -332,10 +332,10 @@ s = design.sheet("Service and expansion", "service.kicad_sch", paper="A4", note=
     "on the remaining rails and USB (CORE-063). The rev A expansion header was dropped with the strip layout (D-42)."))
 s.add("J501", "Connector_Generic:Conn_01x05", "SWD PADS", {
     "1": "3V0", "2": "SWDIO", "3": "SWCLK", "4": "NRESET", "5": "GND"},
-    footprint="ko:WirePads_SWD", in_bom=False, description="SWD wires to a debug probe (first flash, recovery)")
+    footprint="ko:WireGrid_SWD", in_bom=False, description="SWD wires to a debug probe (first flash, recovery)")
 s.add("J503", "Connector_Generic:Conn_01x06", "HAPTIC PADS", {
     "1": "V5", "2": "3V0", "3": "GND", "4": "I2C_SDA", "5": "I2C_SCL", "6": "HAPTIC_EN"},
-    footprint="ko:WirePads_Haptic", in_bom=False, description="Future body haptic driver (CORE-064)")
+    footprint="ko:WireGrid_Haptic", in_bom=False, description="Future body haptic driver (CORE-064)")
 # Underglow strip port (D-40): an addressable 5 V strip (WS2812/SK6812 class) on the switched, current-limited LED rail.
 # EXP_IO2 (P0.26) carries the data; the AHCT buffer, powered from LED_5V, lifts the 3.0 V logic to 5 V levels and is
 # unpowered whenever the LED rail is off. (Symbol: the 74LVC1G125 base symbol, same pins as the 74AHCT1G125.)

@@ -390,6 +390,25 @@ def standins():
                                                 (-1.6, 3.4, 1.0, 1.6, 4.41, 3.6, (0.3, 0.3, 0.3))])
 
 
+def wire_grid(key, cols=3, px=2.0, py=2.8, w=1.2, h=1.4):
+    """Solder pads for wires in a grid (cols per row), each labelled above it on the silkscreen; for the pad sets
+    that sit on the bottom side under the radio module (D-43). Copper only: excluded from BOM and position files."""
+    title, labels = WIRE_PADS[key]
+    n = len(labels)
+    rows = (n + cols - 1) // cols
+    fp = FP(f"WireGrid_{key}", f"{n} solder pads for wires ({title}), {cols} x {rows} grid, {px} x {py} mm pitch",
+            "solder pad wire", -(rows - 1) * py / 2 - h / 2 - 2.0, (rows - 1) * py / 2 + h / 2 + 1.0)
+    fp.items[-1] = "\t(attr smd exclude_from_pos_files exclude_from_bom)\n"
+    fp.items[0] = fp.items[0].replace('(layer "F.SilkS")', '(layer "F.Fab")')
+    x0, y0 = -(cols - 1) * px / 2, -(rows - 1) * py / 2
+    for k, lab in enumerate(labels):
+        x, y = x0 + (k % cols) * px, y0 + (k // cols) * py
+        fp.pad(str(k + 1), x, y, w, h, "roundrect", 0.15, layers='"F.Cu" "F.Mask"')
+        fp.text(lab, x, y - (h / 2 + 0.6), size=0.8, width=0.5)
+    fp.rect(x0 - w / 2 - 0.25, y0 - h / 2 - 1.2, -x0 + w / 2 + 0.25, -y0 + h / 2 + 0.25, "F.CrtYd", 0.05)
+    fp.write()
+
+
 if __name__ == "__main__":
     standins()
     bmd340()
@@ -400,4 +419,6 @@ if __name__ == "__main__":
     castellated()
     for k in WIRE_PADS:
         wire_pads(k)
+    for k in ("SWD", "Haptic"):
+        wire_grid(k)
     print("footprints written to", OUT)

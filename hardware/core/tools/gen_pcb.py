@@ -32,7 +32,8 @@ from kisch.sexpr import find, find_all, parse  # noqa: E402
 
 BOARD_W, BOARD_H = 16.0, 80.0
 OX, OY = 100.0, 100.0           # board origin in KiCad page coordinates
-RF_STRIP = 4.4                   # BMD-340 datasheet 6.1: no copper within 4.4 mm of the antenna edge
+RF_STRIP = 4.2                   # BMD-340 datasheet 6.1: no copper within 4.4 mm of the antenna edge, which
+                                 # stands 0.2 mm beyond the board edge
 RF_Y = (32.0, 51.0)              # keep-out strip along the right edge, beside the module and ~4.1 mm beyond it
 USB_SHELL = (6.0, 15.6, 5.3)     # x0, x1, y1: no top-layer copper under the receptacle body but its pads
 
@@ -86,15 +87,16 @@ PLACEMENT = {
     "C501": (14.6, 25.6, 90, "T"),
     "R501": (13.9, 30.4, 0, "T"),
     # --- in front of the 5 V block: crystal and module decoupling above the module
-    "Y201": (5.6, 34.8, 180, "T"),     # 32.768 kHz next to module pads 13/14
-    "C204": (8.2, 34.8, 90, "T"),
-    "C205": (9.2, 34.8, 90, "T"),
-    "C202": (2.75, 34.95, 90, "T"),    # VCC 100n next to VCC pad 17
-    "C201": (10.4, 34.5, 90, "T"),     # VCC 10u
+    "Y201": (6.0, 34.8, 180, "T"),     # 32.768 kHz next to module pads 13/14
+    "C204": (8.6, 34.8, 90, "T"),
+    "C205": (9.6, 34.8, 90, "T"),
+    "C202": (3.15, 34.95, 90, "T"),    # VCC 100n next to VCC pad 17
+    "C201": (10.8, 34.5, 90, "T"),     # VCC 10u
     "C401": (2.95, 15.6, 90, "T"),     # 3V0 at contact 8
     "C402": (4.2, 32.6, 0, "T"),       # LED_5V, between the 5 V block and the crystal
     # --- module across the full width, antenna flush with the right edge
-    "U201": (8.3, 41.5, 180, "T"),
+    "U201": (8.7, 41.5, 180, "T"),     # antenna 0.2 mm beyond the right edge: room for 3 tracks left of the
+                                       # left pad column (VCC, VBUS, USB D+/D-)
     "C203": (3.1, 47.6, 0, "T"),       # VBUS 4u7 next to module pad 66
     # --- front: charger (moved block), CC_B Rd at their contacts, LDO, fuel gauge, pull-ups, battery
     "R311": (2.65, 54.0, 270, "T"),    # CC1_B Rd at contact 21, tucked against the edge (the lane beside it
@@ -110,10 +112,10 @@ PLACEMENT = {
     "R202": (5.3, 67.5, 0, "T"),
     "J101": (7.4, 74.9, 0, "T"),       # battery, opening to the front edge
     # --- bottom side: solder pads for wires (D-43)
-    "J102": (5.7, 69.6, 0, "B"),       # pack NTC          } three rows under the battery connector, right-aligned
+    "J102": (5.7, 69.6, 0, "B"),       # pack NTC          } under the battery connector, right-aligned
     "J103": (13.7, 69.6, 0, "B"),      # power switch      } so the edge lane stays free for contacts 30-33
-    "J503": (9.7, 73.0, 0, "B"),       # haptic driver     }
-    "J501": (10.7, 76.4, 0, "B"),      # SWD               }
+    "J501": (3.2, 38.0, 0, "B"),       # SWD, under the module next to its SWD pins
+    "J503": (3.2, 43.75, 0, "B"),      # haptic driver, under the module next to I2C and HAPTIC_EN
     "J504": (12.2, 27.6, 0, "B"),      # underglow strip, under its buffer
 }
 PLACEMENT.update(_shift({                # charger, as placed and hand-routed on the 50 x 32 mm board

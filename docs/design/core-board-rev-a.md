@@ -196,13 +196,14 @@ strip that replaced both.
     switch-board contract.
   - Back edge: USB-C port A, a long-body receptacle (HX TYPE-C 16P L10.0) whose mouth stands 3.9 mm proud of
     the board edge, so it reaches through an aluminium or printed back wall.
-  - Right edge (case wall): BMD-340 with its antenna flush with the edge. Nothing else reaches the wall: the
-    power switch is off the board (pads J103).
+  - Right edge (case wall): BMD-340 with its antenna 0.2 mm beyond the edge (the module may overhang; it leaves
+    room for three tracks beside its left pad column). Nothing else reaches the wall: the power switch is off the
+    board (pads J103).
   - Front edge: the battery connector (JST PH, opening to the front), so the cable drops under the switch
     board where the battery sits (MECH-003).
-- **Antenna keep-out:** no copper on any layer in a 4.4 mm strip along the right edge, beside the module and
-  about 4.1 mm beyond it on both sides (y = 32.0…51.0 mm; datasheet section 6.1). The module footprint
-  carries the same keep-out over its antenna section.
+- **Antenna keep-out:** no copper on any layer within 4.4 mm of the antenna edge, i.e. a 4.2 mm strip along the
+  board's right edge, beside the module and about 4.1 mm beyond it on both sides (y = 32.0…51.0 mm; datasheet
+  section 6.1). The module footprint carries the same keep-out over its antenna section.
 - **Layers:**
   - In1 is a solid GND plane, the reference for every signal.
   - Top, bottom and In2 get GND pours after routing.
@@ -221,16 +222,18 @@ strip that replaced both.
     the underglow buffer beside it at the right wall.
   - y 32–36 mm: 32.768 kHz crystal next to module pads 13/14, VCC decoupling (100 nF 3 mm from VCC pad 17,
     10 µF), LED_5V capacitor.
-  - y 36–47 mm: BMD-340 across the full width, antenna flush with the right edge. Its left pad column sits
-    0.65 mm inside the castellated edge, so it keeps only its fixed-function pads (VCC, VBUS, USB D±); the rows
-    moved to the front pad row and port B's CC lines to analog pins on the back row (§5).
+  - y 36–47 mm: BMD-340 across the full width, antenna 0.2 mm beyond the right edge. Its left pad column sits
+    1.85 mm inside the castellated edge, so it keeps only its fixed-function pads (VCC, VBUS, USB D±); the rows
+    moved to the front pad row, in the order of contacts 19–33, and port B's CC lines to analog pins on the back
+    row (§5).
   - y 47–62 mm: C203 (VBUS 4.7 µF) 5 mm from the module's VBUS pad; port B's CC Rd resistors at contacts 21/23;
     the charger, moved as one block from the first layout with its hand-routed switching loop.
   - y 62–69 mm: 3.0 V LDO, fuel gauge, I²C pull-ups.
   - y 70–80 mm: battery connector.
-  - Bottom side, copper only: solder pads for wires (J102 NTC, J103 power switch, J503 haptic driver,
-    J501 SWD in three rows under the battery connector; J504 underglow under its buffer), each pad labelled on
-    the silkscreen, and test points on VBUS, VBUS_A, VBAT, VBOOST, CHG_QON and the module's USB D±. Nets with a
+  - Bottom side, copper only: solder pads for wires, each labelled on the silkscreen: J501 SWD and J503 haptic
+    driver as 3 × 2 grids under the module, next to the module pins they serve (eight lines fewer through the
+    busy front zone); J102 NTC and J103 power switch under the battery connector; J504 underglow under its
+    buffer. Test points on VBUS, VBUS_A, VBAT, VBOOST, CHG_QON and the module's USB D±. Nets with a
     wire pad are probed there; port B's VBUS and CC lines at their castellated contacts. No part is assembled
     on the bottom.
 - **Contact order:** unchanged from D-41; only the positions moved (D-43). Port B power and data, 3V0, I²C
@@ -312,7 +315,7 @@ KiCad's API and drawn with its pad numbers to compare against the source drawing
 | USB_C_Receptacle_HX_TYPE-C-16P_L10.0 | HX TYPE-C 16P L10.0 drawing (LCSC C41427495) | 16 SMD pads at the drawing's pitch, two NPTH pegs Ø0.65 mm at ±2.89 mm, four shell slots (0.6 × 1.7 and 0.6 × 1.4 mm); board edge line 5.0 mm from the pegs, so the mouth stands 3.9 mm proud of the edge |
 | Texas_RUX_VQFN-HR-12_2x2.5mm | TPS2121 datasheet, RUX0012A land pattern | Eight 0.2 × 0.6 mm signal pads at 0.5 mm pitch, four 1.05 × 0.4 mm power pads (IN1, IN2, two OUT) |
 | Castellated_1x33_P2.00mm_Edge_1-17_18-33 | Switch-board contract (D-41, D-43), JLCPCB castellated-hole rules | 0.8 mm plated holes centred on the board edge, 2.0 mm pitch, copper 1.4 × 2.4 mm reaching 1.8 mm into the board (the outer 0.6 mm is milled away); contacts 1–17 and 18–33 in two groups 15 mm apart |
-| WirePads_Switch, _NTC, _SWD, _Haptic, _Underglow | D-43 | Rows of 1.3 × 1.8 mm SMD pads at 2.0 mm pitch for soldering wires, each labelled on the silkscreen; copper only, excluded from BOM and position files |
+| WirePads_Switch, _NTC, _Underglow; WireGrid_SWD, _Haptic | D-43 | Rows of 1.3 × 1.8 mm SMD pads at 2.0 mm pitch, or 3 × 2 grids of 1.2 × 1.4 mm pads at 2.0 × 2.8 mm, for soldering wires, each labelled on the silkscreen; copper only, excluded from BOM and position files |
 
 ## 10. Rev A verification plan
 
