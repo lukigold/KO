@@ -1,0 +1,132 @@
+(footprint "WirePads_NTC"
+	(version 20241229)
+	(generator "ko-gen")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "2 solder pads for wires (NTC), 2.2 mm pitch, 1.5 x 2.0 mm")
+	(tags "solder pad wire")
+	(property "Reference" "REF**"
+		(at 0 -3 0)
+		(layer "F.Fab")
+		(uuid "a1c6946b-5036-5cc9-9283-7155e5d4fbd1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "WirePads_NTC"
+		(at 0 3.2 0)
+		(layer "F.Fab")
+		(uuid "1c8fa30f-a199-5ac6-b082-4566a962bc1a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "aa8078c6-05e7-5ef7-ac09-fd566e013684")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "2 solder pads for wires (NTC), 2.2 mm pitch, 1.5 x 2.0 mm"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "98e6e73d-e4f7-53a8-b6ed-1210438d60eb")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd exclude_from_pos_files exclude_from_bom)
+	(pad "1" smd roundrect
+		(at -1.1 0)
+		(size 1.5 2)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.15)
+		(uuid "4668d427-55d6-57fb-bbcf-09e00131b1d6")
+	)
+	(fp_text user "NTC"
+		(at -1.1 -1.7 0)
+		(layer "F.SilkS")
+		(uuid "37680dca-a9d5-5c65-bf83-558ed9cd2b9e")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "2" smd roundrect
+		(at 1.1 0)
+		(size 1.5 2)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.15)
+		(uuid "991ace52-6ec7-5460-a7a9-63215208283c")
+	)
+	(fp_text user "GND"
+		(at 1.1 -1.7 0)
+		(layer "F.SilkS")
+		(uuid "96b0c4b4-64f4-5625-a256-1603fa68f826")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(fp_line
+		(start -2.1 -2.25)
+		(end 2.1 -2.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "f455165d-8ed3-586e-86c9-97b62561d7c4")
+	)
+	(fp_line
+		(start 2.1 -2.25)
+		(end 2.1 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "e3aa8cc0-9c1e-5eec-a58a-d772853811b1")
+	)
+	(fp_line
+		(start 2.1 1.25)
+		(end -2.1 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "95b938d8-7644-5c4f-be1b-464faf9cca46")
+	)
+	(fp_line
+		(start -2.1 1.25)
+		(end -2.1 -2.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "f77aa213-fa5a-5412-b53b-5b319aa7a126")
+	)
+	(embedded_fonts no)
+)

@@ -165,18 +165,6 @@
   "kind": "mpn",
   "mpn": "XY-S2B-PH-SM4-TB"
  },
- "J_NTC": {
-  "kind": "mpn",
-  "mpn": "SM02B-SRSS-TB(LF)(SN)"
- },
- "J_HAPTIC": {
-  "kind": "mpn",
-  "mpn": "SM06B-SRSS-TB(LF)(SN)"
- },
- "SW_PWR": {
-  "kind": "mpn",
-  "mpn": "PCM12SMTR"
- },
  "RT_NTC": {
   "kind": "fixed",
   "lcsc": "",
@@ -196,11 +184,6 @@
  "Y_32k": {
   "kind": "mpn",
   "mpn": "ECS-.327-12.5-34B-TR"
- },
- "J_SWD": {
-  "kind": "search",
-  "search": "2x5P 1.27mm SMD pin header",
-  "package": ""
  },
  "C_18p_0402_C0G": {
   "kind": "capacitor",
@@ -227,10 +210,6 @@
  "U_AHCT125": {
   "kind": "mpn",
   "mpn": "SN74AHCT1G125DCKR(UMW)"
- },
- "J_UG": {
-  "kind": "mpn",
-  "mpn": "SM03B-SRSS-TB(LF)(SN)"
  },
  "J_USBC_L10": {
   "kind": "mpn",

@@ -22,10 +22,11 @@ There is one switch board per layout and variant. All of them plug into the same
 ## Interface: core ↔ switch board
 
 **Connection (v2, D-41):** the core board is a strip beside the key area at the right. Its left edge carries
-**33 castellated contacts** (plated half holes, 2.0 mm pitch, contact 1 at the back); they are soldered to a
-matching castellated contact row on the switch board's right edge, the core's back end level with the
-switch board's back edge. This pinout replaces the 24-pin FFC of the first rev A layout and is fixed from
-then on.
+**33 castellated contacts** (plated half holes, 2.0 mm pitch, contact 1 at the back) in two groups (D-43):
+contacts 1–17 at 1, 3, … 33 mm from the core's back end, contacts 18–33 at 48, 50, … 78 mm. Between the
+groups the radio module spans the full width of the strip. They are soldered to a matching castellated
+contact row on the switch board's right edge, the core's back end level with the switch board's back edge.
+This pinout replaces the 24-pin FFC of the first rev A layout and is fixed from then on.
 
 | Contact | Signal | Direction | Description |
 |---|---|---|---|
@@ -54,8 +55,8 @@ then on.
 | 30–33 | `ROW0`, `ROW1`, `ROW2`, `ROW3` | SWB → core | Matrix rows |
 
 The order follows the core strip's layout: port B power and data at the back next to the core's VBUS mux and
-data switch, 3V0 and I²C beside the charger, `LED_5V` beside the LED rail switch, and the matrix, its control
-lines and port B's CC lines beside and in front of the radio module, in the order of its pads.
+data switch, 3V0, I²C and `LED_5V` beside the 5 V rail parts, and the matrix, its control lines and port B's
+CC lines in front of the radio module.
 
 **Matrix scheme:** columns are driven through a chain of shift registers on the switch board, so the
 number of columns (and therefore keyboard size) never changes the connector. Rows (≤ 8) go directly to
@@ -104,4 +105,4 @@ the MCU. Diodes run column → row (COL2ROW).
 | SWB-013 | PCB thickness shall be 1.6 mm unless the height stack-up requires 1.2 mm (decided with OPEN-11). | P1 | I |
 | SWB-014 | Hall-effect and Gateron low-profile switch boards shall use the same connector and descriptor, declaring their variant. | Later | A |
 | SWB-015 | The board shall carry USB-C port B at its back-left corner (long-body 16-pin receptacle, ESD on D± and CC) and pass VBUS_B, D±, CC1/CC2 to the core contacts. | P1 | I/T |
-| SWB-016 | The board's right edge shall carry the 33 castellated contacts of the core interface (2.0 mm pitch, contact 1 at the back), aligned so the core's back end is level with the board's back edge. | P1 | I |
+| SWB-016 | The board's right edge shall carry the 33 castellated contacts of the core interface (2.0 mm pitch, contact 1 at the back, two groups at the positions given under "Interface"), aligned so the core's back end is level with the board's back edge. | P1 | I |

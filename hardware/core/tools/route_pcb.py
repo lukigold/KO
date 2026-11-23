@@ -69,7 +69,8 @@ STITCH_VIA = (0.6, 0.3)
 STITCH_PITCH = 2.5
 CLR_VIA = 0.2                  # via copper to other-net copper (net classes ask 0.15)
 CLR_STUB = 0.17
-PRE_GND_PADS = {("U106", "2"), ("U201", "55"), ("U301", "2"), ("R311", "2"), ("R312", "2")}   # GND pads tied to a via by the hand routes
+PRE_GND_PADS = {("U106", "2"), ("U303", "3"), ("U201", "45")}   # U303.3: through the top pour (a via there walls
+# in OV2); U201.45: hand-routed via clear of SWDIO's only way out   # GND pads tied to a via by the hand routes
 EXTRA_GND_VIAS = {("U101", "15"): 2, ("U103", "2"): 2, ("U104", "4"): 2, ("U106", "2"): 2}
 
 # Hand-routed power copper (board mm, origin top-left). Every point was checked against the pad edges for
@@ -77,6 +78,13 @@ EXTRA_GND_VIAS = {("U101", "15"): 2, ("U103", "2"): 2, ("U104", "4"): 2, ("U106"
 PMID, SW, BTST = "/Battery and charger/CHG_PMID", "/Battery and charger/CHG_SW", "/Battery and charger/CHG_BTST"
 F, I2, B = "F.Cu", "In2.Cu", "B.Cu"
 BST_SW, LED_ILIM = "/Power rails/BST_SW", "/Power rails/LED_ILIM"
+
+
+def _turned(tracks: list, vias: list) -> tuple[list, list]:
+    """Hand routes of the rails block, which gen_pcb.py turned by 90 degrees (gen_pcb.RAILS_ROT)."""
+    rot = gen_pcb.rot90
+    return ([(n, layer, w, [rot(*q) for q in pts]) for n, layer, w, pts in tracks],
+            [(n, rot(*q), dia, drill) for n, q, dia, drill in vias])
 
 
 def _moved(tracks: list, vias: list, d: tuple) -> tuple[list, list]:
@@ -116,8 +124,8 @@ _ct, _cv = _moved([
     ("VBUS", (3.4, 4.6), 0.6, 0.3), ("VBUS", (2.55, 4.25), 0.6, 0.3),
 ], gen_pcb.CHARGER_SHIFT)
 
-# Boost (U104), 5 V mux (U105) and LED rail switch (U106), moved the same way (gen_pcb.RAILS_SHIFT).
-_rt, _rv = _moved([
+# Boost (U104), 5 V mux (U105) and LED rail switch (U106), turned with their parts (gen_pcb.RAILS_ROT).
+_rt, _rv = _turned([
     # boost switch node straight up to the inductor; output via In2 to its capacitors and on to the 5 V mux
     # input (U105 pin 6); mux output pins joined under the package, then to C116
     (BST_SW, F, 0.3, [(18.31, 18.4), (19.05, 18.4)]),
@@ -154,127 +162,69 @@ _rt, _rv = _moved([
     ("VBOOST", (24.3, 17.55), 0.6, 0.3), ("VBOOST", (28.85, 18.0), 0.6, 0.3),
     ("VBUS", (25.9, 17.6), 0.6, 0.3),
     ("GND", (21.75, 21.8), 0.5, 0.25),
-], gen_pcb.RAILS_SHIFT)
+])
 
-# Strip-specific power copper (D-41). Floor plan from the back: USB-C and VBUS mux, charger, boost / 5 V mux /
-# LED switch, module, battery. VBUS leaves the TPS2121 on the bottom layer in two short trunks: down the
-# castellated side to the charger, and under the receptacle and down the right side to the 5 V mux. SYS runs
-# from the charger to the boost on the bottom layer, VBAT on a bottom trunk down the castellated side (x = 2.5) to the
-# battery connector. LED_5V leaves the LED switch on the bottom layer to contacts 14-16 (vias up to short top
-# hops) and down the middle under the module to the underglow port.
-PRE_TRACKS = _ct + _rt + [
-    # port A: receptacle VBUS pads -> TPS2121 IN1 (pin 7, from the right); the far pad joins on In2
-    ("VBUS_A", F, 0.6, [(13.6, 6.125), (13.6, 7.3), (13.0, 7.3), (9.7, 7.3), (9.7, 4.75), (8.6, 4.75)]),
-    ("VBUS_A", F, 0.4, [(8.6, 4.75), (7.875, 4.75)]),
-    ("VBUS_A", F, 0.6, [(18.4, 6.125), (18.4, 7.3)]),
-    ("VBUS_A", I2, 0.8, [(13.0, 7.3), (13.0, 6.4), (18.4, 6.4), (18.4, 7.3)]),   # above the D+ vias
-    ("VBUS_A", F, 0.4, [(9.95, 7.3), (9.95, 8.07)]),                   # C302
-    # TPS2121 dividers: each node runs from the upper resistor's top pad down a lane between the columns to the
-    # lower resistor; the upper resistors' supply pads, boxed in by those lanes, get their own vias
-    ("/USB/MUXA_OV2", F, 0.15, [(6.95, 5.55), (6.95, 5.9), (5.6, 6.67)]),
-    ("/USB/MUXA_OV2", F, 0.15, [(5.6, 6.67), (5.25, 6.67), (4.95, 6.97), (4.95, 8.82), (5.25, 9.12), (5.6, 9.12)]),
-    ("/USB/MUXA_OV1", F, 0.15, [(7.45, 5.55), (7.45, 5.9), (7.05, 6.67)]),
-    ("/USB/MUXA_OV1", F, 0.15, [(7.05, 6.67), (6.7, 6.67), (6.32, 7.05), (6.32, 8.75), (6.7, 9.12), (7.05, 9.12)]),
-    ("/USB/MUXA_PR1", F, 0.15, [(7.95, 5.55), (7.95, 5.9), (8.5, 6.67)]),
-    ("/USB/MUXA_PR1", F, 0.15, [(8.5, 6.67), (8.15, 6.67), (7.78, 7.05), (7.78, 8.75), (8.15, 9.12), (8.5, 9.12)]),
-    ("VBUS_A", F, 0.25, [(8.5, 7.63), (9.5, 7.45)]),
-    ("VBUS_A", F, 0.25, [(7.05, 7.63), (7.05, 8.37)]),
-    ("VBUS_A", B, 0.3, [(7.05, 8.37), (9.0, 8.37), (9.0, 7.0), (13.0, 7.0), (13.0, 7.3)]),
-    ("VBUS_B", F, 0.25, [(5.6, 7.63), (5.6, 8.37)]),
-    ("VBUS_B", I2, 0.3, [(5.6, 8.37), (1.2, 8.37)]),                   # to contact 1
-    # port B: contacts 1-3 -> TPS2121 IN2 (pin 2, from the left), C303 on the way
-    ("VBUS_B", F, 0.8, [(1.0, 12.0), (1.0, 8.0)]),
-    ("VBUS_B", F, 0.6, [(1.0, 8.0), (2.6, 6.4), (2.6, 5.15), (3.0, 4.75), (6.0, 4.75)]),
-    ("VBUS_B", F, 0.4, [(6.0, 4.75), (6.525, 4.75)]),
-    ("VBUS_B", F, 0.4, [(3.82, 2.5), (3.82, 4.75)]),
-    # TPS2121 OUT (pins 1 and 8) -> two 0.8/0.4 vias -> bottom trunks to the charger and to the 5 V mux
-    ("VBUS", F, 0.4, [(6.2, 4.05), (5.4, 3.4)]),
-    ("VBUS", F, 0.4, [(8.2, 4.05), (8.8, 3.4)]),
-    ("VBUS", B, 1.0, [(8.8, 3.4), (5.4, 3.4), (3.0, 5.8), (3.0, 19.1), (3.35, 19.45), (4.2, 19.8)]),
-    ("VBUS", B, 1.0, [(8.8, 3.4), (14.2, 3.4), (14.2, 31.6), (14.5, 32.0)]),
-    # SYS to the boost (up to ~1.7 A on battery with the LEDs on): charger SYS node -> 0.8/0.4 via -> 0.8 mm
-    # bottom diagonal -> via -> top layer into L102 pin 1, C112 and U104 VIN
-    ("SYS", F, 0.6, [(11.235, 25.45), (10.35, 25.45)]),
-    ("SYS", B, 0.8, [(10.35, 25.45), (5.6, 28.35)]),
-    ("SYS", F, 0.6, [(5.6, 28.35), (4.4, 29.55), (4.4, 33.9)]),
-    ("SYS", F, 0.6, [(4.4, 33.6), (3.67, 33.775)]),                     # C112 pin 1
-    ("SYS", F, 0.3, [(4.4, 33.3), (5.2, 33.3)]),                        # U104 VIN
-    # VBAT (charging and battery current, up to ~1.7 A): charger capacitor -> two vias -> 0.8 mm bottom trunk
-    # down the castellated side -> two vias -> battery connector pin 1
-    ("VBAT", F, 0.6, [(6.83, 24.6), (6.55, 25.55)]),
-    ("VBAT", F, 0.5, [(6.6, 24.8), (5.85, 25.75)]),
-    ("VBAT", B, 0.8, [(6.55, 25.55), (5.85, 25.75), (2.5, 27.4), (2.5, 69.0), (3.9, 70.4), (4.4, 70.4),
-                      (4.4, 71.4)]),        # close to the contacts: room for C112's GND via
-    ("VBAT", F, 0.6, [(4.4, 70.4), (5.9, 70.8)]),
-    ("VBAT", F, 0.6, [(4.4, 71.4), (5.9, 71.4)]),
-    # LED_5V: from the LED switch's bottom-layer stub to contacts 14-16 and C402, and to the underglow port
-    ("LED_5V", B, 0.8, [(14.0, 35.3), (4.8, 35.3)]),
-    ("LED_5V", B, 0.8, [(4.8, 35.3), (4.8, 36.0), (4.8, 38.0)]),
-    ("LED_5V", F, 0.8, [(4.8, 36.0), (1.0, 36.0)]),
-    ("LED_5V", F, 0.8, [(4.8, 38.0), (1.0, 38.0)]),
-    ("LED_5V", F, 0.8, [(1.0, 34.0), (1.0, 38.0)]),
-    ("LED_5V", F, 0.5, [(4.8, 38.0), (5.8, 38.375)]),                  # C402
-    ("LED_5V", B, 0.8, [(13.85, 38.0), (15.2, 39.35), (15.2, 63.0)]),
-    ("LED_5V", F, 0.5, [(15.2, 63.0), (16.7, 63.0)]),                  # J504 pin 1
-    # USB port A front end (D+/D- 0.2 mm, CC 0.15 mm). D-: both receptacle pads joined on the top layer, into the
-    # ESD array's I/O1 (pins 6 -> 1 across the body), then 0.2 mm beside D+ to the data switch's port-A input.
-    # D+: both pads drop to vias below the pad row and join on the bottom layer, up again into I/O2 (pins 4 -> 3)
-    # and out below D-. CC1 straight down into the CC array; CC2 west above the ESD array, then on In2 to the
-    # CC array's other side.
-    ("/USB/USB_A_DN", F, 0.2, [(15.75, 6.125), (15.75, 8.85)]),
-    ("/USB/USB_A_DN", F, 0.2, [(16.75, 6.125), (16.75, 7.95), (15.75, 7.95)]),
-    ("/USB/USB_A_DN", F, 0.2, [(15.34, 8.85), (13.06, 8.85)]),
-    ("/USB/USB_A_DN", F, 0.2, [(13.06, 8.85), (12.1, 8.85), (11.6, 9.35), (10.7, 9.35), (10.7, 13.8), (7.35, 13.8),
-                          (7.35, 13.28)]),
-    ("/USB/USB_A_DP", F, 0.2, [(15.25, 6.125), (15.25, 7.35)]),
-    ("/USB/USB_A_DP", F, 0.2, [(16.25, 6.125), (16.25, 7.35)]),
-    ("/USB/USB_A_DP", B, 0.2, [(15.25, 7.35), (16.25, 7.35), (16.85, 7.95), (16.85, 11.5)]),
-    ("/USB/USB_A_DP", F, 0.2, [(16.85, 11.5), (15.34, 10.75)]),
-    ("/USB/USB_A_DP", F, 0.2, [(15.34, 10.75), (13.06, 10.75)]),
-    ("/USB/USB_A_DP", F, 0.2, [(13.06, 10.75), (11.6, 10.75), (11.3, 11.05), (11.3, 14.2), (6.85, 14.2), (6.85, 13.28)]),
-    ("CC1", F, 0.15, [(17.25, 6.125), (17.25, 8.85)]),
-    ("CC1", F, 0.15, [(17.66, 8.85), (19.94, 8.85)]),
-    ("CC2", F, 0.15, [(14.25, 6.125), (14.25, 8.15), (12.0, 8.15)]),
-    ("CC2", I2, 0.15, [(12.0, 8.15), (12.0, 12.3), (17.6, 12.3)]),
-    ("CC2", F, 0.15, [(17.6, 12.3), (17.66, 10.75)]),
-    ("CC2", F, 0.15, [(17.66, 10.75), (19.94, 10.75)]),
-    ("GND", F, 0.25, [(12.6, 9.8), (11.4, 10.05)]),                     # U301 GND pin, boxed in by D+/D-
-    # ESD arrays' VBUS reference pins: U301 pin 5 via In2 round the D+ vias, U302 pin 5 round the east side
-    ("VBUS_A", F, 0.25, [(16.0, 9.8), (16.35, 9.8)]),
-    ("VBUS_A", I2, 0.3, [(16.35, 9.8), (17.05, 9.1), (17.05, 6.4)]),
-    ("VBUS_A", F, 0.3, [(20.6, 9.8), (21.2, 9.8), (21.2, 7.6), (18.7, 7.3)]),
-    # port B data from contacts 5/6 into the data switch: D- on top, D+ on In2 and up through a via at the pin
-    ("USB_B_DN", F, 0.2, [(1.2, 16.0), (5.3, 16.0), (6.35, 14.95), (6.35, 13.28)]),
-    ("USB_B_DP", I2, 0.2, [(1.2, 18.0), (2.4, 18.0), (5.85, 14.55), (5.85, 14.45)]),
-    ("USB_B_DP", F, 0.2, [(5.85, 14.45), (5.85, 13.28)]),
-    # west of the module: the fan from the pads in the module's west column to contacts 20-24. Each lane runs
-    # west to its own column, down to its contact's height and west into the contact; lower pads take columns
-    # further east, so no lane crosses another. R311/R312 sit in the CC lanes, their GND pins between lanes.
-    # The left column's lower pads (3V0, VBUS, USB) keep the room east of the ROW4 column for their vias.
-    ("ROW6", F, 0.15, [(7.45, 45.25), (3.9, 45.25), (3.9, 46.0), (1.2, 46.0)]),
-    ("CC1_B", F, 0.15, [(8.35, 45.8), (4.4, 45.8), (4.4, 48.0), (1.2, 48.0)]),
-    ("ROW5", F, 0.15, [(7.45, 46.35), (5.0, 46.35), (5.0, 50.0), (1.2, 50.0)]),
-    ("CC2_B", F, 0.15, [(8.35, 46.9), (5.5, 46.9), (5.5, 52.0), (1.2, 52.0)]),
-    ("ROW4", F, 0.15, [(7.45, 47.45), (6.0, 47.45), (6.0, 54.0), (1.2, 54.0)]),
-    ("GND", F, 0.25, [(3.7, 48.96), (4.5, 49.0)]),                      # R311 GND pin
-    ("GND", F, 0.25, [(3.7, 52.96), (4.4, 52.96)]),                     # R312 GND pin
-    # module pad 55's GND via south-east of it, keeping the way east between pads 54 and 55 free
-    ("GND", F, 0.25, [(10.15, 49.1), (10.8, 49.7)]),
+# Strip-specific copper (D-43, 16 x 80 mm). Floor plan from the back: USB-C and VBUS mux, 5 V block (turned),
+# crystal, module across the full width, charger (moved), LDO and fuel gauge, battery.
+#  - VBUS_B: contacts 1-3 joined on top, into the TPS2121's IN2 and its capacitor.
+#  - VBUS_A: both receptacle VBUS pads; the right one reaches the left one on the bottom layer under the ESD
+#    arrays (the data and CC lines cross above it on In2), the left one runs on top round the dividers to IN1.
+#  - VBUS: the TPS2121's two OUT pads joined under the package, one 0.8/0.4 via, then a 1 mm bottom trunk along
+#    the castellated edge to the 5 V mux and on under the module to the charger.
+#  - USB port A: D- pads joined on top and straight into the ESD array; D+ pads through vias, across on In2.
+#    CC1 straight down, CC2 across on In2 to the CC array's far pin.
+#  - SYS: from the charger's SYS capacitors on a 1 mm bottom trunk under the module to the boost input.
+#  - VBAT: from the charger's BAT capacitor on top past the fuel gauge to the battery connector.
+#  - LED_5V: from the LED switch on In2 to contacts 14-16 and on the bottom layer to the underglow pads.
+STRIP_TRACKS = [
+    ("VBUS_B", F, 0.8, [(1.2, 1.0), (1.2, 5.0)]),
+    ("VBUS_B", F, 0.4, [(1.2, 1.68), (2.75, 1.68)]),
+    ("VBUS_B", F, 0.6, [(1.2, 4.6), (2.7, 4.6)]),
+    ("VBUS_B", F, 0.4, [(2.7, 4.6), (3.1, 4.35), (3.53, 4.35)]),
+    ("VBUS", F, 0.4, [(3.53, 3.65), (4.88, 3.65)]),
+    ("VBUS", F, 0.4, [(2.5, 3.5), (3.0, 3.65), (3.53, 3.65)]),
+    ("VBUS", B, 1.0, [(2.5, 3.5), (2.6, 4.0), (2.6, 5.5)]),
+    ("VBUS", B, 0.8, [(2.6, 5.5), (2.6, 14.5)]),           # 0.8 mm past the dividers' and C304's GND vias
+    ("VBUS", B, 1.0, [(2.6, 14.5), (2.6, 19.0), (3.3, 19.7), (6.9, 19.7)]),
+    ("VBUS", B, 1.0, [(2.6, 19.0), (2.6, 50.6), (5.25, 53.25), (5.65, 53.25), (6.5, 53.6)]),
+    ("VBUS_A", F, 0.6, [(8.4, 6.12), (8.4, 7.45)]),
+    ("VBUS_A", F, 0.5, [(8.4, 7.15), (5.53, 7.15), (5.53, 4.35), (4.88, 4.35)]),
+    ("VBUS_A", F, 0.6, [(13.2, 6.12), (13.2, 7.45)]),
+    ("VBUS_A", B, 0.6, [(8.4, 7.45), (8.4, 9.4), (13.2, 9.4), (13.2, 7.45)]),
+    ("/USB/USB_A_DN", F, 0.2, [(10.55, 6.12), (10.55, 8.45)]),
+    ("/USB/USB_A_DN", F, 0.2, [(11.55, 6.12), (11.55, 7.95), (10.55, 7.95)]),
+    ("/USB/USB_A_DP", F, 0.2, [(10.05, 6.12), (10.05, 7.35)]),
+    ("/USB/USB_A_DP", F, 0.2, [(11.05, 6.12), (11.05, 7.35)]),
+    ("/USB/USB_A_DP", I2, 0.2, [(10.05, 7.35), (11.05, 7.35), (11.7, 8.0), (11.7, 11.65)]),
+    ("/USB/USB_A_DP", F, 0.2, [(11.7, 11.65), (11.1, 11.05), (11.1, 10.35)]),
+    ("CC1", F, 0.15, [(12.05, 6.12), (12.05, 7.5), (12.66, 8.1), (12.66, 8.45)]),
+    ("CC2", F, 0.15, [(9.05, 6.12), (9.05, 6.95), (9.2, 7.4)]),
+    ("CC2", I2, 0.15, [(9.2, 7.4), (9.2, 12.25), (12.4, 12.25), (12.7, 11.95), (12.7, 11.65)]),
+    ("CC2", F, 0.15, [(12.7, 11.65), (12.66, 10.35)]),
+    ("/USB/USB_SEL", F, 0.15, [(4.95, 2.85), (5.25, 2.6), (5.65, 2.6)]),   # ST pin boxed in: via to In2
+    ("GND", F, 0.25, [(11.15, 45.9), (11.2, 46.9), (11.25, 47.45)]),         # module pad 45, beside SWDIO
+    ("SYS", F, 0.8, [(13.52, 59.25), (12.4, 59.25)]),
+    ("SYS", B, 1.0, [(12.4, 59.25), (12.4, 53.6), (10.3, 51.5), (10.3, 31.7), (9.6, 31.0)]),   # clear of the charger's GND vias
+    ("SYS", F, 0.8, [(9.6, 31.0), (8.67, 31.0)]),
+    ("SYS", B, 1.0, [(9.6, 31.0), (9.0, 30.4), (4.9, 30.4)]),
+    ("SYS", F, 0.8, [(4.9, 30.4), (4.9, 29.07)]),
+    ("SYS", F, 0.3, [(8.2, 28.71), (8.2, 29.35)]),
+    ("SYS", F, 0.6, [(8.2, 29.35), (8.67, 29.8), (8.67, 31.0)]),
+    ("VBAT", F, 0.8, [(9.12, 58.4), (8.55, 58.95), (8.55, 61.85), (8.9, 62.2), (8.9, 68.8), (6.4, 69.4), (6.4, 70.6)]),
+    ("LED_5V", I2, 1.0, [(9.25, 20.2), (10.0, 20.95), (10.0, 24.4), (3.0, 24.4), (3.0, 27.0), (1.2, 27.0), (1.2, 31.0)]),
+    ("LED_5V", B, 0.6, [(9.25, 20.2), (9.75, 20.7), (9.75, 26.7)]),
 ]
-PRE_VIAS = _cv + _rv + [
-    ("VBUS_A", (13.0, 7.3), 0.6, 0.3), ("VBUS_A", (18.4, 7.3), 0.6, 0.3),
-    ("VBUS", (5.4, 3.4), 0.8, 0.4), ("VBUS", (8.8, 3.4), 0.8, 0.4),
-    ("SYS", (10.35, 25.45), 0.8, 0.4), ("SYS", (5.6, 28.35), 0.8, 0.4),
-    ("VBAT", (6.55, 25.55), 0.6, 0.3), ("VBAT", (5.85, 25.75), 0.6, 0.3),
-    ("VBAT", (4.4, 70.4), 0.6, 0.3), ("VBAT", (4.4, 71.4), 0.6, 0.3),
-    ("LED_5V", (4.8, 36.0), 0.6, 0.3), ("LED_5V", (4.8, 38.0), 0.6, 0.3), ("LED_5V", (15.2, 63.0), 0.6, 0.3),
-    ("GND", (10.8, 49.7), 0.5, 0.25), ("GND", (4.4, 52.96), 0.5, 0.25), ("GND", (4.5, 49.0), 0.5, 0.25),
-    ("VBUS_A", (7.05, 8.37), 0.5, 0.25), ("VBUS_B", (5.6, 8.37), 0.5, 0.25),
-    ("/USB/USB_A_DP", (15.25, 7.35), 0.5, 0.25), ("/USB/USB_A_DP", (16.25, 7.35), 0.5, 0.25),
-    ("/USB/USB_A_DP", (16.85, 11.5), 0.5, 0.25),
-    ("CC2", (12.0, 8.15), 0.5, 0.25), ("CC2", (17.6, 12.3), 0.5, 0.25), ("GND", (11.4, 10.05), 0.5, 0.25),
-    ("VBUS_A", (16.35, 9.8), 0.5, 0.25), ("USB_B_DP", (5.85, 14.45), 0.5, 0.25),
+STRIP_VIAS = [
+    ("VBUS", (2.5, 3.5), 0.8, 0.4),
+    ("VBUS_A", (8.4, 7.45), 0.6, 0.3), ("VBUS_A", (13.2, 7.45), 0.6, 0.3),
+    ("/USB/USB_A_DP", (10.05, 7.35), 0.5, 0.25), ("/USB/USB_A_DP", (11.05, 7.35), 0.5, 0.25),
+    ("/USB/USB_A_DP", (11.7, 11.65), 0.5, 0.25),
+    ("CC2", (9.2, 7.4), 0.5, 0.25), ("CC2", (12.7, 11.65), 0.5, 0.25),
+    ("SYS", (12.4, 59.25), 0.8, 0.4), ("SYS", (9.6, 31.0), 0.8, 0.4), ("SYS", (4.9, 30.4), 0.8, 0.4),
+    ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (11.25, 47.45), 0.5, 0.25),
 ]
+PRE_TRACKS = _ct + _rt + STRIP_TRACKS
+PRE_VIAS = _cv + _rv + STRIP_VIAS
 LAYERS = {"F.Cu": pcbnew.F_Cu, "In2.Cu": pcbnew.In2_Cu, "B.Cu": pcbnew.B_Cu}
 
 
@@ -728,7 +678,23 @@ def step_maze() -> None:
     b = pcbnew.LoadBoard(str(BOARD))
     r = maze.Router(b, (OX, OY, OX + BOARD_W, OY + BOARD_H), [pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu],
                     clearance=0.18, hole_clearance=0.28)   # margin for the 0.05 mm grid
-    ends = conn_ends
+    islands = {}
+
+    def ends(it, net):
+        """Start/goal points: every point of the copper island the DRC item belongs to (a hand-routed stub
+        then counts as a whole, not just the end DRC happens to name), else conn_ends."""
+        if net not in islands:
+            islands[net] = net_islands(b, net)
+        q = pcbnew.VECTOR2I(int(round(it["pos"]["x"] * 1e6)), int(round(it["pos"]["y"] * 1e6)))
+        hit = [g for g in islands[net] if any(item.HitTest(q, 20000) for item, _ in g)]
+        pts = []
+        for item, pp in (hit[0] if hit else []):
+            ref = item.GetParentFootprint().GetReference() if item.GetClass() == "PAD" else ""
+            if ref == "J401":                          # castellated contact: start in its copper, not on the edge
+                pts += [(x + 1.2, y, li) for x, y, li in pp]
+            else:
+                pts += pp
+        return pts[:60] or conn_ends(it, net)
     conns = []
     for v in drc_unconnected(BOARD):
         a, c = v["items"][0], v["items"][1]
@@ -763,7 +729,8 @@ def step_maze() -> None:
         print(f"  negotiation result taken from cache ({len(cached)} of {len(conns)} connections)")
     else:
         neg = maze.Negotiator(r)
-        paths = neg.run(spec, iters=16, log=print)
+        paths = neg.run(spec, iters=16, log=print, workers=int(os.environ.get("MAZE_WORKERS", os.cpu_count() or 1)),
+                        max_nodes=1_200_000)
         if cache:
             pathlib.Path(cache).write_text(json.dumps({"key": key, "paths": paths}))
 

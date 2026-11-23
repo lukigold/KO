@@ -12,6 +12,7 @@ Copper pours are ignored on purpose: they are refilled afterwards and flow aroun
 """
 import heapq
 import math
+import multiprocessing
 
 import numpy as np
 import pcbnew
@@ -605,17 +606,40 @@ class Negotiator:
                     break
         return bad
 
-    def run(self, conns, iters=10, log=print):
-        """conns: list of (net code, starts, goals, hw, via_r, drill). Returns {cid: path}."""
+    def _route_batch(self, batch, conns, pres, hist_w, nets_of, max_nodes, workers):
+        """Route a batch against the same occupancy; in parallel worker processes when workers > 1.
+
+        Workers are forked from this process, so they see the occupancy as it is now; only the connection
+        ids go out and the paths come back."""
+        if workers <= 1 or len(batch) <= 1:
+            return [(cid, self.route(cid, conns[cid], pres, hist_w, nets_of, max_nodes=max_nodes)) for cid in batch]
+        global _WORK
+        _WORK = (self, conns, pres, hist_w, nets_of, max_nodes)
+        with multiprocessing.get_context("fork").Pool(min(workers, len(batch))) as pool:
+            return pool.map(_route_worker, batch, chunksize=1)
+
+    def run(self, conns, iters=10, log=print, workers=1, max_nodes=2_500_000, give_up=2):
+        """conns: list of (net code, starts, goals, hw, via_r, drill). Returns {cid: path}.
+
+        With workers > 1 each iteration is routed in batches of 2 x workers connections: a batch sees the
+        paths of the batches before it, the members of one batch are routed side by side. A connection
+        that finds no path at all in `give_up` iterations is left out of later ones (it would only search
+        the whole board again)."""
         nets_of = {cid: c[0] for cid, c in enumerate(conns)}
         todo = list(range(len(conns)))
         pres, hist_w = 1.0, 0.5
+        nofail = {}
+        size = 2 * workers if workers > 1 else 1
         for it in range(iters):
-            for cid in todo:
-                net, st, go, hw, vr, dr = conns[cid]
-                path = self.route(cid, conns[cid], pres, hist_w, nets_of)
-                if path:
-                    self.set_path(cid, path, hw, vr)
+            todo = [c for c in todo if nofail.get(c, 0) < give_up]
+            for k in range(0, len(todo), size):
+                batch = todo[k:k + size]
+                for cid, path in self._route_batch(batch, conns, pres, hist_w, nets_of, max_nodes, workers):
+                    hw, vr = conns[cid][3], conns[cid][4]
+                    if path:
+                        self.set_path(cid, path, hw, vr)
+                    else:
+                        nofail[cid] = nofail.get(cid, 0) + 1
             bad = self.conflicts(conns)
             unrouted = [c for c in range(len(conns)) if c not in self.paths]
             log(f"    iteration {it + 1}: {len(bad)} in conflict, {len(unrouted)} unroutable")
@@ -628,3 +652,12 @@ class Negotiator:
             todo = sorted(bad)
             pres *= 1.5
         return self.paths
+
+
+_WORK = None
+
+
+def _route_worker(cid):
+    """Negotiation worker (forked): one connection against the parent's occupancy at fork time."""
+    neg, conns, pres, hist_w, nets_of, max_nodes = _WORK
+    return cid, neg.route(cid, conns[cid], pres, hist_w, nets_of, max_nodes=max_nodes)

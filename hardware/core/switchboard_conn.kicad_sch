@@ -1338,7 +1338,7 @@
 				)
 			)
 		)
-		(property "Footprint" "ko:Castellated_1x33_P2.00mm_Edge"
+		(property "Footprint" "ko:Castellated_1x33_P2.00mm_Edge_1-17_18-33"
 			(at 43.18 81.28 0)
 			(effects
 				(font

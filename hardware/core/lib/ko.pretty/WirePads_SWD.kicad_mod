@@ -1,0 +1,186 @@
+(footprint "WirePads_SWD"
+	(version 20241229)
+	(generator "ko-gen")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "5 solder pads for wires (SWD), 2.2 mm pitch, 1.5 x 2.0 mm")
+	(tags "solder pad wire")
+	(property "Reference" "REF**"
+		(at 0 -3 0)
+		(layer "F.Fab")
+		(uuid "0fd888af-1769-5098-a6f9-f1fb814145e5")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "WirePads_SWD"
+		(at 0 3.2 0)
+		(layer "F.Fab")
+		(uuid "526d7ba5-c5cb-5573-a158-78b3080dbb91")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "f8bd0067-345d-5bc8-8beb-491513b22068")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "5 solder pads for wires (SWD), 2.2 mm pitch, 1.5 x 2.0 mm"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "4013c106-dc72-51ad-97d1-ff9a9ce4829c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd exclude_from_pos_files exclude_from_bom)
+	(pad "1" smd roundrect
+		(at -4.4 0)
+		(size 1.5 2)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.15)
+		(uuid "11ddf371-ca95-57a1-8803-832c411b36b6")
+	)
+	(fp_text user "3V0"
+		(at -4.4 -1.7 0)
+		(layer "F.SilkS")
+		(uuid "e06766ed-f8df-5231-baea-f8c74b1173ff")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "2" smd roundrect
+		(at -2.2 0)
+		(size 1.5 2)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.15)
+		(uuid "6ac1db8b-2ac4-5fab-a65e-39f785df683c")
+	)
+	(fp_text user "DIO"
+		(at -2.2 -1.7 0)
+		(layer "F.SilkS")
+		(uuid "51216cdb-7258-5c58-ad3b-2a75b1c59ca9")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "3" smd roundrect
+		(at 0 0)
+		(size 1.5 2)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.15)
+		(uuid "f34ba7a2-cc9f-5f3a-9e2a-39712617a815")
+	)
+	(fp_text user "CLK"
+		(at 0 -1.7 0)
+		(layer "F.SilkS")
+		(uuid "3881b529-505d-5b2e-a393-fd4e8c0cbced")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "4" smd roundrect
+		(at 2.2 0)
+		(size 1.5 2)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.15)
+		(uuid "62739ac1-7675-57ca-86cf-d85b5a61cdff")
+	)
+	(fp_text user "RST"
+		(at 2.2 -1.7 0)
+		(layer "F.SilkS")
+		(uuid "0178d19d-26a3-545f-af8a-83076172a3d4")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "5" smd roundrect
+		(at 4.4 0)
+		(size 1.5 2)
+		(layers "F.Cu" "F.Mask")
+		(roundrect_rratio 0.15)
+		(uuid "d9bb0b31-efba-54b7-a612-57dc0a0161f9")
+	)
+	(fp_text user "GND"
+		(at 4.4 -1.7 0)
+		(layer "F.SilkS")
+		(uuid "a81e959c-527a-51de-8400-7551fe81f6dc")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+	(fp_line
+		(start -5.4 -2.25)
+		(end 5.4 -2.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "19985ca2-28ad-57db-a6b0-fc444bed5a5a")
+	)
+	(fp_line
+		(start 5.4 -2.25)
+		(end 5.4 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "e37f5f34-a4a3-5ddc-92f3-1d41aaf0698f")
+	)
+	(fp_line
+		(start 5.4 1.25)
+		(end -5.4 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "2b60b67b-8620-53b9-baec-1fb2bb863779")
+	)
+	(fp_line
+		(start -5.4 1.25)
+		(end -5.4 -2.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "3a090e1a-a4a8-5e67-9178-2bb8ee87cd74")
+	)
+	(embedded_fonts no)
+)

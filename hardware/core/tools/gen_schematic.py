@@ -175,9 +175,9 @@ R(s, "R105", "10k", "R_10k_0402", "CHG_INT", "3V0")
 s.add("J101", "Connector_Generic_MountingPin:Conn_01x02_MountingPin", "BAT 1:+ 2:-",
       {"1": "VBAT", "2": "GND", "MP": "GND"},
       footprint="Connector_JST:JST_PH_S2B-PH-SM4-TB_1x02-1MP_P2.00mm_Horizontal", **lcsc("J_BAT"))
-s.add("J102", "Connector_Generic_MountingPin:Conn_01x02_MountingPin", "NTC 10k",
-      {"1": "CHG_TS", "2": "GND", "MP": "GND"},
-      footprint="Connector_JST:JST_SH_SM02B-SRSS-TB_1x02-1MP_P1.00mm_Horizontal", **lcsc("J_NTC"))
+# Solder pads for wires instead of connectors (D-43): copper only, nothing to buy or place.
+s.add("J102", "Connector_Generic:Conn_01x02", "NTC PADS", {"1": "CHG_TS", "2": "GND"},
+      footprint="ko:WirePads_NTC", in_bom=False, description="Pack NTC (10 kOhm) soldered to pads")
 s.add("RT101", "Device:Thermistor_NTC", "10k DNP", {"1": "CHG_TS", "2": "GND"}, footprint=FP_R0402, dnp=True,
       mpn=PARTS["RT_NTC"]["mfr"], description="Fallback board NTC; only if no pack NTC is fitted on J102")
 s.add("U102", "ko:MAX17048", "MAX17048", {
@@ -189,11 +189,12 @@ R(s, "R106", "10k", "R_10k_0402", "FG_ALRT", "3V0")
 # --------------------------------------------------------------------------- sheet: power rails
 
 s = design.sheet("Power rails", "power_rails.kicad_sch", paper="A4", note=(
-    "Power rails (CORE-007, 009). SW101 drives the 3.0 V LDO enable: OFF leaves only charger + fuel gauge (< 10 uA).\n"
+    "Power rails (CORE-007, 009). An off-board switch on pads J103 drives the 3.0 V LDO enable (bridge the pads for\n"
+    "always on): OFF leaves only charger + fuel gauge (< 10 uA).\n"
     "V5 = VBUS when USB is present (TPS2116 priority, switches to boost below 4.0 V), else TPS61023 boost (5.07 V, enabled by MCU).\n"
     "LED_5V: AP22653 limits the switch-board LED rail to 1.7 A and cuts it to 0 uA when LED_EN is low. MCU enables default low (pull-downs)."))
-s.add("SW101", "Switch:SW_SPDT", "POWER", {"2": "PWR_EN", "1": "SYS", "3": "GND"},
-      footprint="Button_Switch_SMD:SW_SPDT_PCM12", **lcsc("SW_PWR"))
+s.add("J103", "Connector_Generic:Conn_01x02", "POWER SWITCH PADS", {"1": "SYS", "2": "PWR_EN"},
+      footprint="ko:WirePads_Switch", in_bom=False, description="Off-board power switch (SPST) soldered to pads")
 R(s, "R107", "1M", "R_1M_0402", "PWR_EN", "GND")
 s.add("U103", "ko:TPS7A02", "TPS7A0230 (3.0 V)", {"1": "SYS", "3": "PWR_EN", "5": "3V0", "2": "GND"},
       footprint="Package_TO_SOT_SMD:SOT-23-5", **lcsc("U_TPS7A0230"))
@@ -234,15 +235,18 @@ s = design.sheet("MCU and radio", "mcu_radio.kicad_sch", paper="A4", note=(
     "Pins marked (LF) are 'standard drive, low frequency I/O only': used for rows and static signals. SPI, I2C and UART use full-speed pins.\n"
     "32.768 kHz crystal ECS-.327-12.5-34B (CL 12.5 pF) with 18 pF load capacitors. I2C pull-ups 4.7 kOhm to 3V0."))
 s.add("U201", "ko:BMD-340", "BMD-340-A-R", {
-    "13": "XL1", "14": "XL2", "15": "CC1", "19": "CC1_B", "20": "NC", "21": "CC2_B",   # pins chosen for the strip
+    # pins chosen for the 16 mm strip (D-43): the module's left pad column sits at the castellated edge and only
+    # keeps its fixed-function pins (VCC, VBUS, USB); rows leave through the front pad row, port B's CC lines use
+    # analog pins on the back row
+    "13": "XL1", "14": "XL2", "15": "CC1", "19": "NC", "20": "NC", "21": "NC",
     "22": "NC", "23": "NC", "24": "NC", "25": "NC", "26": "NC", "27": "NC", "28": "I2C_SDA",
     "31": "RSV_MISO", "32": "COL_LAT", "33": "COL_DAT", "34": "COL_CLK", "35": "RSV_INT", "39": "NRESET",
-    "37": "I2C_SCL", "38": "NC", "36": "NC", "40": "NC", "41": "HAPTIC_EN", "42": "NC",   # D-42, strip routing
-    "6": "NC", "7": "EXP_IO2", "8": "NC", "9": "LED_FAULT", "10": "NC", "11": "FG_ALRT",
+    "37": "I2C_SCL", "38": "ROW5", "36": "ROW4", "40": "ROW6", "41": "HAPTIC_EN", "42": "ROW7",
+    "6": "NC", "7": "EXP_IO2", "8": "NC", "9": "LED_FAULT", "10": "CC1_B", "11": "CC2_B",
     "12": "CC2",
-    "56": "NC", "57": "ROW0", "58": "ROW1", "59": "ROW2", "60": "ROW3", "48": "LED_SDB", "49": "LED_EN",
-    "50": "BOOST_EN", "51": "CHG_INT", "52": "NC", "53": "NC", "54": "NC", "61": "ROW7",
-    "62": "ROW6", "63": "ROW5", "64": "ROW4", "44": "SWDIO", "43": "SWCLK", "68": "USB_DP", "67": "USB_DN",
+    "56": "FG_ALRT", "57": "ROW0", "58": "ROW1", "59": "ROW2", "60": "ROW3", "48": "LED_SDB", "49": "LED_EN",
+    "50": "BOOST_EN", "51": "CHG_INT", "52": "NC", "53": "NC", "54": "NC", "61": "NC",
+    "62": "NC", "63": "NC", "64": "NC", "44": "SWDIO", "43": "SWCLK", "68": "USB_DP", "67": "USB_DN",
     "17": "3V0", "65": "3V0", "66": "VBUS", "GND": "GND"},
     footprint="ko:u-blox_BMD-340", **lcsc("U_BMD340"))
 C(s, "C201", "10u", "C_10u_0603_10V", "3V0")
@@ -315,22 +319,21 @@ s = design.sheet("Switch board connector", "switchboard_conn.kicad_sch", paper="
     "Pinout fixed by docs/contracts/switch-board.md (VLOGIC = 3V0 rail). Contacts 1-9 bring USB-C port B from the switch board.\n"
     "Rows are read with the nRF52840's internal pull-downs (columns driven high through the shift-register chain)."))
 s.add("J401", "Connector_Generic:Conn_01x33", "SWITCH BOARD", SWB_PINOUT,
-      footprint="ko:Castellated_1x33_P2.00mm_Edge", in_bom=False, description="Castellated edge, no part")
+      footprint="ko:Castellated_1x33_P2.00mm_Edge_1-17_18-33", in_bom=False, description="Castellated edge, no part")
 C(s, "C401", "100n", "C_100n_0402_16V", "3V0")
 C(s, "C402", "10u", "C_10u_0603_10V", "LED_5V")
 
 # --------------------------------------------------------------------------- sheet: service and expansion
 
 s = design.sheet("Service and expansion", "service.kicad_sch", paper="A4", note=(
-    "SWD (2x5 1.27 mm Cortex debug pinout, matches the nRF52840 DK 'debug out' cable). Test points on every rail, USB, I2C, SWD (CORE-063).\n"
-    "J503 (DNP) reserves a future body haptic driver (CORE-064). The rev A expansion header was dropped with the strip layout (D-42)."))
-s.add("J501", "Connector_Generic:Conn_02x05_Odd_Even", "SWD", {
-    "1": "3V0", "2": "SWDIO", "3": "GND", "4": "SWCLK", "5": "GND", "6": "NC", "7": "NC", "8": "NC",
-    "9": "GND", "10": "NRESET"}, footprint="Connector_PinHeader_1.27mm:PinHeader_2x05_P1.27mm_Vertical_SMD",
-    **lcsc("J_SWD"))
-s.add("J503", "Connector_Generic_MountingPin:Conn_01x06_MountingPin", "HAPTIC DNP", {
-    "1": "V5", "2": "3V0", "3": "GND", "4": "I2C_SDA", "5": "I2C_SCL", "6": "HAPTIC_EN", "MP": "GND"},
-    footprint="Connector_JST:JST_SH_SM06B-SRSS-TB_1x06-1MP_P1.00mm_Horizontal", dnp=True, **lcsc("J_HAPTIC"))
+    "Solder pads for wires (D-43): SWD (J501), haptic driver (J503, CORE-064), underglow strip (J504), with test points\n"
+    "on the remaining rails and USB (CORE-063). The rev A expansion header was dropped with the strip layout (D-42)."))
+s.add("J501", "Connector_Generic:Conn_01x05", "SWD PADS", {
+    "1": "3V0", "2": "SWDIO", "3": "SWCLK", "4": "NRESET", "5": "GND"},
+    footprint="ko:WirePads_SWD", in_bom=False, description="SWD wires to a debug probe (first flash, recovery)")
+s.add("J503", "Connector_Generic:Conn_01x06", "HAPTIC PADS", {
+    "1": "V5", "2": "3V0", "3": "GND", "4": "I2C_SDA", "5": "I2C_SCL", "6": "HAPTIC_EN"},
+    footprint="ko:WirePads_Haptic", in_bom=False, description="Future body haptic driver (CORE-064)")
 # Underglow strip port (D-40): an addressable 5 V strip (WS2812/SK6812 class) on the switched, current-limited LED rail.
 # EXP_IO2 (P0.26) carries the data; the AHCT buffer, powered from LED_5V, lifts the 3.0 V logic to 5 V levels and is
 # unpowered whenever the LED rail is off. (Symbol: the 74LVC1G125 base symbol, same pins as the 74AHCT1G125.)
@@ -338,14 +341,15 @@ s.add("U501", "74xGxx:74LVC1G125", "74AHCT1G125", {"1": "GND", "2": "EXP_IO2", "
       footprint="Package_TO_SOT_SMD:SOT-353_SC-70-5", **lcsc("U_AHCT125"))
 C(s, "C501", "100n", "C_100n_0402_16V", "LED_5V")
 R(s, "R501", "330", "R_330_0402", "UG_BUF", "UG_DOUT")
-s.add("J504", "Connector_Generic_MountingPin:Conn_01x03_MountingPin", "UNDERGLOW", {
-    "1": "LED_5V", "2": "UG_DOUT", "3": "GND", "MP": "GND"},
-    footprint="Connector_JST:JST_SH_SM03B-SRSS-TB_1x03-1MP_P1.00mm_Horizontal", **lcsc("J_UG"))
+s.add("J504", "Connector_Generic:Conn_01x03", "UNDERGLOW PADS", {
+    "1": "LED_5V", "2": "UG_DOUT", "3": "GND"},
+    footprint="ko:WirePads_Underglow", in_bom=False, description="Addressable LED strip soldered to pads")
 # CC1_B/CC2_B (former TP518/TP519) are probed at their castellated contacts, which stay exposed; the charger's
 # power-good pin (former TP517) is unused.
-for i, net in enumerate(["VBUS", "SYS", "VBAT", "3V0", "V5", "VBOOST", "LED_5V", "PWR_EN", "USB_DP", "USB_DN",
-                         "I2C_SDA", "I2C_SCL", "SWDIO", "SWCLK", "NRESET", "CHG_QON", None,
-                         None, None, "GND", "GND", "VBUS_A", "VBUS_B"], start=1):
+# Nets with a wire pad (SYS, 3V0, V5, LED_5V, PWR_EN, I2C, SWD, GND) are probed there (D-43).
+for i, net in enumerate(["VBUS", None, "VBAT", None, None, "VBOOST", None, None, "USB_DP", "USB_DN",
+                         None, None, None, None, None, "CHG_QON", None,
+                         None, None, None, None, "VBUS_A", None], start=1):   # VBUS_B: at contacts 1-3
     if net:
         TP(s, f"TP{500 + i}", net)
 

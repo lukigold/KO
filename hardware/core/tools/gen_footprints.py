@@ -118,6 +118,11 @@ class FP:
                           f'\t\t(fill\n\t\t\t(thermal_gap 0.5)\n\t\t\t(thermal_bridge_width 0.5)\n\t\t)\n'
                           f'\t\t(polygon\n\t\t\t(pts {pts})\n\t\t)\n\t)\n')
 
+    def text(self, txt, x, y, layer="F.SilkS", size=0.8):
+        self.items.append(f'\t(fp_text user "{txt}"\n\t\t(at {f(x)} {f(y)} 0)\n\t\t(layer "{layer}")\n'
+                          f'\t\t(uuid "{uid(self.name, "text", txt, f(x), f(y))}")\n\t\t(effects\n\t\t\t(font\n'
+                          f'\t\t\t\t(size {f(size)} {f(size)})\n\t\t\t\t(thickness 0.12)\n\t\t\t)\n\t\t)\n\t)\n')
+
     def model(self):
         self.items.append(f'\t(model "${{KIPRJMOD}}/lib/ko.3dshapes/{self.name}.wrl"\n\t\t(offset\n\t\t\t(xyz 0 0 0)\n'
                           f'\t\t)\n\t\t(scale\n\t\t\t(xyz 1 1 1)\n\t\t)\n\t\t(rotate\n\t\t\t(xyz 0 0 0)\n\t\t)\n\t)\n')
@@ -325,19 +330,55 @@ def rux12():
 
 # --------------------------------------------------------------------------- castellated board edge
 
-def castellated(n=33, pitch=2.0):
+def castellated(groups=((1, 17, 0.0), (18, 33, 47.0)), pitch=2.0):
     """Castellated edge (plated half holes) joining the core board to the switch board (switch-board
-    contract). The board edge runs along x = 0, the board lies at +x. Each contact: 0.8 mm hole centred on
-    the edge, copper 1.4 x 2.4 mm reaching 1.8 mm into the board on both sides. Contact 1 at the back (-y)."""
-    fp = FP(f"Castellated_1x{n}_P{pitch:.2f}mm_Edge", f"{n} castellated edge contacts, {pitch} mm pitch, board edge at x=0, board at +x",
-            "castellated edge half hole board-to-board", 0, (n - 1) * pitch / 2 + 2.0)
-    y0 = -(n - 1) * pitch / 2
-    for i in range(n):
-        # pad position = hole position (on the edge); the offset moves the copper 0.6 mm into the board
-        fp.thpad(str(i + 1), 0.0, y0 + i * pitch, 2.4, 1.4, 0.8, "rect", offset=(0.6, 0), castellated=True)
-    fp.line(0, y0 - 1.5, 0, -y0 + 1.5, "F.Fab", 0.1)                            # board edge
-    fp.rect(-0.4, y0 - 1.0, 2.1, -y0 + 1.0, "F.CrtYd", 0.05)
-    fp.circle(2.4, y0, 0.15, "F.SilkS", 0.1)                                   # contact 1 marker
+    contract, D-43). The board edge runs along x = 0, the board lies at +x. Contacts come in groups
+    (first, last, y of the first); the origin is contact 1, contact 1 at the back (-y). Each contact: 0.8 mm
+    hole centred on the edge, copper 1.4 x 2.4 mm reaching 1.8 mm into the board on both sides."""
+    n = groups[-1][1]
+    name = f"Castellated_1x{n}_P{pitch:.2f}mm_Edge_" + "_".join(f"{a}-{b}" for a, b, _ in groups)
+    y_end = groups[-1][2] + (groups[-1][1] - groups[-1][0]) * pitch
+    fp = FP(name, f"{n} castellated edge contacts in {len(groups)} groups, {pitch} mm pitch, board edge at x=0, board at +x",
+            "castellated edge half hole board-to-board", 0, y_end + 2.0)
+    for first, last, y0 in groups:
+        for i in range(first, last + 1):
+            # pad position = hole position (on the edge); the offset moves the copper 0.6 mm into the board
+            fp.thpad(str(i), 0.0, y0 + (i - first) * pitch, 2.4, 1.4, 0.8, "rect", offset=(0.6, 0), castellated=True)
+        y1 = y0 + (last - first) * pitch
+        fp.line(0, y0 - 1.0, 0, y1 + 1.0, "F.Fab", 0.1)                         # board edge
+        fp.rect(-0.4, y0 - 1.0, 2.1, y1 + 1.0, "F.CrtYd", 0.05)
+    fp.circle(2.4, 0.0, 0.15, "F.SilkS", 0.1)                                  # contact 1 marker
+    fp.write()
+    return name
+
+
+# --------------------------------------------------------------------------- solder pads for wires (D-43)
+
+WIRE_PADS = {
+    "Switch": ("POWER SW", ["SYS", "EN"]),
+    "NTC": ("NTC", ["NTC", "GND"]),
+    "SWD": ("SWD", ["3V0", "DIO", "CLK", "RST", "GND"]),
+    "Haptic": ("HAPTIC", ["V5", "3V0", "GND", "SDA", "SCL", "EN"]),
+    "Underglow": ("UNDERGLOW", ["LED", "DAT", "GND"]),
+}
+
+
+def wire_pads(key, pitch=2.2, w=1.5, h=2.0):
+    """A row of bare SMD pads to solder wires to, each labelled on the silkscreen (the group name is the Value,
+    on the assembly layer). Copper only: excluded from BOM and position files. Placed on the bottom side by
+    gen_pcb.py (KiCad mirrors pads and text)."""
+    title, labels = WIRE_PADS[key]
+    n = len(labels)
+    fp = FP(f"WirePads_{key}", f"{n} solder pads for wires ({title}), {pitch} mm pitch, {w} x {h} mm",
+            "solder pad wire", -(h / 2 + 2.0), h / 2 + 2.2)
+    fp.items[-1] = "\t(attr smd exclude_from_pos_files exclude_from_bom)\n"
+    fp.items[0] = fp.items[0].replace('(layer "F.SilkS")', '(layer "F.Fab")')     # the labels say enough
+    x0 = -(n - 1) * pitch / 2
+    for i, lab in enumerate(labels):
+        x = x0 + i * pitch
+        fp.pad(str(i + 1), x, 0, w, h, "roundrect", 0.15, layers='"F.Cu" "F.Mask"')
+        fp.text(lab, x, -(h / 2 + 0.7))
+    fp.rect(x0 - w / 2 - 0.25, -(h / 2 + 1.25), -x0 + w / 2 + 0.25, h / 2 + 0.25, "F.CrtYd", 0.05)
     fp.write()
 
 
@@ -357,4 +398,6 @@ if __name__ == "__main__":
     usbc_hx_l10()
     rux12()
     castellated()
+    for k in WIRE_PADS:
+        wire_pads(k)
     print("footprints written to", OUT)

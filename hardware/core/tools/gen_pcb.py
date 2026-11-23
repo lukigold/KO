@@ -30,79 +30,91 @@ CORE = HERE.parent
 sys.path.insert(0, str(CORE.parent / "tools"))
 from kisch.sexpr import find, find_all, parse  # noqa: E402
 
-BOARD_W, BOARD_H = 22.0, 80.0
+BOARD_W, BOARD_H = 16.0, 80.0
 OX, OY = 100.0, 100.0           # board origin in KiCad page coordinates
 RF_STRIP = 4.4                   # BMD-340 datasheet 6.1: no copper within 4.4 mm of the antenna edge
-RF_Y = (38.5, 57.5)              # keep-out strip along the right edge, beside the module (centre y 48)
-USB_SHELL = (11.0, 21.0, 5.3)    # x0, x1, y1: no top-layer copper under the receptacle body but its pads
+RF_Y = (32.0, 51.0)              # keep-out strip along the right edge, beside the module and ~4.1 mm beyond it
+USB_SHELL = (6.0, 15.6, 5.3)     # x0, x1, y1: no top-layer copper under the receptacle body but its pads
 
-# Translate a block of the 50 x 32 mm placement, whose hand routes (route_pcb.py) move with it.
-CHARGER_SHIFT = (0.8, 15.2)      # charger: BQ25628E and its parts
-RAILS_SHIFT = (-11.4, 14.4)      # boost, 5 V mux, LED rail switch
+# Blocks of the 50 x 32 mm placement whose hand routes (route_pcb.py) move with them.
+CHARGER_SHIFT = (3.1, 49.0)      # charger: BQ25628E and its parts, translated
+RAILS_ROT = ((22.7, 20.8), (10.1, 22.9))   # boost / 5 V mux / LED switch: turned 90 deg CCW about the first
+                                          # point (block centre on the old board), which lands on the second
 
 
 def _shift(d: dict, dx: float, dy: float) -> dict:
     return {k: (round(x + dx, 3), round(y + dy, 3), r, side) for k, (x, y, r, side) in d.items()}
 
 
+def rot90(x: float, y: float, rr=RAILS_ROT) -> tuple:
+    """Point of the rails block turned 90 deg counter-clockwise on screen (KiCad's +90) and moved."""
+    (cx, cy), (tx, ty) = rr
+    return round(tx + (y - cy), 3), round(ty - (x - cx), 3)
+
+
+def _turn(d: dict) -> dict:
+    return {k: (*rot90(x, y), (r + 90) % 360, side) for k, (x, y, r, side) in d.items()}
+
+
 # ref: (x, y, rotation_deg, side)   side "T" top or "B" bottom. Rotation is KiCad's (CCW positive).
-# Strip of 22 x 80 mm (D-41): x = 0 is the castellated edge soldered to the switch board, x = 22 the right
+# Strip of 16 x 80 mm (D-43): x = 0 is the castellated edge soldered to the switch board, x = 16 the right
 # case wall (antenna), y = 0 the back edge (USB-C port A), y = 80 the front edge (battery).
 PLACEMENT = {
     # --- back: USB-C port A, VBUS mux, ESD, data switch
-    "J301": (16.0, 5.0, 180, "T"),     # long-body USB-C, mouth through the back wall
-    "J401": (0.0, 40.0, 0, "T"),       # 33 castellated contacts on the left edge, contact 1 at y = 8
-    "U303": (7.2, 4.4, 0, "T"),        # TPS2121: IN2 = port B from the left, IN1 = port A from the right
-    "C301": (5.9, 1.4, 0, "T"),        # SS
-    "R309": (8.5, 1.4, 0, "T"),        # ILIM
-    "C303": (4.3, 2.5, 0, "T"),        # VBUS_B input
-    "C302": (9.95, 8.55, 270, "T"),    # VBUS_A input, below the VBUS_A track
-    "R307": (5.6, 7.15, 90, "T"),      # OV2 divider, VBUS_B side (columns 1.45 mm apart: node links between)
-    "R305": (7.05, 7.15, 90, "T"),     # OV1 divider, VBUS_A side
-    "R303": (8.5, 7.15, 90, "T"),      # PR1 divider, VBUS_A side
-    "R308": (5.6, 9.6, 270, "T"),      # dividers, GND side
-    "R306": (7.05, 9.6, 270, "T"),
-    "R304": (8.5, 9.6, 270, "T"),
-    "U301": (14.2, 9.8, 0, "T"),       # D+/D- ESD, flow-through: receptacle right, data switch left
-    "U302": (18.8, 9.8, 0, "T"),       # CC ESD
-    "U304": (6.6, 12.6, 90, "T"),      # TS3USB221A: inputs at the bottom (port A right, port B left), outputs on top
-    "C304": (4.2, 12.6, 90, "T"),
-    "C203": (12.0, 28.2, 0, "T"),      # module VBUS sense 4u7, on the VBUS side (the module's west side is a fan)
-    "R301": (21.2, 12.6, 90, "T"),     # CC1 Rd, next to the CC array
-    "R302": (20.1, 12.6, 90, "T"),     # CC2 Rd
-    "R310": (4.0, 10.0, 90, "T"),      # TPS2121 ST pull-up (USB_SEL), clear of port B data
-    # --- beside the charger at the right wall: power switch and 3.0 V LDO
-    "SW101": (19.0, 18.5, 90, "T"),    # power slide switch, actuator through the right wall
-    "R107": (15.2, 18.5, 90, "T"),     # PWR_EN pull-down
-    "U103": (19.2, 25.3, 0, "T"),      # 3.0 V LDO
-    "C110": (16.0, 24.4, 90, "T"),     # SYS input
-    "C111": (19.2, 28.0, 0, "T"),      # 3V0 output
-    "C401": (2.8, 26.75, 90, "T"),     # 3V0 at contact 10
-    # --- module: antenna flush with the right edge, its back pad rows facing the power parts
-    "U201": (14.3, 48.0, 180, "T"),
-    "Y201": (9.3, 41.3, 180, "T"),     # 32.768 kHz, XL1 straight above module pad 13, XL2 beside pad 14
-    "C204": (12.9, 41.3, 90, "T"),
-    "C205": (6.6, 41.3, 90, "T"),
-    "C201": (4.2, 40.3, 0, "T"),       # VCC 10u, above the module: its west side is the fan to the contacts
-    "C202": (4.2, 42.0, 0, "T"),       # VCC 100n
-    "R311": (3.7, 48.48, 270, "T"),    # CC1_B Rd: pin 1 on the lane to contact 21, GND pin between lanes
-    "R312": (3.7, 52.48, 270, "T"),    # CC2_B Rd: pin 1 on the lane to contact 23
-    "C402": (6.2, 37.6, 90, "T"),      # LED_5V at contacts 14-16
-    # --- front: underglow port at the right wall, fuel gauge, I2C pull-ups, battery and NTC at the front edge
-    "J504": (18.7, 62.0, 90, "T"),     # underglow strip port (D-40), opening to the right wall
-    "U501": (13.2, 62.4, 0, "T"),      # 5 V data buffer, fed from LED_5V
-    "C501": (13.2, 60.4, 0, "T"),
-    "R501": (13.2, 64.6, 0, "T"),      # series resistor at the strip's data input
-    "R201": (3.4, 65.4, 0, "T"),       # I2C pull-ups
-    "R202": (3.4, 66.5, 0, "T"),
+    "J301": (10.8, 5.0, 180, "T"),     # long-body USB-C, mouth through the back wall
+    "J401": (0.0, 1.0, 0, "T"),        # castellated contacts: 1-17 at y 1..33, 18-33 at y 48..78
+    "U303": (4.2, 4.0, 0, "T"),        # TPS2121: IN2 = port B from the contacts, IN1 = port A from the right
+    "C303": (3.05, 1.2, 90, "T"),      # VBUS_B input, at contact 1
+    "C301": (4.1, 1.2, 90, "T"),       # SS
+    "R309": (5.15, 1.2, 90, "T"),      # ILIM
+    "R307": (3.1, 8.4, 90, "T"),       # OV2 divider (VBUS_B), below the TPS2121's divider pins
+    "R305": (4.25, 8.4, 90, "T"),      # OV1 divider (VBUS_A)
+    "R303": (5.4, 8.4, 90, "T"),       # PR1 divider (VBUS_A)
+    "R308": (3.1, 10.6, 270, "T"),
+    "R306": (4.25, 10.6, 270, "T"),
+    "R304": (5.4, 10.6, 270, "T"),
+    "C302": (6.6, 8.4, 90, "T"),       # VBUS_A input
+    "U301": (9.6, 9.4, 0, "T"),        # D+/D- ESD below the receptacle's data pins
+    "U302": (13.8, 9.4, 0, "T"),       # CC ESD
+    "R301": (12.6, 13.0, 0, "T"),      # CC1 Rd
+    "R302": (14.6, 13.0, 0, "T"),      # CC2 Rd
+    "U304": (4.8, 13.3, 90, "T"),      # TS3USB221A next to contacts 5/6
+    "C304": (2.75, 13.3, 90, "T"),
+    "R310": (7.1, 13.3, 90, "T"),      # TPS2121 ST pull-up (USB_SEL)
+    # --- beside the 5 V block at the right wall: underglow data buffer (LED_5V leaves the block there)
+    "U501": (13.9, 28.0, 0, "T"),
+    "C501": (14.6, 25.6, 90, "T"),
+    "R501": (13.9, 30.4, 0, "T"),
+    # --- in front of the 5 V block: crystal and module decoupling above the module
+    "Y201": (5.6, 34.8, 180, "T"),     # 32.768 kHz next to module pads 13/14
+    "C204": (8.2, 34.8, 90, "T"),
+    "C205": (9.2, 34.8, 90, "T"),
+    "C202": (2.75, 34.95, 90, "T"),    # VCC 100n next to VCC pad 17
+    "C201": (10.4, 34.5, 90, "T"),     # VCC 10u
+    "C401": (2.95, 15.6, 90, "T"),     # 3V0 at contact 8
+    "C402": (4.2, 32.6, 0, "T"),       # LED_5V, between the 5 V block and the crystal
+    # --- module across the full width, antenna flush with the right edge
+    "U201": (8.3, 41.5, 180, "T"),
+    "C203": (3.1, 47.6, 0, "T"),       # VBUS 4u7 next to module pad 66
+    # --- front: charger (moved block), CC_B Rd at their contacts, LDO, fuel gauge, pull-ups, battery
+    "R311": (3.2, 54.0, 90, "T"),      # CC1_B Rd at contact 21
+    "R312": (3.2, 58.0, 90, "T"),      # CC2_B Rd at contact 23
+    "U103": (13.6, 64.1, 0, "T"),      # 3.0 V LDO
+    "C110": (10.8, 64.1, 90, "T"),     # SYS input
+    "C111": (13.6, 66.9, 0, "T"),      # 3V0 output
+    "R107": (10.8, 66.9, 90, "T"),     # PWR_EN pull-down (switch on pads J103)
+    "U102": (6.9, 63.4, 180, "T"),     # fuel gauge: VBAT pins towards the VBAT track, I2C towards the pull-ups
+    "C109": (7.0, 65.4, 180, "T"),     # VBAT, pin 1 on the VBAT track
+    "R106": (4.4, 63.4, 90, "T"),      # FG_ALRT pull-up
+    "R201": (3.6, 66.4, 0, "T"),       # I2C pull-ups
+    "R202": (3.6, 67.5, 0, "T"),
     "J101": (7.4, 74.9, 0, "T"),       # battery, opening to the front edge
-    "J102": (16.0, 76.6, 0, "T"),      # NTC, opening to the front edge
-    "U102": (17.6, 70.8, 0, "T"),      # fuel gauge
-    "C109": (20.8, 70.8, 90, "T"),
-    "R106": (14.6, 71.0, 90, "T"),
-    # --- bottom side
-    "J501": (10.4, 58.0, 0, "B"),      # SWD, in front of the module
-    "J503": (18.7, 74.0, 90, "B"),     # haptic (DNP), under the NTC connector
+    # --- bottom side: solder pads for wires (D-43)
+    "J102": (4.4, 69.6, 0, "B"),       # pack NTC          } three rows under the battery connector
+    "J103": (11.6, 69.6, 0, "B"),      # power switch      }
+    "J503": (8.6, 73.2, 0, "B"),       # haptic driver     }
+    "J501": (8.6, 76.8, 0, "B"),       # SWD               }
+    "J504": (12.2, 27.6, 0, "B"),      # underglow strip, under its buffer
 }
 PLACEMENT.update(_shift({                # charger, as placed and hand-routed on the 50 x 32 mm board
     "U101": (6.4, 6.2, 0, "T"),
@@ -122,7 +134,7 @@ PLACEMENT.update(_shift({                # charger, as placed and hand-routed on
     "RT101": (3.6, 12.4, 0, "T"),      # fallback NTC (DNP)
     "R105": (8.8, 12.6, 0, "T"),       # INT pull-up
 }, *CHARGER_SHIFT))
-PLACEMENT.update(_shift({                # boost, 5 V mux and LED switch, as on the 50 x 32 mm board
+PLACEMENT.update(_turn({                 # boost, 5 V mux and LED switch, as on the 50 x 32 mm board
     "L102": (17.6, 15.6, 0, "T"),      # boost inductor
     "U104": (17.6, 18.4, 0, "T"),      # boost
     "C112": (14.6, 18.6, 90, "T"),
@@ -142,20 +154,14 @@ PLACEMENT.update(_shift({                # boost, 5 V mux and LED switch, as on 
     "R115": (28.0, 22.6, 0, "T"),
     "C117": (22.56, 18.85, 180, "T"),  # LED switch input cap, next to its V5 pin
     "C118": (24.0, 24.8, 0, "T"),
-}, *RAILS_SHIFT))
+}))
 
-# Test points on the bottom side, next to the copper they probe.
+# Test points on the bottom side, next to the copper they probe (nets with a wire pad are probed there).
 TP_POS = {
-    "TP501": (3.0, 16.4), "TP522": (13.0, 7.3), "TP523": (4.8, 9.2),               # VBUS, VBUS_A, VBUS_B
-    "TP509": (4.8, 11.4), "TP510": (4.8, 13.6),                                   # USB_DP, USB_DN
-    "TP508": (17.6, 13.4), "TP520": (20.4, 12.2),                                 # PWR_EN, GND
-    "TP502": (17.4, 24.0), "TP504": (20.6, 24.0),                                 # SYS, 3V0
-    "TP516": (20.4, 27.4),                                                        # CHG_QON
-    "TP505": (17.5, 30.0), "TP521": (20.6, 30.4),                                 # V5, GND
-    "TP506": (20.4, 33.4), "TP507": (17.6, 35.6),                                 # VBOOST, LED_5V
-    "TP511": (4.6, 29.6), "TP512": (4.6, 31.8),                                   # SDA, SCL
-    "TP503": (2.6, 45.0),                                                         # VBAT, on its trunk
-    "TP513": (16.8, 58.8), "TP514": (16.8, 61.2), "TP515": (19.2, 58.8),          # SWDIO, SWCLK, NRESET
+    "TP501": (2.6, 16.5), "TP522": (11.6, 9.4),                                   # on the VBUS and VBUS_A copper
+    "TP509": (9.2, 13.8), "TP510": (11.4, 13.8),                                  # USB_DP, USB_DN
+    "TP506": (8.6, 33.6), "TP516": (13.6, 60.6),                                  # VBOOST, CHG_QON
+    "TP503": (8.0, 69.6),                                                         # VBAT
 }
 
 STANDIN_MODELS = {"J101": "JST_PH_S2B-PH-SM4-TB_standin"}
@@ -309,7 +315,7 @@ def build() -> pcbnew.BOARD:
         fp.SetPath(pcbnew.KIID_PATH(sheet_ts + sym_ts))
         props = {str(find(p, "name")[1]): (str(find(p, "value")[1]) if find(p, "value") else "")
                  for p in find_all(comp, "property")}
-        dnp = "dnp" in props or ref in ("J503", "RT101")
+        dnp = "dnp" in props or ref == "RT101"
         if ref.startswith("TP"):
             x, y = TP_POS[ref]
             rot, side = 0, "B"
@@ -435,8 +441,8 @@ def tidy_silk(board: pcbnew.BOARD) -> None:
 
     obstacles = {layer: [] for layer in silk}
     for fp in board.GetFootprints():
-        for g in fp.GraphicalItems():
-            if g.GetLayer() in silk and g.GetClass() != "PCB_TEXT":
+        for g in fp.GraphicalItems():           # outlines and the wire pads' labels
+            if g.GetLayer() in silk:
                 obstacles[g.GetLayer()].append(_bb(g, 0.05))
         for p in fp.Pads():
             if p.IsOnLayer(pcbnew.F_Cu):
@@ -459,6 +465,8 @@ def tidy_silk(board: pcbnew.BOARD) -> None:
             t.SetVisible(False)
             continue
         layer = t.GetLayer()
+        if layer not in obstacles:              # reference kept on the assembly layer (wire pads)
+            continue
         cy = fp.GetCourtyard(pcbnew.F_Cu if fp.GetSide() == 0 else pcbnew.B_Cu).BBox()
         x0, y0 = pcbnew.ToMM(cy.GetLeft()) - OX, pcbnew.ToMM(cy.GetTop()) - OY
         x1, y1 = pcbnew.ToMM(cy.GetRight()) - OX, pcbnew.ToMM(cy.GetBottom()) - OY
