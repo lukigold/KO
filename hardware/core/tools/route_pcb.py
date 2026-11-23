@@ -69,15 +69,27 @@ STITCH_VIA = (0.6, 0.3)
 STITCH_PITCH = 2.5
 CLR_VIA = 0.2                  # via copper to other-net copper (net classes ask 0.15)
 CLR_STUB = 0.17
-PRE_GND_PADS = {("U201", "55"), ("J502", "12"), ("U106", "2")}   # GND pads tied to a via by the hand routes
+PRE_GND_PADS = {("U106", "2"), ("U201", "55"), ("U301", "2"), ("R311", "2"), ("R312", "2")}   # GND pads tied to a via by the hand routes
 EXTRA_GND_VIAS = {("U101", "15"): 2, ("U103", "2"): 2, ("U104", "4"): 2, ("U106", "2"): 2}
 
 # Hand-routed power copper (board mm, origin top-left). Every point was checked against the pad edges for
 # >= 0.15 mm clearance; DRC verifies. Tracks: (net, layer, width, points). Vias: (net, (x, y), dia, drill).
 PMID, SW, BTST = "/Battery and charger/CHG_PMID", "/Battery and charger/CHG_SW", "/Battery and charger/CHG_BTST"
 F, I2, B = "F.Cu", "In2.Cu", "B.Cu"
-PRE_TRACKS = [
-    # charger (U101): PMID up to its capacitors, 0.2 mm while between the 0.4 mm-pitch pins
+BST_SW, LED_ILIM = "/Power rails/BST_SW", "/Power rails/LED_ILIM"
+
+
+def _moved(tracks: list, vias: list, d: tuple) -> tuple[list, list]:
+    """Hand routes of a block of parts that gen_pcb.py moved as a whole by d = (dx, dy)."""
+    dx, dy = d
+    mv = lambda x, y: (round(x + dx, 3), round(y + dy, 3))
+    return ([(n, layer, w, [mv(*q) for q in pts]) for n, layer, w, pts in tracks],
+            [(n, mv(*q), dia, drill) for n, q, dia, drill in vias])
+
+
+# Charger (U101), routed on the 50 x 32 mm board and moved with its parts (gen_pcb.CHARGER_SHIFT).
+_ct, _cv = _moved([
+    # PMID up to its capacitors, 0.2 mm while between the 0.4 mm-pitch pins
     (PMID, F, 0.2, [(6.18, 4.95), (6.18, 3.9)]),
     (PMID, F, 0.35, [(6.18, 3.9), (5.9, 3.4)]),
     (PMID, F, 0.4, [(5.65, 2.3), (6.1, 1.1)]),
@@ -89,7 +101,7 @@ PRE_TRACKS = [
     (BTST, F, 0.3, [(4.85, 5.38), (4.3, 5.35)]),        # from the L pad's bottom leg
     (BTST, I2, 0.3, [(4.3, 5.35), (8.82, 2.35)]),
     (BTST, F, 0.3, [(8.82, 2.35), (8.82, 3.2)]),
-    # VBUS into the charger and its 1 uF capacitor
+    # VBUS into the charger and its 1 uF capacitor (the trunk arrives at the two vias)
     ("VBUS", F, 0.2, [(5.775, 5.0), (5.775, 4.25), (5.6, 4.1)]),
     ("VBUS", F, 0.4, [(5.6, 4.1), (3.9, 4.1), (3.4, 3.68)]),
     ("VBUS", F, 0.4, [(3.9, 4.1), (3.4, 4.6), (2.55, 4.25)]),
@@ -99,19 +111,17 @@ PRE_TRACKS = [
     ("SYS", F, 0.8, [(10.5, 7.5), (10.45, 9.4), (10.42, 11.1)]),
     ("VBAT", F, 0.2, [(6.57, 7.4), (6.57, 8.55)]),
     ("VBAT", F, 0.4, [(6.57, 8.55), (6.2, 9.0)]),
-    # VBUS: receptacle pads -> vias -> 1 mm bottom trunk -> charger (west) and 5 V mux (south-east)
-    ("VBUS", F, 0.6, [(16.55, 7.6), (16.55, 9.75)]),
-    ("VBUS", F, 0.6, [(21.45, 7.6), (21.45, 9.0)]),
-    ("VBUS", B, 1.0, [(21.45, 9.0), (16.55, 9.0), (13.4, 9.0), (13.4, 4.3), (4.2, 4.3), (3.4, 4.6), (2.55, 4.25)]),
-    ("VBUS", B, 1.0, [(16.55, 9.0), (16.55, 9.75)]),
-    ("VBUS", B, 1.0, [(21.45, 9.0), (23.0, 10.55), (23.0, 15.1), (25.9, 17.6)]),
-    ("VBUS", B, 0.6, [(25.9, 17.6), (24.0, 19.6)]),
-    ("VBUS", F, 0.5, [(25.9, 17.6), (25.2, 16.9)]),
-    ("VBUS", F, 0.3, [(25.2, 16.75), (26.6, 16.65)]),
-    # boost (U104): switch node straight up to the inductor; output via In2 to its capacitors and on to
-    # the 5 V mux input (U105 pin 6); mux output pins joined under the package, then to C116
-    ("/Power rails/BST_SW", F, 0.3, [(18.31, 18.4), (19.05, 18.4)]),
-    ("/Power rails/BST_SW", F, 0.4, [(19.05, 18.4), (19.05, 16.4)]),
+], [
+    (BTST, (4.3, 5.35), 0.5, 0.25), (BTST, (8.82, 2.35), 0.5, 0.25),
+    ("VBUS", (3.4, 4.6), 0.6, 0.3), ("VBUS", (2.55, 4.25), 0.6, 0.3),
+], gen_pcb.CHARGER_SHIFT)
+
+# Boost (U104), 5 V mux (U105) and LED rail switch (U106), moved the same way (gen_pcb.RAILS_SHIFT).
+_rt, _rv = _moved([
+    # boost switch node straight up to the inductor; output via In2 to its capacitors and on to the 5 V mux
+    # input (U105 pin 6); mux output pins joined under the package, then to C116
+    (BST_SW, F, 0.3, [(18.31, 18.4), (19.05, 18.4)]),
+    (BST_SW, F, 0.4, [(19.05, 18.4), (19.05, 16.4)]),
     ("VBOOST", F, 0.3, [(18.31, 17.9), (18.31, 17.2)]),
     ("VBOOST", I2, 0.6, [(18.31, 17.2), (19.85, 17.55)]),
     ("VBOOST", F, 0.6, [(19.85, 17.55), (20.6, 17.55)]),
@@ -125,140 +135,147 @@ PRE_TRACKS = [
     ("V5", I2, 0.5, [(30.8, 16.6), (22.3, 16.6), (22.3, 19.2), (22.7, 19.6)]),
     ("V5", F, 0.5, [(22.7, 19.6), (22.75, 20.8)]),
     ("V5", F, 0.3, [(22.7, 19.6), (23.04, 18.9)]),
+    # VBUS from the trunk via into the 5 V mux and its capacitor
     ("VBUS", F, 0.2, [(27.95, 17.15), (26.85, 16.65)]),
-    # LED rail: LED switch -> via -> 0.8 mm bottom trunk between the test-point rows -> FFC pins 2-4
+    ("VBUS", F, 0.5, [(25.9, 17.6), (25.2, 16.9)]),
+    ("VBUS", F, 0.3, [(25.2, 16.75), (26.6, 16.65)]),
+    # LED rail out of U106 to the bottom layer (trunk below) and to C118
     ("LED_5V", F, 0.6, [(25.14, 20.85), (25.4, 19.95)]),
-    ("LED_5V", B, 0.8, [(25.4, 19.95), (25.4, 21.1), (40.2, 21.1), (40.2, 26.0), (36.8, 26.0), (36.25, 27.1)]),
-    ("LED_5V", B, 0.6, [(39.0, 21.1), (39.0, 19.6)]),
-    # underglow strip port J504 pin 1: up to the rail's 1.5 A, so a 0.8 mm bottom branch from the LED trunk (D-40)
-    ("LED_5V", B, 0.8, [(40.2, 26.0), (40.2, 27.9), (45.0, 27.9), (45.0, 28.05)]),
-    ("LED_5V", F, 0.6, [(45.0, 28.05), (45.0, 27.0)]),
-    ("LED_5V", B, 0.6, [(25.4, 21.1), (25.25, 21.4), (25.25, 23.6), (23.2, 25.95)]),
+    ("LED_5V", B, 0.6, [(25.4, 19.95), (25.4, 21.1), (25.25, 21.4), (25.25, 23.6), (23.2, 25.95)]),
     ("LED_5V", F, 0.5, [(23.2, 25.95), (23.2, 25.0)]),
-    ("LED_5V", F, 0.5, [(36.25, 27.1), (37.0, 26.7), (37.8, 25.8)]),
-    ("LED_5V", F, 0.4, [(36.25, 27.1), (36.25, 27.45)]),
-    ("LED_5V", F, 0.3, [(35.75, 27.45), (36.75, 27.45)]),
-    ("LED_5V", F, 0.3, [(35.75, 27.45), (35.75, 28.1)]),
-    ("LED_5V", F, 0.3, [(36.25, 27.45), (36.25, 28.1)]),
-    ("LED_5V", F, 0.3, [(36.75, 27.45), (36.75, 28.1)]),
-]
-PRE_VIAS = [
-    (BTST, (4.3, 5.35), 0.5, 0.25), (BTST, (8.82, 2.35), 0.5, 0.25),
-    ("VBUS", (3.4, 4.6), 0.6, 0.3), ("VBUS", (2.55, 4.25), 0.6, 0.3),
-    ("VBUS", (16.55, 9.0), 0.6, 0.3), ("VBUS", (16.55, 9.75), 0.6, 0.3), ("VBUS", (21.45, 9.0), 0.6, 0.3),
-    ("VBUS", (25.9, 17.6), 0.6, 0.3),
-    ("LED_5V", (25.4, 19.95), 0.6, 0.3), ("LED_5V", (36.25, 27.1), 0.6, 0.3), ("LED_5V", (45.0, 28.05), 0.6, 0.3),
-    ("LED_5V", (37.0, 26.7), 0.6, 0.3), ("LED_5V", (23.2, 25.95), 0.6, 0.3),
+    # LED current-limit resistor west of the switch, its pin east: under the package and around
+    (LED_ILIM, F, 0.15, [(25.14, 21.8), (24.0, 21.8), (24.0, 23.45), (21.6, 23.45), (21.2, 23.6)]),
+    ("LED_EN", F, 0.15, [(22.86, 22.75), (21.6, 22.5), (21.2, 22.4)]),
+    ("GND", F, 0.3, [(22.86, 21.8), (21.75, 21.8)]),       # LED switch GND pin, boxed in
+], [
+    ("LED_5V", (25.4, 19.95), 0.6, 0.3), ("LED_5V", (23.2, 25.95), 0.6, 0.3),
     ("V5", (30.8, 16.6), 0.6, 0.3), ("V5", (22.7, 19.6), 0.6, 0.3),
     ("VBOOST", (18.31, 17.2), 0.6, 0.3), ("VBOOST", (19.85, 17.55), 0.6, 0.3),
     ("VBOOST", (24.3, 17.55), 0.6, 0.3), ("VBOOST", (28.85, 18.0), 0.6, 0.3),
+    ("VBUS", (25.9, 17.6), 0.6, 0.3),
+    ("GND", (21.75, 21.8), 0.5, 0.25),
+], gen_pcb.RAILS_SHIFT)
+
+# Strip-specific power copper (D-41). Floor plan from the back: USB-C and VBUS mux, charger, boost / 5 V mux /
+# LED switch, module, battery. VBUS leaves the TPS2121 on the bottom layer in two short trunks: down the
+# castellated side to the charger, and under the receptacle and down the right side to the 5 V mux. SYS runs
+# from the charger to the boost on the bottom layer, VBAT on a bottom trunk down the castellated side (x = 2.5) to the
+# battery connector. LED_5V leaves the LED switch on the bottom layer to contacts 14-16 (vias up to short top
+# hops) and down the middle under the module to the underglow port.
+PRE_TRACKS = _ct + _rt + [
+    # port A: receptacle VBUS pads -> TPS2121 IN1 (pin 7, from the right); the far pad joins on In2
+    ("VBUS_A", F, 0.6, [(13.6, 6.125), (13.6, 7.3), (13.0, 7.3), (9.7, 7.3), (9.7, 4.75), (8.6, 4.75)]),
+    ("VBUS_A", F, 0.4, [(8.6, 4.75), (7.875, 4.75)]),
+    ("VBUS_A", F, 0.6, [(18.4, 6.125), (18.4, 7.3)]),
+    ("VBUS_A", I2, 0.8, [(13.0, 7.3), (13.0, 6.4), (18.4, 6.4), (18.4, 7.3)]),   # above the D+ vias
+    ("VBUS_A", F, 0.4, [(9.95, 7.3), (9.95, 8.07)]),                   # C302
+    # TPS2121 dividers: each node runs from the upper resistor's top pad down a lane between the columns to the
+    # lower resistor; the upper resistors' supply pads, boxed in by those lanes, get their own vias
+    ("/USB/MUXA_OV2", F, 0.15, [(6.95, 5.55), (6.95, 5.9), (5.6, 6.67)]),
+    ("/USB/MUXA_OV2", F, 0.15, [(5.6, 6.67), (5.25, 6.67), (4.95, 6.97), (4.95, 8.82), (5.25, 9.12), (5.6, 9.12)]),
+    ("/USB/MUXA_OV1", F, 0.15, [(7.45, 5.55), (7.45, 5.9), (7.05, 6.67)]),
+    ("/USB/MUXA_OV1", F, 0.15, [(7.05, 6.67), (6.7, 6.67), (6.32, 7.05), (6.32, 8.75), (6.7, 9.12), (7.05, 9.12)]),
+    ("/USB/MUXA_PR1", F, 0.15, [(7.95, 5.55), (7.95, 5.9), (8.5, 6.67)]),
+    ("/USB/MUXA_PR1", F, 0.15, [(8.5, 6.67), (8.15, 6.67), (7.78, 7.05), (7.78, 8.75), (8.15, 9.12), (8.5, 9.12)]),
+    ("VBUS_A", F, 0.25, [(8.5, 7.63), (9.5, 7.45)]),
+    ("VBUS_A", F, 0.25, [(7.05, 7.63), (7.05, 8.37)]),
+    ("VBUS_A", B, 0.3, [(7.05, 8.37), (9.0, 8.37), (9.0, 7.0), (13.0, 7.0), (13.0, 7.3)]),
+    ("VBUS_B", F, 0.25, [(5.6, 7.63), (5.6, 8.37)]),
+    ("VBUS_B", I2, 0.3, [(5.6, 8.37), (1.2, 8.37)]),                   # to contact 1
+    # port B: contacts 1-3 -> TPS2121 IN2 (pin 2, from the left), C303 on the way
+    ("VBUS_B", F, 0.8, [(1.0, 12.0), (1.0, 8.0)]),
+    ("VBUS_B", F, 0.6, [(1.0, 8.0), (2.6, 6.4), (2.6, 5.15), (3.0, 4.75), (6.0, 4.75)]),
+    ("VBUS_B", F, 0.4, [(6.0, 4.75), (6.525, 4.75)]),
+    ("VBUS_B", F, 0.4, [(3.82, 2.5), (3.82, 4.75)]),
+    # TPS2121 OUT (pins 1 and 8) -> two 0.8/0.4 vias -> bottom trunks to the charger and to the 5 V mux
+    ("VBUS", F, 0.4, [(6.2, 4.05), (5.4, 3.4)]),
+    ("VBUS", F, 0.4, [(8.2, 4.05), (8.8, 3.4)]),
+    ("VBUS", B, 1.0, [(8.8, 3.4), (5.4, 3.4), (3.0, 5.8), (3.0, 19.1), (3.35, 19.45), (4.2, 19.8)]),
+    ("VBUS", B, 1.0, [(8.8, 3.4), (14.2, 3.4), (14.2, 31.6), (14.5, 32.0)]),
+    # SYS to the boost (up to ~1.7 A on battery with the LEDs on): charger SYS node -> 0.8/0.4 via -> 0.8 mm
+    # bottom diagonal -> via -> top layer into L102 pin 1, C112 and U104 VIN
+    ("SYS", F, 0.6, [(11.235, 25.45), (10.35, 25.45)]),
+    ("SYS", B, 0.8, [(10.35, 25.45), (5.6, 28.35)]),
+    ("SYS", F, 0.6, [(5.6, 28.35), (4.4, 29.55), (4.4, 33.9)]),
+    ("SYS", F, 0.6, [(4.4, 33.6), (3.67, 33.775)]),                     # C112 pin 1
+    ("SYS", F, 0.3, [(4.4, 33.3), (5.2, 33.3)]),                        # U104 VIN
+    # VBAT (charging and battery current, up to ~1.7 A): charger capacitor -> two vias -> 0.8 mm bottom trunk
+    # down the castellated side -> two vias -> battery connector pin 1
+    ("VBAT", F, 0.6, [(6.83, 24.6), (6.55, 25.55)]),
+    ("VBAT", F, 0.5, [(6.6, 24.8), (5.85, 25.75)]),
+    ("VBAT", B, 0.8, [(6.55, 25.55), (5.85, 25.75), (2.5, 27.4), (2.5, 69.0), (3.9, 70.4), (4.4, 70.4),
+                      (4.4, 71.4)]),        # close to the contacts: room for C112's GND via
+    ("VBAT", F, 0.6, [(4.4, 70.4), (5.9, 70.8)]),
+    ("VBAT", F, 0.6, [(4.4, 71.4), (5.9, 71.4)]),
+    # LED_5V: from the LED switch's bottom-layer stub to contacts 14-16 and C402, and to the underglow port
+    ("LED_5V", B, 0.8, [(14.0, 35.3), (4.8, 35.3)]),
+    ("LED_5V", B, 0.8, [(4.8, 35.3), (4.8, 36.0), (4.8, 38.0)]),
+    ("LED_5V", F, 0.8, [(4.8, 36.0), (1.0, 36.0)]),
+    ("LED_5V", F, 0.8, [(4.8, 38.0), (1.0, 38.0)]),
+    ("LED_5V", F, 0.8, [(1.0, 34.0), (1.0, 38.0)]),
+    ("LED_5V", F, 0.5, [(4.8, 38.0), (5.8, 38.375)]),                  # C402
+    ("LED_5V", B, 0.8, [(13.85, 38.0), (15.2, 39.35), (15.2, 63.0)]),
+    ("LED_5V", F, 0.5, [(15.2, 63.0), (16.7, 63.0)]),                  # J504 pin 1
+    # USB port A front end (D+/D- 0.2 mm, CC 0.15 mm). D-: both receptacle pads joined on the top layer, into the
+    # ESD array's I/O1 (pins 6 -> 1 across the body), then 0.2 mm beside D+ to the data switch's port-A input.
+    # D+: both pads drop to vias below the pad row and join on the bottom layer, up again into I/O2 (pins 4 -> 3)
+    # and out below D-. CC1 straight down into the CC array; CC2 west above the ESD array, then on In2 to the
+    # CC array's other side.
+    ("/USB/USB_A_DN", F, 0.2, [(15.75, 6.125), (15.75, 8.85)]),
+    ("/USB/USB_A_DN", F, 0.2, [(16.75, 6.125), (16.75, 7.95), (15.75, 7.95)]),
+    ("/USB/USB_A_DN", F, 0.2, [(15.34, 8.85), (13.06, 8.85)]),
+    ("/USB/USB_A_DN", F, 0.2, [(13.06, 8.85), (12.1, 8.85), (11.6, 9.35), (10.7, 9.35), (10.7, 13.8), (7.35, 13.8),
+                          (7.35, 13.28)]),
+    ("/USB/USB_A_DP", F, 0.2, [(15.25, 6.125), (15.25, 7.35)]),
+    ("/USB/USB_A_DP", F, 0.2, [(16.25, 6.125), (16.25, 7.35)]),
+    ("/USB/USB_A_DP", B, 0.2, [(15.25, 7.35), (16.25, 7.35), (16.85, 7.95), (16.85, 11.5)]),
+    ("/USB/USB_A_DP", F, 0.2, [(16.85, 11.5), (15.34, 10.75)]),
+    ("/USB/USB_A_DP", F, 0.2, [(15.34, 10.75), (13.06, 10.75)]),
+    ("/USB/USB_A_DP", F, 0.2, [(13.06, 10.75), (11.6, 10.75), (11.3, 11.05), (11.3, 14.2), (6.85, 14.2), (6.85, 13.28)]),
+    ("CC1", F, 0.15, [(17.25, 6.125), (17.25, 8.85)]),
+    ("CC1", F, 0.15, [(17.66, 8.85), (19.94, 8.85)]),
+    ("CC2", F, 0.15, [(14.25, 6.125), (14.25, 8.15), (12.0, 8.15)]),
+    ("CC2", I2, 0.15, [(12.0, 8.15), (12.0, 12.3), (17.6, 12.3)]),
+    ("CC2", F, 0.15, [(17.6, 12.3), (17.66, 10.75)]),
+    ("CC2", F, 0.15, [(17.66, 10.75), (19.94, 10.75)]),
+    ("GND", F, 0.25, [(12.6, 9.8), (11.4, 10.05)]),                     # U301 GND pin, boxed in by D+/D-
+    # ESD arrays' VBUS reference pins: U301 pin 5 via In2 round the D+ vias, U302 pin 5 round the east side
+    ("VBUS_A", F, 0.25, [(16.0, 9.8), (16.35, 9.8)]),
+    ("VBUS_A", I2, 0.3, [(16.35, 9.8), (17.05, 9.1), (17.05, 6.4)]),
+    ("VBUS_A", F, 0.3, [(20.6, 9.8), (21.2, 9.8), (21.2, 7.6), (18.7, 7.3)]),
+    # port B data from contacts 5/6 into the data switch: D- on top, D+ on In2 and up through a via at the pin
+    ("USB_B_DN", F, 0.2, [(1.2, 16.0), (5.3, 16.0), (6.35, 14.95), (6.35, 13.28)]),
+    ("USB_B_DP", I2, 0.2, [(1.2, 18.0), (2.4, 18.0), (5.85, 14.55), (5.85, 14.45)]),
+    ("USB_B_DP", F, 0.2, [(5.85, 14.45), (5.85, 13.28)]),
+    # west of the module: the fan from the pads in the module's west column to contacts 20-24. Each lane runs
+    # west to its own column, down to its contact's height and west into the contact; lower pads take columns
+    # further east, so no lane crosses another. R311/R312 sit in the CC lanes, their GND pins between lanes.
+    # The left column's lower pads (3V0, VBUS, USB) keep the room east of the ROW4 column for their vias.
+    ("ROW6", F, 0.15, [(7.45, 45.25), (3.9, 45.25), (3.9, 46.0), (1.2, 46.0)]),
+    ("CC1_B", F, 0.15, [(8.35, 45.8), (4.4, 45.8), (4.4, 48.0), (1.2, 48.0)]),
+    ("ROW5", F, 0.15, [(7.45, 46.35), (5.0, 46.35), (5.0, 50.0), (1.2, 50.0)]),
+    ("CC2_B", F, 0.15, [(8.35, 46.9), (5.5, 46.9), (5.5, 52.0), (1.2, 52.0)]),
+    ("ROW4", F, 0.15, [(7.45, 47.45), (6.0, 47.45), (6.0, 54.0), (1.2, 54.0)]),
+    ("GND", F, 0.25, [(3.7, 48.96), (4.5, 49.0)]),                      # R311 GND pin
+    ("GND", F, 0.25, [(3.7, 52.96), (4.4, 52.96)]),                     # R312 GND pin
+    # module pad 55's GND via south-east of it, keeping the way east between pads 54 and 55 free
+    ("GND", F, 0.25, [(10.15, 49.1), (10.8, 49.7)]),
+]
+PRE_VIAS = _cv + _rv + [
+    ("VBUS_A", (13.0, 7.3), 0.6, 0.3), ("VBUS_A", (18.4, 7.3), 0.6, 0.3),
+    ("VBUS", (5.4, 3.4), 0.8, 0.4), ("VBUS", (8.8, 3.4), 0.8, 0.4),
+    ("SYS", (10.35, 25.45), 0.8, 0.4), ("SYS", (5.6, 28.35), 0.8, 0.4),
+    ("VBAT", (6.55, 25.55), 0.6, 0.3), ("VBAT", (5.85, 25.75), 0.6, 0.3),
+    ("VBAT", (4.4, 70.4), 0.6, 0.3), ("VBAT", (4.4, 71.4), 0.6, 0.3),
+    ("LED_5V", (4.8, 36.0), 0.6, 0.3), ("LED_5V", (4.8, 38.0), 0.6, 0.3), ("LED_5V", (15.2, 63.0), 0.6, 0.3),
+    ("GND", (10.8, 49.7), 0.5, 0.25), ("GND", (4.4, 52.96), 0.5, 0.25), ("GND", (4.5, 49.0), 0.5, 0.25),
+    ("VBUS_A", (7.05, 8.37), 0.5, 0.25), ("VBUS_B", (5.6, 8.37), 0.5, 0.25),
+    ("/USB/USB_A_DP", (15.25, 7.35), 0.5, 0.25), ("/USB/USB_A_DP", (16.25, 7.35), 0.5, 0.25),
+    ("/USB/USB_A_DP", (16.85, 11.5), 0.5, 0.25),
+    ("CC2", (12.0, 8.15), 0.5, 0.25), ("CC2", (17.6, 12.3), 0.5, 0.25), ("GND", (11.4, 10.05), 0.5, 0.25),
+    ("VBUS_A", (16.35, 9.8), 0.5, 0.25), ("USB_B_DP", (5.85, 14.45), 0.5, 0.25),
 ]
 LAYERS = {"F.Cu": pcbnew.F_Cu, "In2.Cu": pcbnew.In2_Cu, "B.Cu": pcbnew.B_Cu}
-
-
-def switchboard_buses() -> tuple[list, list]:
-    """BMD-340 -> FFC J401 buses (0.15 mm), planar thanks to the pin order chosen in gen_schematic.py.
-
-    ROW0-7 run on In2: the four left-column pads escape west to vias, the four inner pads escape north to
-    a staircase of vias inside the module outline; all eight turn south, then run at 45 deg to two
-    staggered rows of vias above the FFC and drop onto pins 24..17. The shift-register and reserved lines
-    (pads 31-35) leave the module's bottom edge on the top layer and run at 45 deg straight into pins 16..10.
-    """
-    tracks, vias = [], []
-    w, via = 0.15, (0.5, 0.25)
-    # (net, pad xy, escape-via xy or None, vertical x)   ordered west -> east at the FFC
-    rows = [("ROW7", (35.45, 4.75), (34.5, 4.75), 32.0), ("ROW6", (35.45, 5.85), (34.5, 5.85), 32.5),
-            ("ROW5", (35.45, 6.95), (34.5, 6.95), 33.0), ("ROW4", (35.45, 8.05), (34.5, 8.05), 33.5),
-            ("ROW3", (44.05, 11.2), (44.05, 8.1), 35.0), ("ROW2", (42.95, 11.2), (42.95, 8.6), 35.5),
-            ("ROW1", (41.85, 11.2), (41.85, 9.1), 36.0), ("ROW0", (40.75, 11.2), (40.75, 9.6), 36.5)]
-    for i, (net, pad, esc, xv) in enumerate(rows):
-        c = 50.0 + 0.6 * i                     # diagonal x + y = c, 0.42 mm apart
-        xj = 25.75 + 0.5 * i                   # FFC pin 24 - i
-        yv = 26.2 if i % 2 == 0 else 26.9      # staggered vias above the FFC
-        tracks.append((net, F, w, [pad, esc]))
-        vias.append((net, esc) + via)
-        tracks.append((net, I2, w, [esc, (xv, esc[1]), (xv, c - xv), (xj, c - xj), (xj, yv)]))
-        vias.append((net, (xj, yv)) + via)
-        tracks.append((net, F, w, [(xj, yv), (xj, 28.1)]))
-    cols = [("RSV_MISO", (37.45, 13.0), 29.75), ("COL_LAT", (38.0, 12.1), 30.25),
-            ("COL_DAT", (38.55, 13.0), 30.75), ("COL_CLK", (39.1, 12.1), 31.75), ("RSV_INT", (39.65, 13.0), 32.75)]
-    for i, (net, (xu, yu), xj) in enumerate(cols):
-        c = 55.5 + 0.6 * i
-        tracks.append((net, F, w, [(xu, yu), (xu, c - xu), (xj, c - xj), (xj, 28.1)]))
-    return tracks, vias
-
-
-def expansion_routes() -> tuple[list, list]:
-    """BMD-340 -> expansion header J502 (DNP, bottom side, under the module), 0.15 mm.
-
-    The header's pin order was chosen for this (D-35). Pads on the module's top side run down through the
-    module interior to vias just above J502's upper pad row; pads on the bottom edge drop to vias between
-    J502's two rows, or (TX, MOSI) below the header, and reach their pads on the bottom layer.
-    """
-    w, via = 0.15, (0.5, 0.25)
-    # (net, F.Cu path from the module pad to the via, B.Cu path from the via to the header pad)
-    spec = [
-        ("GND", [(38.15, 9.7), (38.8, 10.3)], [(38.8, 10.3), (37.6, 11.2)]),   # module pad 55 + J502 pin 12
-        ("EXP_IO4", [(39.65, 6.0), (39.65, 9.95), (39.5, 10.35)], [(39.5, 10.35), (38.87, 11.2)]),
-        ("EXP_AIN1", [(40.2, 5.1), (40.2, 10.25)], [(40.2, 10.25), (40.14, 11.2)]),
-        ("EXP_IO3", [(41.3, 5.1), (41.3, 10.3)], [(41.3, 10.3), (41.4, 11.2)]),
-        ("EXP_IO1", [(42.4, 5.1), (42.4, 10.3)], [(42.4, 10.3), (42.68, 11.2)]),
-        ("EXP_IO2", [(41.85, 4.2), (41.85, 3.4)], [(41.85, 3.4), (43.5, 5.0), (43.5, 10.6), (43.94, 11.2)]),
-        ("EXP_CS", [(40.2, 12.1), (40.2, 14.4)], [(40.2, 14.4), (40.14, 15.0)]),
-        ("EXP_RX", [(41.3, 12.1), (41.3, 14.4)], [(41.3, 14.4), (41.4, 15.0)]),
-        ("EXP_SCK", [(42.4, 12.1), (42.4, 14.4)], [(42.4, 14.4), (42.68, 15.0)]),
-        ("EXP_MISO", [(43.5, 12.1), (43.5, 14.4)], [(43.5, 14.4), (43.94, 15.0)]),
-        ("EXP_TX", [(40.75, 13.0), (40.75, 17.75)], [(40.75, 17.75), (39.5, 17.75), (38.87, 17.15)]),
-        ("EXP_MOSI", [(42.95, 13.0), (42.95, 18.4)], [(42.95, 18.4), (37.6, 18.4), (37.6, 17.15)]),
-    ]
-    tracks, vias = [], []
-    for net, top, bottom in spec:
-        tracks += [(net, F, w, top), (net, B, w, bottom)]
-        vias.append((net, top[-1]) + via)
-    # module interior escapes to vias outside the band the In2 row bus occupies (y 7.7-10.0)
-    for net, path in (("SPARE_P004", [(37.25, 6.95), (37.9, 6.95), (38.1, 6.25)]),
-                      ("HAPTIC_EN", [(39.1, 5.1), (39.1, 3.45)]),
-                      ("CHG_INT", [(40.75, 6.0), (40.75, 7.2)]),
-                      ("BOOST_EN", [(41.85, 6.0), (41.85, 7.0)]),
-                      ("LED_EN", [(42.95, 6.0), (42.95, 7.0)]),
-                      ("LED_FAULT", [(40.75, 4.2), (40.75, 3.45)])):
-        tracks.append((net, F, w, path))
-        vias.append((net, path[-1]) + via)
-    # LED current-limit resistor sits west of the LED switch, its pin east: under the package and around
-    tracks.append(("/Power rails/LED_ILIM", F, w, [(25.14, 21.8), (24.0, 21.8), (24.0, 23.45), (21.6, 23.45),
-                                                   (21.2, 23.6)]))
-    tracks.append(("LED_EN", F, w, [(22.86, 22.75), (21.6, 22.5), (21.2, 22.4)]))
-    tracks.append(("GND", F, 0.3, [(22.86, 21.8), (21.75, 21.8)]))       # LED switch GND pin, boxed in
-    # LED_EN at the LED switch: the last part of the path the maze router found on the hand-routed board,
-    # kept as a hand route because later routes otherwise wall the switch's EN pin in
-    tracks += [("LED_EN", I2, w, [(26.05, 19.4), (25.6, 19.35), (25.25, 19.35), (25.05, 19.45), (21.9, 22.6),
-                                  (21.8, 22.9)]),
-               ("LED_EN", F, w, [(21.8, 22.9), (21.6, 22.5)])]
-    vias += [("LED_EN", (26.05, 19.4)) + via, ("LED_EN", (21.8, 22.9)) + via]
-    vias.append(("GND", (21.75, 21.8)) + via)
-    # USB D+/D- from the ESD array to the module (full speed: length-matched to ~0.5 mm is plenty),
-    # found by the maze router on the hand-routed board, kept clear of the receptacle shell
-    tracks += [("USB_DP", F, 0.2, [(20.15, 10.05), (21.15, 10.25)]),
-               ("USB_DP", I2, 0.2, [(21.15, 10.25), (23.6, 9.45)]),
-               ("USB_DP", F, 0.2, [(23.6, 9.45), (24.05, 9.4), (32.4, 9.4), (35.45, 12.45)]),
-               ("USB_DN", F, 0.2, [(20.15, 11.95), (21.1, 12.1), (21.6, 12.6), (23.45, 12.65), (24.2, 13.4),
-                                   (29.6, 13.4)]),
-               ("USB_DN", B, 0.2, [(29.6, 13.4), (31.6, 13.4), (34.4, 10.6)]),
-               ("USB_DN", F, 0.2, [(34.4, 10.6), (35.45, 11.35)])]
-    vias += [("USB_DP", (21.15, 10.25)) + via, ("USB_DP", (23.6, 9.45)) + via,
-             ("USB_DN", (29.6, 13.4)) + via, ("USB_DN", (34.4, 10.6)) + via]
-    # CC2 receptacle pin -> via under the receptacle body -> In2 above the shell tabs -> CC ESD pin 4
-    tracks += [("CC2", F, w, [(17.25, 6.85), (17.4, 6.3)]),
-               ("CC2", I2, w, [(17.4, 6.3), (17.4, 4.4), (24.4, 4.4), (24.4, 12.8)]),
-               ("CC2", F, w, [(24.4, 12.8), (24.54, 12.0)])]
-    vias += [("CC2", (17.4, 6.3)) + via, ("CC2", (24.4, 12.8)) + via]
-    return tracks, vias
-
-
-_bt, _bv = switchboard_buses()
-_et, _ev = expansion_routes()
-PRE_TRACKS += _bt + _et
-PRE_VIAS += _bv + _ev
 
 
 def mm(v: float) -> int:
@@ -648,6 +665,9 @@ def step_finish(stitch: bool = True, use_maze: bool = True) -> None:
         lone = drop_single_layer_vias(b)
         if lone:
             print(f"  vias joining only one layer removed: {lone}")
+        stubs = drop_dangling_tracks(b)
+        if stubs:
+            print(f"  dangling router stubs removed: {stubs}")
     forks = bridge_narrow_forks(b)
     if forks:
         print(f"  narrow forks bridged: {forks}")
@@ -680,7 +700,7 @@ def drc_unconnected(path: pathlib.Path) -> list:
     return data.get("unconnected_items", [])
 
 
-ESCAPE_NETS = {"SPARE_P004", "HAPTIC_EN", "CHG_INT", "BOOST_EN", "LED_EN", "LED_FAULT"}
+ESCAPE_NETS: set = set()      # nets whose hand routes end in an escape via the router should start from
 
 
 def conn_ends(it, net):
@@ -691,6 +711,8 @@ def conn_ends(it, net):
     for n, (x, y), _, _ in PRE_VIAS:
         if n == net and net in ESCAPE_NETS and math.dist((OX + x, OY + y), xy) < 2.5:
             return [(OX + x, OY + y, li) for li in range(3)]     # the prepared escape via, not the pad
+    if "of J401" in d:                 # castellated contact: the hole sits on the board edge, start in its copper
+        return [(xy[0] + 1.2, xy[1], li) for li in (0, 1, 2)]
     if d.startswith("Via") or "PTH pad" in d:
         return [(xy[0], xy[1], li) for li in (0, 2)]
     for k, li in names.items():
@@ -700,7 +722,9 @@ def conn_ends(it, net):
 
 
 def step_maze() -> None:
-    """Route every connection still open with the grid maze router (targeted rip-up); store in MAZE_JSON."""
+    """Route every connection still open with the grid maze router (targeted rip-up); store in MAZE_JSON.
+    With MAZE_MERGE=1 the routes already stored (and on the board) stay, and the new ones are added to them."""
+    keep = json.loads(MAZE_JSON.read_text()) if os.environ.get("MAZE_MERGE") and MAZE_JSON.exists() else None
     b = pcbnew.LoadBoard(str(BOARD))
     r = maze.Router(b, (OX, OY, OX + BOARD_W, OY + BOARD_H), [pcbnew.F_Cu, pcbnew.In2_Cu, pcbnew.B_Cu],
                     clearance=0.18, hole_clearance=0.28)   # margin for the 0.05 mm grid
@@ -726,9 +750,17 @@ def step_maze() -> None:
         spec.append((b.FindNet(net).GetNetCode(), st, go, w0 / 2, vd / 2, vdr))
     cache = os.environ.get("MAZE_CACHE")              # optional: reuse a negotiation result while tuning
     key = json.dumps([[c[2], c[3], c[4]] for c in conns])
-    if cache and pathlib.Path(cache).exists() and json.loads(pathlib.Path(cache).read_text())["key"] == key:
-        paths = {int(k): [tuple(p) for p in v] for k, v in json.loads(pathlib.Path(cache).read_text())["paths"].items()}
-        print("  negotiation result taken from cache")
+    cached = None
+    if cache and pathlib.Path(cache).exists():         # matched per connection: DRC lists them in varying order
+        old = json.loads(pathlib.Path(cache).read_text())
+        by_conn = {json.dumps(k): old["paths"].get(str(i)) for i, k in enumerate(json.loads(old["key"]))}
+        mine = [json.dumps([c[2], c[3], c[4]]) for c in conns]
+        hit = {i: [tuple(p) for p in by_conn[m]] for i, m in enumerate(mine) if by_conn.get(m)}
+        if len(hit) >= 0.9 * len(conns):              # the rest (DRC picked other end points) is routed fresh
+            cached = hit
+    if cached is not None:
+        paths = cached
+        print(f"  negotiation result taken from cache ({len(cached)} of {len(conns)} connections)")
     else:
         neg = maze.Negotiator(r)
         paths = neg.run(spec, iters=16, log=print)
@@ -800,32 +832,38 @@ def step_maze() -> None:
                     failed.append(x)
         return gave_up
 
+    def save(routes) -> None:
+        found = {"tracks": [], "vias": []}
+        for cid, (code, _, (segs, vias, hw, vr, dr)) in sorted(routes.items()):
+            net = conns[cid][2]
+            for li, pts in segs:
+                found["tracks"].append({"net": net, "layer": ["F.Cu", "In2.Cu", "B.Cu"][li], "width": round(hw * 2, 3),
+                                        "points": [[round(x - OX, 4), round(y - OY, 4)] for x, y in pts]})
+            for x, y in vias:
+                found["vias"].append({"net": net, "x": round(x - OX, 4), "y": round(y - OY, 4),
+                                      "dia": round(vr * 2, 3), "drill": dr})
+        MAZE_JSON.write_text(json.dumps(found, indent=1) + "\n")
+
     order = list(range(len(conns)))
     best = None
-    for attempt in range(4):
+    for attempt in range(int(os.environ.get("MAZE_ATTEMPTS", "4"))):
         failed = legalize(order)
         gave_up = ripup(list(failed))
-        print(f"  legalisation {attempt + 1}: {len(conns) - len(gave_up)}/{len(conns)} routed")
+        print(f"  legalisation {attempt + 1}: {len(conns) - len(gave_up)}/{len(conns)} routed" +
+              (f"; open: {', '.join(sorted(conns[c][2] for c in gave_up))}" if gave_up else ""), flush=True)
         if best is None or len(gave_up) < len(best[0]):
             best = (list(gave_up), dict(r.routes))
+            save(best[1])                              # kept after every attempt: a long run may be cut off
         if not gave_up:
             break
         order = gave_up + [c for c in order if c not in gave_up]   # the hard ones first next time
     gave_up = best[0]
-    r.routes = best[1]
-    r._rt.clear()
-    r._rv.clear()
-    found = {"tracks": [], "vias": []}
-    for cid, (code, _, (segs, vias, hw, vr, dr)) in sorted(r.routes.items()):
-        net = conns[cid][2]
-        for li, pts in segs:
-            found["tracks"].append({"net": net, "layer": ["F.Cu", "In2.Cu", "B.Cu"][li], "width": round(hw * 2, 3),
-                                    "points": [[round(x - OX, 4), round(y - OY, 4)] for x, y in pts]})
-        for x, y in vias:
-            found["vias"].append({"net": net, "x": round(x - OX, 4), "y": round(y - OY, 4),
-                                  "dia": round(vr * 2, 3), "drill": dr})
-    MAZE_JSON.write_text(json.dumps(found, indent=1) + "\n")
-    print(f"  routed {len(r.routes)}/{len(conns)}" +
+    if keep is not None:                               # merge mode: the routes stored before stay
+        found = json.loads(MAZE_JSON.read_text())
+        found["tracks"] = keep["tracks"] + found["tracks"]
+        found["vias"] = keep["vias"] + found["vias"]
+        MAZE_JSON.write_text(json.dumps(found, indent=1) + "\n")
+    print(f"  routed {len(best[1])}/{len(conns)}" +
           (f"; not routed: {', '.join(conns[c][2] for c in gave_up)}" if gave_up else ""))
 
 
@@ -990,12 +1028,14 @@ def step_repair() -> None:
         q = pcbnew.VECTOR2I(int(round(x * 1e6)), int(round(y * 1e6)))
         return any(it.IsOnLayer(lay[li]) and it.HitTest(q, 10000) for it in base_cu.get(net, ()))
 
-    comps = maze_components(json.loads(MAZE_JSON.read_text()), on_base)
-    ends_of, width_of, chain_of, fixed_ids = {}, {}, {}, set()
+    data = json.loads(MAZE_JSON.read_text())
+    comps = maze_components(data, on_base)
+    ends_of, width_of, chain_of, fixed_ids, orig_of = {}, {}, {}, set(), {}
     rid = 0
     for c in comps:
         code = b.FindNet(c["net"]).GetNetCode()
-        hw = c["tracks"][0][2] / 2
+        hw = max(t[2] for t in c["tracks"]) / 2       # mixed widths: the widest one keeps the others clear
+        orig_of[rid] = c                               # written back exactly as stored unless it is moved
         vr = (c["vias"][0][3] / 2) if c["vias"] else MAZE_WIDTH[net_class(c["net"])][1] / 2
         dr = c["vias"][0][4] if c["vias"] else MAZE_WIDTH[net_class(c["net"])][2]
         segs = [(li, pts) for _, li, _, pts in c["tracks"]]
@@ -1136,6 +1176,15 @@ def step_repair() -> None:
     found = {"tracks": [], "vias": []}
     allr = dict(r.routes)
     for k in sorted(allr):
+        if k in orig_of:                               # untouched stored route: keep every width as it was
+            c = orig_of[k]
+            for net, li, w, pts in c["tracks"]:
+                found["tracks"].append({"net": net, "layer": LAYER_NAMES[li], "width": w,
+                                        "points": [[round(x - OX, 4), round(y - OY, 4)] for x, y in pts]})
+            for net, x, y, d, dr in c["vias"]:
+                found["vias"].append({"net": net, "x": round(x - OX, 4), "y": round(y - OY, 4),
+                                      "dia": d, "drill": dr})
+            continue
         code, _, (segs, vias, hw, vr, dr) = allr[k][:3]
         net = b.FindNet(code).GetNetname()
         for li, pts in segs:
@@ -1144,6 +1193,9 @@ def step_repair() -> None:
         for x, y in vias:
             found["vias"].append({"net": net, "x": round(x - OX, 4), "y": round(y - OY, 4),
                                   "dia": round(vr * 2, 3), "drill": dr})
+    used = {(v[0], round(v[1], 3), round(v[2], 3)) for c in comps for v in c["vias"]}
+    found["vias"] += [v for v in data["vias"]           # vias no stored track touches stay as they are
+                      if (v["net"], round(OX + v["x"], 3), round(OY + v["y"], 3)) not in used]
     MAZE_JSON.write_text(json.dumps(found, indent=1) + "\n")
     OPEN_JSON.unlink()
     print("  repaired" + (f"; still open: {', '.join(failed)}" if failed else ": nothing left open"))
@@ -1214,8 +1266,8 @@ def drop_single_layer_vias(b: pcbnew.BOARD) -> int:
     pads = [p for fp in b.GetFootprints() for p in fp.Pads()]
     for v in [t for t in b.GetTracks() if t.GetClass() == "PCB_VIA"]:
         net = v.GetNetname()
-        if net == "GND":
-            continue                                   # GND vias also join the In1 plane
+        if net == "GND" or v.IsLocked():
+            continue                                   # GND vias also join the In1 plane; hand vias stay
         c = v.GetPosition()
         layers = {t.GetLayer() for t in tracks if t.GetNetname() == net and (t.GetStart() == c or t.GetEnd() == c)}
         layers |= {l for p in pads if p.GetNetname() == net and p.HitTest(c, 0)
@@ -1224,6 +1276,149 @@ def drop_single_layer_vias(b: pcbnew.BOARD) -> int:
             b.Remove(v)
             n += 1
     return n
+
+
+def drop_dangling_tracks(b: pcbnew.BOARD) -> int:
+    """Router copper (unlocked) left over after rip-ups: islands of a net that reach no pad, and branches with
+    an end that touches nothing. Repeated until none is left."""
+    total = 0
+    pads = [p for fp in b.GetFootprints() for p in fp.Pads()]
+
+    def touch(a, c) -> bool:
+        if a.GetClass() == "PCB_TRACK" and c.GetClass() == "PCB_TRACK":
+            if a.GetLayer() != c.GetLayer():
+                return False
+            return any(c.HitTest(q, 0) for q in (a.GetStart(), a.GetEnd())) or \
+                any(a.HitTest(q, 0) for q in (c.GetStart(), c.GetEnd()))
+        if a.GetClass() == "PCB_VIA":
+            a, c = c, a
+        if c.GetClass() == "PCB_VIA":            # a is a track
+            return any(c.HitTest(q, 0) for q in (a.GetStart(), a.GetEnd()))
+        return False
+
+    while True:
+        by_net = {}
+        for t in b.GetTracks():
+            by_net.setdefault(t.GetNetCode(), []).append(t)
+        dead = []
+        for code, items in by_net.items():
+            net = b.FindNet(code)
+            if net is None or net.GetNetname() == "GND":
+                continue
+            npads = [p for p in pads if p.GetNetCode() == code]
+            parent = list(range(len(items)))
+
+            def find(i):
+                while parent[i] != i:
+                    parent[i] = parent[parent[i]]
+                    i = parent[i]
+                return i
+            for i in range(len(items)):
+                for j in range(i + 1, len(items)):
+                    if touch(items[i], items[j]):
+                        parent[find(i)] = find(j)
+            on_pad = set()
+            for i, t in enumerate(items):
+                pts = [t.GetPosition()] if t.GetClass() == "PCB_VIA" else [t.GetStart(), t.GetEnd()]
+                for p in npads:
+                    if any(p.HitTest(q, 0) for q in pts) and (t.GetClass() == "PCB_VIA" or p.IsOnLayer(t.GetLayer())):
+                        on_pad.add(find(i))
+                        break
+            for i, t in enumerate(items):
+                if not t.IsLocked() and find(i) not in on_pad:
+                    dead.append(t)
+                    continue
+                if t.IsLocked() or t.GetClass() != "PCB_TRACK":
+                    continue
+                for end in (t.GetStart(), t.GetEnd()):
+                    if any(o is not t and (o.GetClass() == "PCB_VIA" or o.GetLayer() == t.GetLayer())
+                           and o.HitTest(end, 0) for o in items):
+                        continue
+                    if any(p.IsOnLayer(t.GetLayer()) and p.HitTest(end, 0) for p in npads):
+                        continue
+                    dead.append(t)
+                    break
+        if not dead:
+            return total
+        for t in dead:
+            b.Remove(t)
+        total += len(dead)
+
+
+def _on_seg(p, seg) -> bool:
+    """True when point p lies on the segment (within 1 um)."""
+    (ax, ay), (bx, by) = seg
+    dx, dy = bx - ax, by - ay
+    ll = dx * dx + dy * dy
+    t = 0.0 if ll == 0 else max(0.0, min(1.0, ((p[0] - ax) * dx + (p[1] - ay) * dy) / ll))
+    return math.hypot(p[0] - ax - t * dx, p[1] - ay - t * dy) < 0.001
+
+
+def step_polish() -> int:
+    """Remove router segments and vias that KiCad reports as dangling from MAZE_JSON (hand routes stay)."""
+    found = json.loads(MAZE_JSON.read_text())
+    segs = []
+    for t in found["tracks"]:                          # one entry per segment, so single segments can go
+        for a, c in zip(t["points"], t["points"][1:]):
+            segs.append({"net": t["net"], "layer": t["layer"], "width": t["width"], "points": [a, c]})
+    bad = [v for v in drc_violations(BOARD) if v["type"] in ("track_dangling", "via_dangling")]
+    removed = 0
+    for v in bad:
+        it = v["items"][0]
+        m = re.search(r"\[([^\]]+)\]", it["description"])
+        net = m.group(1) if m else None
+        x, y = it["pos"]["x"] - OX, it["pos"]["y"] - OY
+        if it["description"].startswith("Via"):
+            keep = [q for q in found["vias"] if not (q["net"] == net and math.dist((q["x"], q["y"]), (x, y)) < 0.02)]
+            removed += len(found["vias"]) - len(keep)
+            found["vias"] = keep
+            continue
+        lm = re.search(r"length ([0-9.]+) mm", it["description"])
+        length = float(lm.group(1)) if lm else None
+        cand = [sg for sg in segs if sg["net"] == net and not sg.get("gone")
+                and min(math.dist(sg["points"][0], (x, y)), math.dist(sg["points"][1], (x, y))) < 0.02]
+        exact = [sg for sg in cand if length is None or abs(math.dist(*sg["points"]) - length) <= 0.01]
+        if not exact and len(cand) == 1:               # the board copy was trimmed at a pad: same segment
+            exact = cand
+        if exact:
+            exact[0]["gone"] = True
+            removed += 1
+    # A removed dead end can leave the next piece of the same dead branch dangling: follow the branch while
+    # its joints join exactly two router segments, with no via, pad or hand route there.
+    b = pcbnew.LoadBoard(str(BOARD))
+    fixed = [it for fp in b.GetFootprints() for it in fp.Pads()] + [t for t in b.GetTracks() if t.IsLocked()]
+
+    def anchored(net, layer, x, y):
+        q = pcbnew.VECTOR2I(int(round((x + OX) * 1e6)), int(round((y + OY) * 1e6)))
+        return any(it.GetNetname() == net and it.IsOnLayer(LAYERS[layer]) and it.HitTest(q, 10000) for it in fixed)
+
+    def at(sg, x, y):
+        return [i for i in (0, 1) if math.dist(sg["points"][i], (x, y)) < 0.001]
+    todo = [(sg, i) for sg in segs if sg.get("gone") for i in (0, 1)]
+    while todo:
+        sg, i = todo.pop()
+        x, y = sg["points"][i]
+        if any(q["net"] == sg["net"] and math.dist((q["x"], q["y"]), (x, y)) < 0.02 for q in found["vias"]):
+            continue
+        if anchored(sg["net"], sg["layer"], x, y):
+            continue
+        near = [o for o in segs if not o.get("gone") and o is not sg and o["net"] == sg["net"]
+                and o["layer"] == sg["layer"] and at(o, x, y)]
+        if len(near) != 1:                             # a junction, or nothing left: stop here
+            continue
+        o = near[0]
+        mid = any(not q.get("gone") and q is not o and q["net"] == o["net"] and q["layer"] == o["layer"]
+                  and _on_seg((x, y), q["points"]) for q in segs)
+        if mid:                                        # something else meets this point: not a dead end
+            continue
+        o["gone"] = True
+        removed += 1
+        j = 1 - at(o, x, y)[0]
+        todo.append((o, j))
+    found["tracks"] = [{k: sg[k] for k in ("net", "layer", "width", "points")} for sg in segs if not sg.get("gone")]
+    MAZE_JSON.write_text(json.dumps(found, indent=1) + "\n")
+    print(f"  polish: {removed} dangling router items removed")
+    return removed
 
 
 def step_fill() -> None:
@@ -1275,6 +1470,8 @@ if __name__ == "__main__":
     ap.add_argument("--maze", action="store_true", help="maze-route the connections still open, then rebuild")
     ap.add_argument("--repair", action="store_true",
                     help="route what is still open, moving only the stored maze routes in the way, then rebuild")
+    ap.add_argument("--polish", action="store_true",
+                    help="remove router leftovers KiCad reports as dangling, then rebuild")
     ap.add_argument("--step", nargs="+", help=argparse.SUPPRESS)
     a = ap.parse_args()
     if a.step:
@@ -1290,6 +1487,8 @@ if __name__ == "__main__":
             step_repair_prep()
         elif a.step[0] == "repair":
             step_repair()
+        elif a.step[0] == "polish":
+            step_polish()
         sys.stdout.flush()
         os._exit(0)          # skip interpreter teardown: SWIG objects of removed items crash on exit
     if a.autoroute:
@@ -1329,6 +1528,15 @@ if __name__ == "__main__":
                 break
         best_copy.unlink(missing_ok=True)
         OPEN_JSON.unlink(missing_ok=True)
+    if a.polish:
+        print("polish:")
+        for n in range(4):                             # removing one dead piece can expose the next
+            run_step("finish", "nostitch")
+            run_step("fill")
+            r = subprocess.run([sys.executable, __file__, "--step", "polish"], capture_output=True, text=True)
+            print(r.stdout.strip())
+            if " 0 dangling" in r.stdout:
+                break
     if a.maze:
         print("maze (on the board without stitching vias):")
         run_step("finish", "nostitch")

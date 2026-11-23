@@ -21,27 +21,41 @@ There is one switch board per layout and variant. All of them plug into the same
 
 ## Interface: core ↔ switch board
 
-**Connector:** Hirose FH34SRJ-24S-0.5SH (24 pins, 0.5 mm pitch, 1.0 mm tall, flip lock) on the core,
-a matching FFC to the switch board. This pinout is fixed from core rev A on and never changes.
+**Connection (v2, D-41):** the core board is a strip beside the key area at the right. Its left edge carries
+**33 castellated contacts** (plated half holes, 2.0 mm pitch, contact 1 at the back); they are soldered to a
+matching castellated contact row on the switch board's right edge, the core's back end level with the
+switch board's back edge. This pinout replaces the 24-pin FFC of the first rev A layout and is fixed from
+then on.
 
-| Pin | Signal | Direction | Description |
+| Contact | Signal | Direction | Description |
 |---|---|---|---|
-| 1 | `GND` | — | Ground (also LED return) |
-| 2, 3, 4 | `LED_5V` | core → SWB | Switched LED supply, ≤ 1.5 A total (≤ 0.5 A per contact), off by default |
-| 5 | `GND` | — | Ground (LED return) |
-| 6 | `VLOGIC` | core → SWB | Logic supply, 3.0 V ±5 % (core rail `3V0`), ≤ 50 mA. Switch-board logic must work from 2.7 V to 3.6 V |
-| 7 | `I2C_SCL` | core → SWB | LED driver(s) + descriptor EEPROM, 400 kHz (1 MHz allowed). Pull-ups (4.7 kΩ) on the core |
-| 8 | `I2C_SDA` | bidir | |
-| 9 | `LED_SDB` | core → SWB | LED driver hardware shutdown, active low |
-| 10 | `RSV_INT` | SWB → core | Reserved for variants with their own scanning controller (Hall-effect) |
-| 11 | `GND` | — | Ground, shields the column clock |
-| 12 | `COL_CLK` | core → SWB | Column shift-register clock |
-| 13 | `GND` | — | Ground |
-| 14 | `COL_DAT` | core → SWB | Column shift-register data |
-| 15 | `COL_LAT` | core → SWB | Column shift-register latch |
-| 16 | `RSV_MISO` | SWB → core | Reserved (Hall-effect variant data) |
-| 17–24 | `ROW0`–`ROW7` | SWB → core | Matrix rows, read directly by MCU GPIOs (wake-capable, internal pull-downs) |
-| MP | `GND` | — | Connector mounting tabs |
+| 1, 2, 3 | `VBUS_B` | SWB → core | VBUS of USB-C port B (on the switch board), ≤ 3 A, passed straight from the receptacle |
+| 4 | `GND` | — | Ground |
+| 5 | `USB_B_DN` | bidir | Port B D− (after the switch board's ESD array) |
+| 6 | `USB_B_DP` | bidir | Port B D+ |
+| 7 | `GND` | — | Ground, shields the USB pair |
+| 8 | `VLOGIC` | core → SWB | Logic supply, 3.0 V ±5 % (core rail `3V0`), ≤ 50 mA. Switch-board logic must work from 2.7 V to 3.6 V |
+| 9 | `I2C_SCL` | core → SWB | LED driver(s) + descriptor EEPROM, 400 kHz (1 MHz allowed). Pull-ups (4.7 kΩ) on the core |
+| 10 | `I2C_SDA` | bidir | |
+| 11, 12, 13 | `GND` | — | Ground (also the LED return) |
+| 14, 15, 16 | `LED_5V` | core → SWB | Switched LED supply, ≤ 1.5 A total (≤ 0.5 A per contact), off by default |
+| 17 | `GND` | — | Ground (LED return) |
+| 18 | `LED_SDB` | core → SWB | LED driver hardware shutdown, active low |
+| 19, 20 | `ROW7`, `ROW6` | SWB → core | Matrix rows, read directly by MCU GPIOs (wake-capable, internal pull-downs) |
+| 21 | `CC1_B` | SWB → core | Port B CC1; Rd 5.1 kΩ and sensing on the core |
+| 22 | `ROW5` | SWB → core | Matrix row |
+| 23 | `CC2_B` | SWB → core | Port B CC2; Rd 5.1 kΩ and sensing on the core |
+| 24 | `ROW4` | SWB → core | Matrix row |
+| 25 | `RSV_MISO` | SWB → core | Reserved (Hall-effect variant data) |
+| 26 | `COL_LAT` | core → SWB | Column shift-register latch |
+| 27 | `COL_DAT` | core → SWB | Column shift-register data |
+| 28 | `COL_CLK` | core → SWB | Column shift-register clock (≤ 10 MHz; slow edges are enough, the switch board may add a series resistor) |
+| 29 | `RSV_INT` | SWB → core | Reserved for variants with their own scanning controller (Hall-effect) |
+| 30–33 | `ROW0`, `ROW1`, `ROW2`, `ROW3` | SWB → core | Matrix rows |
+
+The order follows the core strip's layout: port B power and data at the back next to the core's VBUS mux and
+data switch, 3V0 and I²C beside the charger, `LED_5V` beside the LED rail switch, and the matrix, its control
+lines and port B's CC lines beside and in front of the radio module, in the order of its pads.
 
 **Matrix scheme:** columns are driven through a chain of shift registers on the switch board, so the
 number of columns (and therefore keyboard size) never changes the connector. Rows (≤ 8) go directly to
@@ -62,8 +76,13 @@ the MCU. Diodes run column → row (COL2ROW).
 - The core reads the descriptor before scanning or enabling LEDs. An unknown descriptor format
   version means: keys are scanned with a safe default, LEDs stay off, and the app reports the problem.
 
+**Preconditions (switch board, for port B)**
+- USB-C port B sits at the back-left corner of the switch board: a long-body 16-pin receptacle (as on the core,
+  mouth through the case wall), ESD arrays on D± and CC next to it, and VBUS_B traces for 3 A.
+- USB_B_DP/DN run as a differential pair (90 Ω where the stackup allows, Full Speed only).
+
 **Invariants**
-- A switch board never sources power into the core.
+- A switch board never sources power into the core; the only power it passes in is VBUS_B, straight from its USB-C port.
 - A new switch board of an existing variant needs **no firmware change**; the descriptor is enough.
 
 ## Requirements
@@ -84,3 +103,5 @@ the MCU. Diodes run column → row (COL2ROW).
 | SWB-012 | Mounting and soft-mount points shall support the Choc plate height (slim case) and the MX plate height (taller case). | P1 | I |
 | SWB-013 | PCB thickness shall be 1.6 mm unless the height stack-up requires 1.2 mm (decided with OPEN-11). | P1 | I |
 | SWB-014 | Hall-effect and Gateron low-profile switch boards shall use the same connector and descriptor, declaring their variant. | Later | A |
+| SWB-015 | The board shall carry USB-C port B at its back-left corner (long-body 16-pin receptacle, ESD on D± and CC) and pass VBUS_B, D±, CC1/CC2 to the core contacts. | P1 | I/T |
+| SWB-016 | The board's right edge shall carry the 33 castellated contacts of the core interface (2.0 mm pitch, contact 1 at the back), aligned so the core's back end is level with the board's back edge. | P1 | I |

@@ -1983,37 +1983,9 @@
 			)
 		)
 	)
-	(wire
-		(pts
-			(xy 35.56 69.85)
-			(xy 33.02 69.85)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f679aa53-35fc-5bf7-ad8e-d0753c975dc0")
-	)
-	(global_label "CHG_PG"
-		(shape passive)
-		(at 33.02 69.85 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "160d4597-a505-539e-9ad5-da3771cdf153")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 33.02 69.85 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
+	(no_connect
+		(at 35.56 69.85)
+		(uuid "f818b176-358a-5071-a1fa-55d490c8cecc")
 	)
 	(no_connect
 		(at 35.56 72.39)

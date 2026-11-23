@@ -11,7 +11,8 @@ Writes hardware/core/fab/:
   ko-core-rev-a-cpl.csv       JLCPCB placement: Designator, Mid X, Mid Y, Layer, Rotation
   ko-core-rev-a-fit-1to1.pdf  print at 100 % to check the outline, connectors and parts against the case
   ko-core-rev-a-top.png, -bottom.png, -iso.png   renders
-Unpopulated parts and test points are left out of BOM and CPL.
+Unpopulated parts, test points and the castellated edge J401 (bare-board copper) are left out of BOM and CPL.
+The castellated edge needs JLCPCB's "Castellated Holes" option when ordering.
 """
 import argparse
 import csv
@@ -29,6 +30,7 @@ PCB = CORE / "ko-core.kicad_pcb"
 SCH = CORE / "ko-core.kicad_sch"
 FAB = CORE / "fab"
 NAME = "ko-core-rev-a"
+NOT_PLACED = ("TP", "J401")     # test points and the castellated edge: copper only, nothing to buy or place
 LAYERS = ["F.Cu", "In1.Cu", "In2.Cu", "B.Cu", "F.Paste", "B.Paste", "F.Silkscreen", "B.Silkscreen",
           "F.Mask", "B.Mask", "Edge.Cuts"]
 
@@ -68,7 +70,7 @@ def cpl() -> None:
         w = csv.writer(f)
         w.writerow(["Designator", "Mid X", "Mid Y", "Layer", "Rotation"])
         for r in rows:
-            if r["Ref"].startswith("TP"):
+            if r["Ref"].startswith(NOT_PLACED):
                 continue
             w.writerow([r["Ref"], f"{float(r['PosX']):.3f}mm", f"{float(r['PosY']):.3f}mm",
                         "Top" if r["Side"] == "top" else "Bottom", f"{float(r['Rot']):.0f}"])
@@ -86,7 +88,7 @@ def bom() -> None:
         w = csv.writer(f)
         w.writerow(["Comment", "Designator", "Footprint", "LCSC Part #"])
         for r in rows:
-            refs = [x.strip() for x in r["Designator"].split(",") if not x.strip().startswith("TP")]
+            refs = [x.strip() for x in r["Designator"].split(",") if not x.strip().startswith(NOT_PLACED)]
             if refs:
                 w.writerow([r["Comment"], ",".join(refs), r["Footprint"].split(":")[-1], r["LCSC Part #"]])
 
@@ -104,9 +106,11 @@ def drawing_and_renders() -> None:
         else:
             shutil.copy(top, FAB / f"{NAME}-fit-1to1.pdf")
             shutil.copy(bot, FAB / f"{NAME}-fit-1to1-bottom.pdf")
-    for side, extra in (("top", []), ("bottom", []), ("iso", ["--rotate", "-45,0,45", "--perspective"])):
+    # the strip is 22 x 80 mm: top and bottom views upright, the iso view turned so the strip runs across
+    for side, size, extra in (("top", ("700", "1800"), []), ("bottom", ("700", "1800"), []),
+                              ("iso", ("1800", "1000"), ["--rotate", "-50,0,-60", "--perspective"])):
         cli("pcb", "render", "--side", "bottom" if side == "bottom" else "top", "--quality", "high",
-            "-w", "1600", "-h", "1100", "--background", "opaque", "--zoom", "0.85", *extra,
+            "-w", size[0], "-h", size[1], "--background", "opaque", "--zoom", "0.9", *extra,
             "-o", str(FAB / f"{NAME}-{side}.png"), str(PCB))
 
 

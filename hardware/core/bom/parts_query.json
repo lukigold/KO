@@ -231,5 +231,27 @@
  "J_UG": {
   "kind": "mpn",
   "mpn": "SM03B-SRSS-TB(LF)(SN)"
+ },
+ "J_USBC_L10": {
+  "kind": "mpn",
+  "mpn": "HX TYPE-C 16P L10.0"
+ },
+ "U_TPS2121": {
+  "kind": "mpn",
+  "mpn": "TPS2121RUXR"
+ },
+ "U_TS3USB221A": {
+  "kind": "mpn",
+  "mpn": "TS3USB221ARSER"
+ },
+ "R_36k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 36000
+ },
+ "R_22k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 22000
  }
 }

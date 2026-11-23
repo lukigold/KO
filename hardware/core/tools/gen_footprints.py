@@ -83,6 +83,20 @@ class FP:
         self.items.append(f'\t(pad "{num}" smd {shape}\n\t\t(at {f(x)} {f(y)})\n\t\t(size {f(w)} {f(h)})\n'
                           f'\t\t(layers {layers}){rr}\n\t\t(uuid "{uid(self.name, "pad", num, f(x), f(y))}")\n\t)\n')
 
+    def thpad(self, num, x, y, w, h, drill, shape="rect", offset=None, castellated=False):
+        """Plated through-hole pad; drill is a diameter or (width, height) for an oval slot."""
+        d = f"oval {f(drill[0])} {f(drill[1])}" if isinstance(drill, tuple) else f(drill)
+        off = f"\n\t\t\t(offset {f(offset[0])} {f(offset[1])})" if offset else ""
+        prop = "\n\t\t(property pad_prop_castellated)" if castellated else ""
+        self.items.append(f'\t(pad "{num}" thru_hole {shape}\n\t\t(at {f(x)} {f(y)})\n\t\t(size {f(w)} {f(h)})\n'
+                          f'\t\t(drill {d}{off}\n\t\t)\n\t\t(layers "*.Cu" "*.Mask"){prop}\n'
+                          f'\t\t(remove_unused_layers no)\n\t\t(uuid "{uid(self.name, "th", num, f(x), f(y))}")\n\t)\n')
+
+    def npth(self, x, y, dia):
+        self.items.append(f'\t(pad "" np_thru_hole circle\n\t\t(at {f(x)} {f(y)})\n\t\t(size {f(dia)} {f(dia)})\n'
+                          f'\t\t(drill {f(dia)})\n\t\t(layers "*.Cu" "*.Mask")\n'
+                          f'\t\t(uuid "{uid(self.name, "npth", f(x), f(y))}")\n\t)\n')
+
     def custom_pad(self, num, ax, ay, poly):
         """Pad anchored at (ax, ay) with a polygon outline given in absolute footprint coordinates."""
         pts = " ".join(f"(xy {f(x - ax)} {f(y - ay)})" for x, y in poly)
@@ -253,6 +267,80 @@ def fh34srj(n=24):
     fp.write()
 
 
+# --------------------------------------------------------------------------- HX TYPE-C 16P L10.0 (long body)
+
+def usbc_hx_l10():
+    """HANXIA HX TYPE-C 16P L10.0 (LCSC C41427495), USB 2.0 receptacle with a 10.0 mm long body, so the
+    mouth reaches through a case wall. From the maker's drawing (recommended PCB layout and side view),
+    distances along the plug axis measured from the far end of the signal pads (R0):
+    pad length 1.15, rear shell legs at R0+1.14 (2.10 x 0.6 slot, drill 1.70), pegs (0.65) at R0+1.70,
+    front shell legs at R0+5.32 (1.80 x 0.6, drill 1.40), mouth at R0+10.59 (front legs + 5.27).
+    Origin here: midpoint of the two pegs; mouth towards +y. Pads 12 positions: 6.40 / 4.80 spans for the
+    wide pads (0.6), 3.50 / 2.50 / 1.50 / 0.50 for the narrow ones (0.3). The board edge goes at y = +5.0,
+    so the shell sticks out 3.9 mm beyond it."""
+    fp = FP("USB_C_Receptacle_HX_TYPE-C-16P_L10.0", "HX TYPE-C 16P L10.0 USB 2.0 Type-C receptacle, 10 mm long body, board edge at y=+5.0 (shell overhangs 3.9 mm)",
+            "USB C Type-C receptacle long body HX L10.0", -3.0, 9.6)
+    pad_y = -1.70 + 0.575
+    pads = [("A1", -3.20, 0.6), ("B12", -3.20, 0.6), ("A4", -2.40, 0.6), ("B9", -2.40, 0.6), ("B8", -1.75, 0.3),
+            ("A5", -1.25, 0.3), ("B7", -0.75, 0.3), ("A6", -0.25, 0.3), ("A7", 0.25, 0.3), ("B6", 0.75, 0.3),
+            ("A8", 1.25, 0.3), ("B5", 1.75, 0.3), ("B4", 2.40, 0.6), ("A9", 2.40, 0.6), ("B1", 3.20, 0.6), ("A12", 3.20, 0.6)]
+    for n, x, w in pads:
+        fp.pad(n, x, pad_y, w, 1.15)
+    for sx in (-1, 1):
+        fp.npth(sx * 2.89, 0, 0.65)
+        fp.thpad("S1", sx * 4.32, -0.56, 1.0, 2.10, (0.6, 1.70), "oval")
+        fp.thpad("S1", sx * 4.32, 3.62, 1.0, 1.80, (0.6, 1.40), "oval")
+    rear, mouth, edge = -1.11, 8.89, 5.0
+    fp.rect(-4.47, rear, 4.47, mouth, "F.Fab", 0.1)
+    fp.line(-5.5, edge, 5.5, edge, "F.Fab", 0.1)                                # PCB edge
+    fp.rect(-5.0, -2.0, 5.0, edge, "F.CrtYd", 0.05)
+    fp.line(-5.0, -0.9, -5.0, -1.9, "F.SilkS", 0.12)
+    fp.line(5.0, -0.9, 5.0, -1.9, "F.SilkS", 0.12)
+    vrml_boxes(fp.name, [(-4.47, rear, 0, 4.47, mouth, 3.26, (0.78, 0.78, 0.8))])
+    fp.model()
+    fp.write()
+
+
+# --------------------------------------------------------------------------- TPS2121 (RUX0012A)
+
+def rux12():
+    """TI RUX0012A VQFN-HR 12, 2.0 x 2.5 mm, per TI's example board layout (datasheet SLVSEA3F p. 39), top view,
+    pin 1 upper left: eight 0.2 x 0.6 pads at 0.5 mm pitch in rows at y = -/+1.15 (12..9 top, 3..6 bottom),
+    four 1.05 x 0.4 power pads at x = -/+0.675, y = -/+0.35 (1, 2 left; 8, 7 right), corner radius 0.05."""
+    fp = FP("Texas_RUX_VQFN-HR-12_2x2.5mm", "TI RUX0012A VQFN-HR 12-pin 2.0x2.5 mm (TPS2121), per TI example board layout",
+            "VQFN-HR RUX0012A TPS2121", -2.3, 2.3)
+    for n, x in (("12", -0.75), ("11", -0.25), ("10", 0.25), ("9", 0.75)):
+        fp.pad(n, x, -1.15, 0.2, 0.6, "roundrect", 0.25)
+    for n, x in (("3", -0.75), ("4", -0.25), ("5", 0.25), ("6", 0.75)):
+        fp.pad(n, x, 1.15, 0.2, 0.6, "roundrect", 0.25)
+    for n, x, y in (("1", -0.675, -0.35), ("2", -0.675, 0.35), ("8", 0.675, -0.35), ("7", 0.675, 0.35)):
+        fp.pad(n, x, y, 1.05, 0.4, "roundrect", 0.125)
+    fp.rect(-1.0, -1.25, 1.0, 1.25, "F.Fab", 0.1)
+    fp.rect(-1.45, -1.7, 1.45, 1.7, "F.CrtYd", 0.05)
+    fp.circle(-1.3, -1.45, 0.1, "F.SilkS", 0.1)                                # pin 1 marker
+    vrml_boxes(fp.name, [(-1.0, -1.25, 0, 1.0, 1.25, 0.9, (0.1, 0.1, 0.1))])
+    fp.model()
+    fp.write()
+
+
+# --------------------------------------------------------------------------- castellated board edge
+
+def castellated(n=33, pitch=2.0):
+    """Castellated edge (plated half holes) joining the core board to the switch board (switch-board
+    contract). The board edge runs along x = 0, the board lies at +x. Each contact: 0.8 mm hole centred on
+    the edge, copper 1.4 x 2.4 mm reaching 1.8 mm into the board on both sides. Contact 1 at the back (-y)."""
+    fp = FP(f"Castellated_1x{n}_P{pitch:.2f}mm_Edge", f"{n} castellated edge contacts, {pitch} mm pitch, board edge at x=0, board at +x",
+            "castellated edge half hole board-to-board", 0, (n - 1) * pitch / 2 + 2.0)
+    y0 = -(n - 1) * pitch / 2
+    for i in range(n):
+        # pad position = hole position (on the edge); the offset moves the copper 0.6 mm into the board
+        fp.thpad(str(i + 1), 0.0, y0 + i * pitch, 2.4, 1.4, 0.8, "rect", offset=(0.6, 0), castellated=True)
+    fp.line(0, y0 - 1.5, 0, -y0 + 1.5, "F.Fab", 0.1)                            # board edge
+    fp.rect(-0.4, y0 - 1.0, 2.1, -y0 + 1.0, "F.CrtYd", 0.05)
+    fp.circle(2.4, y0, 0.15, "F.SilkS", 0.1)                                   # contact 1 marker
+    fp.write()
+
+
 def standins():
     """Stand-in 3D models for library footprints whose STEP model is missing from KiCad's package
     (used by gen_pcb.py for J301 and J101; renders only)."""
@@ -266,4 +354,7 @@ if __name__ == "__main__":
     bmd340()
     ryk18()
     fh34srj()
+    usbc_hx_l10()
+    rux12()
+    castellated()
     print("footprints written to", OUT)

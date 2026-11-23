@@ -15,13 +15,13 @@ Switch boards and modules change; the core board does not.
 | MCU + radio | Pre-certified nRF52840 module with integrated antenna (part: OPEN-01) |
 | Battery | One flat LiPo pouch cell, ≤ 3.5 mm thick, under the switch board |
 | Power | Charger with power path, fuel gauge, NTC, power switch, 3.0 V system rail, switched 5 V rail for LEDs and modules (from USB, or boost converter on battery) |
-| USB | 2 × USB-C receptacles on the back edge, CC role logic per port, USB 2.0 HS 2:1 data switch, 7-port USB 2.0 HS hub, current-limited accessory-port switch |
+| USB | 2 × USB-C receptacles on the back edge: port A on the core board, port B on the switch board (D-41), both long-body receptacles through the case wall. From rev A: VBUS priority mux (port A first) and a 2:1 data switch, so either port can be the computer port. From rev B: CC role logic per port, 7-port USB 2.0 HS hub, current-limited accessory-port switch |
 | Module ports | 4 × module side interfaces (left, right, back, front) per [module-interface.md](module-interface.md) |
-| Switch board | Connector per [switch-board.md](switch-board.md) |
+| Switch board | Castellated contact row (33 contacts) per [switch-board.md](switch-board.md); the core board is a strip soldered to the switch board's right edge |
 | Service | SWD access, test points, reserved footprint for a future body haptic driver |
 
-**Revisions:** rev A (P1) = MCU, power, one USB-C port, switch-board connector; rev B (P2) adds the hub,
-the second identical port and port-role logic; rev C (P3) adds the module ports. Module contacts sit on small
+**Revisions:** rev A (P1) = MCU, power, both USB-C ports as computer ports (port B through the switch board), switch-board contacts;
+rev B (P2) adds the hub, the accessory-port role and port-role logic; rev C (P3) adds the module ports. Module contacts sit on small
 **edge boards**, one per side, connected to the core board by FFC cables. Details: [docs/design/core-board-rev-a.md](../design/core-board-rev-a.md).
 
 ## Interfaces
@@ -86,6 +86,7 @@ average, so the 3 mA target leaves a large margin for modules and ageing.
 | CORE-062 | The radio module's antenna keep-out shall be respected, and the antenna shall sit at the case's RF path ([mechanical.md](mechanical.md)). | P1 | I |
 | CORE-063 | Every rail, USB, I2C and SWD shall have labelled test points the owner can probe. | P1 | I |
 | CORE-064 | A footprint/connector for a future body haptic driver (I2C) shall be reserved and left unpopulated. | P1 | I |
+| CORE-066 | Rev A shall accept a computer or charger on either USB-C port: VBUS priority mux (port A first) with reverse-current blocking, D± 2:1 switch selected by the mux status, CC sensing on both ports, and an input overvoltage cut-off below 6 V. | P1 | T |
 | CORE-065 | An underglow strip port shall provide the switched LED rail, GND and a 5 V data line buffered from an MCU pin, for an addressable 5 V LED strip (WS2812/SK6812 class), within the LED rail's 1.5 A; the buffer shall be unpowered while the LED rail is off. | P1 | I/T |
 | CORE-070 | The radio shall be a pre-certified nRF52840 module with integrated antenna. | P1 | I |
 

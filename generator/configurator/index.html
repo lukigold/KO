@@ -971,7 +971,8 @@ function renderInfo(g) {
 
   const notes = [];
   if (state.size === "40") notes.push("40 %: digits and F-keys go on the Fn layer.");
-  if (state.size === "40" || state.size === "60") notes.push("The generator checks that the core board and battery fit under this size.");
+  if (state.size === "40" || state.size === "60") notes.push("The generator checks that the battery fits under this size.");
+  if (d * 19.05 < 80) notes.push("The core strip beside the keys is 80 mm long, deeper than this key area: the case grows to fit it.");
   if (rows > 8) notes.push("More than 8 rows: the generator folds them into 8 matrix rows.");
   const ul = document.getElementById("notes");
   renderFit();

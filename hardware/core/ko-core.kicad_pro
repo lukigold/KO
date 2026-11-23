@@ -320,6 +320,14 @@
       },
       {
         "netclass": "Power",
+        "pattern": "VBUS_A"
+      },
+      {
+        "netclass": "Power",
+        "pattern": "VBUS_B"
+      },
+      {
+        "netclass": "Power",
         "pattern": "SYS"
       },
       {
