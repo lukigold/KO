@@ -54,8 +54,34 @@ the dongle and the modules.
 `gen_pcb.py` places every part from the schematic netlist. `route_pcb.py` rebuilds the copper: the power paths
 drawn in code, a GND via for every SMD GND pad, the stored maze-router tracks
 (`route/ko-core-maze.json`), stitching vias and the pours. `route_pcb.py --maze` routes again whatever is open
-(about 20 minutes; set `MAZE_CACHE=/some/file.json` to keep the slow negotiation step between runs).
-`route_pcb.py --repair` closes connections that are still open by moving only the stored routes in their way.
+(set `MAZE_CACHE=/some/file.json` to keep the slow negotiation step between runs).
+`route_pcb.py --repair` closes connections that are still open by moving only the stored routes in their way;
+`route_pcb.py --polish` removes dead router leftovers. The negotiation runs in one worker process per CPU core
+(`MAZE_WORKERS=N` to choose); on a 4-core machine one round takes about 2 minutes on the 16 mm strip.
+
+### Running the routing on your own computer
+
+The scripts need KiCad 9 (its `pcbnew` Python module and `kicad-cli`) and numpy, on Linux. On Windows use WSL2
+with Ubuntu and KiCad 9 from the KiCad PPA. Then, in a clone of this repository:
+
+```bash
+/usr/bin/python3 hardware/core/tools/gen_schematic.py && /usr/bin/python3 hardware/core/tools/check_schematic.py
+```
+
+```bash
+MAZE_WORKERS=16 /usr/bin/python3 -u hardware/core/tools/route_pcb.py --maze
+```
+
+```bash
+/usr/bin/python3 -u hardware/core/tools/route_pcb.py --repair && /usr/bin/python3 -u hardware/core/tools/route_pcb.py --polish
+```
+
+```bash
+kicad-cli pcb drc --schematic-parity --severity-all hardware/core/ko-core.kicad_pcb
+```
+
+Repeat `--repair` while it still closes connections. `fab_outputs.py` then writes the ordering files once DRC is
+clean.
 
 ## Manufacturing files
 
