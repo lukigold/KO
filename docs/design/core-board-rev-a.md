@@ -312,7 +312,7 @@ KiCad's API and drawn with its pad numbers to compare against the source drawing
 | USB_C_Receptacle_HX_TYPE-C-16P_L10.0 | HX TYPE-C 16P L10.0 drawing (LCSC C41427495) | 16 SMD pads at the drawing's pitch, two NPTH pegs Ø0.65 mm at ±2.89 mm, four shell slots (0.6 × 1.7 and 0.6 × 1.4 mm); board edge line 5.0 mm from the pegs, so the mouth stands 3.9 mm proud of the edge |
 | Texas_RUX_VQFN-HR-12_2x2.5mm | TPS2121 datasheet, RUX0012A land pattern | Eight 0.2 × 0.6 mm signal pads at 0.5 mm pitch, four 1.05 × 0.4 mm power pads (IN1, IN2, two OUT) |
 | Castellated_1x33_P2.00mm_Edge_1-17_18-33 | Switch-board contract (D-41, D-43), JLCPCB castellated-hole rules | 0.8 mm plated holes centred on the board edge, 2.0 mm pitch, copper 1.4 × 2.4 mm reaching 1.8 mm into the board (the outer 0.6 mm is milled away); contacts 1–17 and 18–33 in two groups 15 mm apart |
-| WirePads_Switch, _NTC, _SWD, _Haptic, _Underglow | D-43 | Rows of 1.5 × 2.0 mm SMD pads at 2.2 mm pitch for soldering wires, each labelled on the silkscreen; copper only, excluded from BOM and position files |
+| WirePads_Switch, _NTC, _SWD, _Haptic, _Underglow | D-43 | Rows of 1.3 × 1.8 mm SMD pads at 2.0 mm pitch for soldering wires, each labelled on the silkscreen; copper only, excluded from BOM and position files |
 
 ## 10. Rev A verification plan
 

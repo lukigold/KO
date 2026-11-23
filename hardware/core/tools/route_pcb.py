@@ -69,7 +69,7 @@ STITCH_VIA = (0.6, 0.3)
 STITCH_PITCH = 2.5
 CLR_VIA = 0.2                  # via copper to other-net copper (net classes ask 0.15)
 CLR_STUB = 0.17
-PRE_GND_PADS = {("U106", "2"), ("U303", "3"), ("U201", "45")}   # U303.3: through the top pour (a via there walls
+PRE_GND_PADS = {("U106", "2"), ("U303", "3"), ("U201", "45"), ("C114", "2"), ("C115", "2")}   # U303.3: through the top pour (a via there walls
 # in OV2); U201.45: hand-routed via clear of SWDIO's only way out   # GND pads tied to a via by the hand routes
 EXTRA_GND_VIAS = {("U101", "15"): 2, ("U103", "2"): 2, ("U104", "4"): 2, ("U106", "2"): 2}
 
@@ -186,7 +186,9 @@ STRIP_TRACKS = [
     ("VBUS", B, 1.0, [(2.5, 3.5), (2.6, 4.0), (2.6, 5.5)]),
     ("VBUS", B, 0.8, [(2.6, 5.5), (2.6, 14.5)]),           # 0.8 mm past the dividers' and C304's GND vias
     ("VBUS", B, 1.0, [(2.6, 14.5), (2.6, 19.0), (3.3, 19.7), (6.9, 19.7)]),
-    ("VBUS", B, 1.0, [(2.6, 19.0), (2.6, 50.6), (5.25, 53.25), (5.65, 53.25), (6.5, 53.6)]),
+    # on to the charger inside the castellated edge's lane, so the matrix lines to contacts 18-33 keep the bottom
+    # layer along the edge in front of the module
+    ("VBUS", B, 1.0, [(3.3, 19.7), (3.3, 37.0), (5.65, 39.35), (5.65, 53.25), (6.5, 53.6)]),
     ("VBUS_A", F, 0.6, [(8.4, 6.12), (8.4, 7.45)]),
     ("VBUS_A", F, 0.5, [(8.4, 7.15), (5.53, 7.15), (5.53, 4.35), (4.88, 4.35)]),
     ("VBUS_A", F, 0.6, [(13.2, 6.12), (13.2, 7.45)]),
@@ -203,6 +205,8 @@ STRIP_TRACKS = [
     ("CC2", F, 0.15, [(12.7, 11.65), (12.66, 10.35)]),
     ("/USB/USB_SEL", F, 0.15, [(4.95, 2.85), (5.25, 2.6), (5.65, 2.6)]),   # ST pin boxed in: via to In2
     ("GND", F, 0.25, [(11.15, 45.9), (11.2, 46.9), (11.25, 47.45)]),         # module pad 45, beside SWDIO
+    ("GND", F, 0.3, [(4.95, 22.4), (4.95, 21.2)]),                           # boost output cap C114, beside VBUS
+    ("GND", F, 0.25, [(5.22, 20.4), (4.95, 21.2)]),                          # and the mux input cap C115
     ("SYS", F, 0.8, [(13.52, 59.25), (12.4, 59.25)]),
     ("SYS", B, 1.0, [(12.4, 59.25), (12.4, 53.6), (10.3, 51.5), (10.3, 31.7), (9.6, 31.0)]),   # clear of the charger's GND vias
     ("SYS", F, 0.8, [(9.6, 31.0), (8.67, 31.0)]),
@@ -221,7 +225,7 @@ STRIP_VIAS = [
     ("/USB/USB_A_DP", (11.7, 11.65), 0.5, 0.25),
     ("CC2", (9.2, 7.4), 0.5, 0.25), ("CC2", (12.7, 11.65), 0.5, 0.25),
     ("SYS", (12.4, 59.25), 0.8, 0.4), ("SYS", (9.6, 31.0), 0.8, 0.4), ("SYS", (4.9, 30.4), 0.8, 0.4),
-    ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (11.25, 47.45), 0.5, 0.25),
+    ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (11.25, 47.45), 0.5, 0.25), ("GND", (4.95, 21.2), 0.5, 0.25),
 ]
 PRE_TRACKS = _ct + _rt + STRIP_TRACKS
 PRE_VIAS = _cv + _rv + STRIP_VIAS

@@ -3,10 +3,10 @@
 	(generator "ko-gen")
 	(generator_version "9.0")
 	(layer "F.Cu")
-	(descr "2 solder pads for wires (NTC), 2.2 mm pitch, 1.5 x 2.0 mm")
+	(descr "2 solder pads for wires (NTC), 2.0 mm pitch, 1.3 x 1.8 mm")
 	(tags "solder pad wire")
 	(property "Reference" "REF**"
-		(at 0 -3 0)
+		(at 0 -2.9 0)
 		(layer "F.Fab")
 		(uuid "a1c6946b-5036-5cc9-9283-7155e5d4fbd1")
 		(effects
@@ -17,7 +17,7 @@
 		)
 	)
 	(property "Value" "WirePads_NTC"
-		(at 0 3.2 0)
+		(at 0 3.1 0)
 		(layer "F.Fab")
 		(uuid "1c8fa30f-a199-5ac6-b082-4566a962bc1a")
 		(effects
@@ -39,7 +39,7 @@
 			)
 		)
 	)
-	(property "Description" "2 solder pads for wires (NTC), 2.2 mm pitch, 1.5 x 2.0 mm"
+	(property "Description" "2 solder pads for wires (NTC), 2.0 mm pitch, 1.3 x 1.8 mm"
 		(at 0 0 0)
 		(layer "F.Fab")
 		(hide yes)
@@ -53,44 +53,44 @@
 	)
 	(attr smd exclude_from_pos_files exclude_from_bom)
 	(pad "1" smd roundrect
-		(at -1.1 0)
-		(size 1.5 2)
+		(at -1 0)
+		(size 1.3 1.8)
 		(layers "F.Cu" "F.Mask")
 		(roundrect_rratio 0.15)
-		(uuid "4668d427-55d6-57fb-bbcf-09e00131b1d6")
+		(uuid "5134c33f-e0d2-5c81-bf17-b64df1818322")
 	)
 	(fp_text user "NTC"
-		(at -1.1 -1.7 0)
+		(at -1 -1.6 0)
 		(layer "F.SilkS")
-		(uuid "37680dca-a9d5-5c65-bf83-558ed9cd2b9e")
+		(uuid "7f2d4256-5886-5e50-9386-70df2fa03e40")
 		(effects
 			(font
-				(size 0.8 0.8)
+				(size 0.8 0.5)
 				(thickness 0.12)
 			)
 		)
 	)
 	(pad "2" smd roundrect
-		(at 1.1 0)
-		(size 1.5 2)
+		(at 1 0)
+		(size 1.3 1.8)
 		(layers "F.Cu" "F.Mask")
 		(roundrect_rratio 0.15)
-		(uuid "991ace52-6ec7-5460-a7a9-63215208283c")
+		(uuid "4af2744a-4254-52d3-a4b7-8331ab89289e")
 	)
 	(fp_text user "GND"
-		(at 1.1 -1.7 0)
+		(at 1 -1.6 0)
 		(layer "F.SilkS")
-		(uuid "96b0c4b4-64f4-5625-a256-1603fa68f826")
+		(uuid "5064a827-e0cd-51e5-ad64-a132d22c8fef")
 		(effects
 			(font
-				(size 0.8 0.8)
+				(size 0.8 0.5)
 				(thickness 0.12)
 			)
 		)
 	)
 	(fp_line
-		(start -2.1 -2.25)
-		(end 2.1 -2.25)
+		(start -1.9 -2.15)
+		(end 1.9 -2.15)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -99,8 +99,8 @@
 		(uuid "f455165d-8ed3-586e-86c9-97b62561d7c4")
 	)
 	(fp_line
-		(start 2.1 -2.25)
-		(end 2.1 1.25)
+		(start 1.9 -2.15)
+		(end 1.9 1.15)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -109,8 +109,8 @@
 		(uuid "e3aa8cc0-9c1e-5eec-a58a-d772853811b1")
 	)
 	(fp_line
-		(start 2.1 1.25)
-		(end -2.1 1.25)
+		(start 1.9 1.15)
+		(end -1.9 1.15)
 		(stroke
 			(width 0.05)
 			(type solid)
@@ -119,8 +119,8 @@
 		(uuid "95b938d8-7644-5c4f-be1b-464faf9cca46")
 	)
 	(fp_line
-		(start -2.1 1.25)
-		(end -2.1 -2.25)
+		(start -1.9 1.15)
+		(end -1.9 -2.15)
 		(stroke
 			(width 0.05)
 			(type solid)

@@ -110,10 +110,10 @@ PLACEMENT = {
     "R202": (3.6, 67.5, 0, "T"),
     "J101": (7.4, 74.9, 0, "T"),       # battery, opening to the front edge
     # --- bottom side: solder pads for wires (D-43)
-    "J102": (4.4, 69.6, 0, "B"),       # pack NTC          } three rows under the battery connector
-    "J103": (11.6, 69.6, 0, "B"),      # power switch      }
-    "J503": (8.6, 73.2, 0, "B"),       # haptic driver     }
-    "J501": (8.6, 76.8, 0, "B"),       # SWD               }
+    "J102": (5.7, 69.6, 0, "B"),       # pack NTC          } three rows under the battery connector, right-aligned
+    "J103": (13.7, 69.6, 0, "B"),      # power switch      } so the edge lane stays free for contacts 30-33
+    "J503": (9.7, 73.0, 0, "B"),       # haptic driver     }
+    "J501": (10.7, 76.4, 0, "B"),      # SWD               }
     "J504": (12.2, 27.6, 0, "B"),      # underglow strip, under its buffer
 }
 PLACEMENT.update(_shift({                # charger, as placed and hand-routed on the 50 x 32 mm board
@@ -161,7 +161,7 @@ TP_POS = {
     "TP501": (2.6, 16.5), "TP522": (11.6, 9.4),                                   # on the VBUS and VBUS_A copper
     "TP509": (9.2, 13.8), "TP510": (11.4, 13.8),                                  # USB_DP, USB_DN
     "TP506": (8.6, 33.6), "TP516": (13.6, 60.6),                                  # VBOOST, CHG_QON
-    "TP503": (8.0, 69.6),                                                         # VBAT
+    "TP503": (9.7, 69.6),                                                         # VBAT
 }
 
 STANDIN_MODELS = {"J101": "JST_PH_S2B-PH-SM4-TB_standin"}

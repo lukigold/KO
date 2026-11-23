@@ -118,10 +118,10 @@ class FP:
                           f'\t\t(fill\n\t\t\t(thermal_gap 0.5)\n\t\t\t(thermal_bridge_width 0.5)\n\t\t)\n'
                           f'\t\t(polygon\n\t\t\t(pts {pts})\n\t\t)\n\t)\n')
 
-    def text(self, txt, x, y, layer="F.SilkS", size=0.8):
+    def text(self, txt, x, y, layer="F.SilkS", size=0.8, width=None):
         self.items.append(f'\t(fp_text user "{txt}"\n\t\t(at {f(x)} {f(y)} 0)\n\t\t(layer "{layer}")\n'
                           f'\t\t(uuid "{uid(self.name, "text", txt, f(x), f(y))}")\n\t\t(effects\n\t\t\t(font\n'
-                          f'\t\t\t\t(size {f(size)} {f(size)})\n\t\t\t\t(thickness 0.12)\n\t\t\t)\n\t\t)\n\t)\n')
+                          f'\t\t\t\t(size {f(size)} {f(width or size)})\n\t\t\t\t(thickness 0.12)\n\t\t\t)\n\t\t)\n\t)\n')
 
     def model(self):
         self.items.append(f'\t(model "${{KIPRJMOD}}/lib/ko.3dshapes/{self.name}.wrl"\n\t\t(offset\n\t\t\t(xyz 0 0 0)\n'
@@ -363,7 +363,7 @@ WIRE_PADS = {
 }
 
 
-def wire_pads(key, pitch=2.2, w=1.5, h=2.0):
+def wire_pads(key, pitch=2.0, w=1.3, h=1.8):
     """A row of bare SMD pads to solder wires to, each labelled on the silkscreen (the group name is the Value,
     on the assembly layer). Copper only: excluded from BOM and position files. Placed on the bottom side by
     gen_pcb.py (KiCad mirrors pads and text)."""
@@ -377,7 +377,7 @@ def wire_pads(key, pitch=2.2, w=1.5, h=2.0):
     for i, lab in enumerate(labels):
         x = x0 + i * pitch
         fp.pad(str(i + 1), x, 0, w, h, "roundrect", 0.15, layers='"F.Cu" "F.Mask"')
-        fp.text(lab, x, -(h / 2 + 0.7))
+        fp.text(lab, x, -(h / 2 + 0.7), size=0.8, width=0.5)   # narrow letters: 3 fit in 2 mm
     fp.rect(x0 - w / 2 - 0.25, -(h / 2 + 1.25), -x0 + w / 2 + 0.25, h / 2 + 0.25, "F.CrtYd", 0.05)
     fp.write()
 
