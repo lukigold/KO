@@ -61,15 +61,39 @@ drawn in code, a GND via for every SMD GND pad, the stored maze-router tracks
 
 ### Running the routing on your own computer
 
-The scripts need KiCad 9 (its `pcbnew` Python module and `kicad-cli`) and numpy, on Linux. On Windows use WSL2
-with Ubuntu and KiCad 9 from the KiCad PPA. Then, in a clone of this repository:
+The scripts need Linux with KiCad 9 (its `pcbnew` Python module and `kicad-cli`), numpy and git. On Windows use
+WSL2 with Ubuntu 24.04; it sees all CPU threads by default.
+
+1. Windows PowerShell as administrator, then restart Windows:
+
+```powershell
+wsl --install -d Ubuntu-24.04
+```
+
+2. In the Ubuntu terminal: KiCad 9 from the KiCad PPA, numpy and git:
+
+```bash
+sudo add-apt-repository -y ppa:kicad/kicad-9.0-releases && sudo apt update && sudo apt install -y kicad python3-numpy git
+```
+
+3. Clone this repository (branch `p1/core-strip`) inside the Linux file system (not under `/mnt/c`, which is slow):
+
+```bash
+cd ~ && git clone -b p1/core-strip https://github.com/lukigold/ko.git && cd ko
+```
+
+4. Check the toolchain: the schematic check must end with `RESULT: PASS`.
 
 ```bash
 /usr/bin/python3 hardware/core/tools/gen_schematic.py && /usr/bin/python3 hardware/core/tools/check_schematic.py
 ```
 
+5. Route. `MAZE_WORKERS` is the number of parallel worker processes (default: all CPU threads); the negotiation
+   and the legalisation attempts both run in parallel. `MAZE_CACHE` keeps the negotiation result, so a second run
+   with the same placement starts at the legalisation.
+
 ```bash
-MAZE_WORKERS=16 /usr/bin/python3 -u hardware/core/tools/route_pcb.py --maze
+MAZE_CACHE=/tmp/ko-neg.json MAZE_ATTEMPTS=16 /usr/bin/python3 -u hardware/core/tools/route_pcb.py --maze
 ```
 
 ```bash
@@ -82,6 +106,18 @@ kicad-cli pcb drc --schematic-parity --severity-all hardware/core/ko-core.kicad_
 
 Repeat `--repair` while it still closes connections. `fab_outputs.py` then writes the ordering files once DRC is
 clean.
+
+### Where the 16 mm strip stands (D-43)
+
+- Schematic, contracts, placement and the hand-drawn power copper are done and DRC clean before routing
+  (ERC and netlist check pass).
+- The maze router leaves 20-30 of the 128 open connections after legalisation; the congestion is in front of the
+  module (y 42-62 mm), where the matrix lines to contacts 18-33 pass the charger. The last layout changes (SWD and
+  haptic pads under the module, module 0.4 mm right, front pad row ordered by contact) were made for this; the
+  `--repair` loop then closes what is left, as on the 22 mm layout.
+- If a connection stays open, fix it in the layout (more room or a hand route in `route_pcb.py`), never by
+  relaxing clearances. Afterwards: `fab_outputs.py`, the design note's result line (§9), the verification record
+  (`docs/verification/p1.md`), commit.
 
 ## Manufacturing files
 
