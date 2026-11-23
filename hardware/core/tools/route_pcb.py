@@ -28,6 +28,8 @@ so every step that loads a board runs in its own process (this script calls itse
 import argparse
 import json
 import math
+import multiprocessing
+import random
 import os
 import pathlib
 import re
@@ -682,6 +684,14 @@ def conn_ends(it, net):
     return [(xy[0], xy[1], 0)]
 
 
+_ATTEMPT = None
+
+
+def _attempt_worker(order):
+    """Legalisation worker (forked from step_maze): one attempt in the given connection order."""
+    return _ATTEMPT(order)
+
+
 def step_maze() -> None:
     """Route every connection still open with the grid maze router (targeted rip-up); store in MAZE_JSON.
     With MAZE_MERGE=1 the routes already stored (and on the board) stay, and the new ones are added to them."""
@@ -822,19 +832,47 @@ def step_maze() -> None:
                                       "dia": round(vr * 2, 3), "drill": dr})
         MAZE_JSON.write_text(json.dumps(found, indent=1) + "\n")
 
-    order = list(range(len(conns)))
-    best = None
-    for attempt in range(int(os.environ.get("MAZE_ATTEMPTS", "4"))):
+    def attempt(order):
         failed = legalize(order)
         gave_up = ripup(list(failed))
-        print(f"  legalisation {attempt + 1}: {len(conns) - len(gave_up)}/{len(conns)} routed" +
-              (f"; open: {', '.join(sorted(conns[c][2] for c in gave_up))}" if gave_up else ""), flush=True)
-        if best is None or len(gave_up) < len(best[0]):
-            best = (list(gave_up), dict(r.routes))
-            save(best[1])                              # kept after every attempt: a long run may be cut off
-        if not gave_up:
+        return gave_up, {cid: (v[0], None, v[2]) for cid, v in r.routes.items()}
+
+    # Attempts run side by side in forked worker processes, one connection order each (the attempts are
+    # independent: each starts from the negotiated paths on an empty board); the best result wins.
+    workers = max(1, int(os.environ.get("MAZE_WORKERS", os.cpu_count() or 1)))
+    attempts = int(os.environ.get("MAZE_ATTEMPTS", "4"))
+    base = list(range(len(conns)))
+    best, done, rnd = None, 0, random.Random(7)
+    while done < attempts:
+        k = min(workers, attempts - done)
+        orders = []
+        for i in range(k):
+            if best is None and i == 0:
+                orders.append(base)
+            elif best is not None and i == 0:          # the hard ones of the best attempt first
+                orders.append(best[0] + [c for c in base if c not in best[0]])
+            elif i % 2:                                # the longest connections first
+                orders.append(sorted(base, key=lambda c: -conns[c][1]))
+            else:
+                o = list(base)
+                rnd.shuffle(o)
+                orders.append((best[0] if best else []) + [c for c in o if not best or c not in best[0]])
+        if k > 1:
+            global _ATTEMPT
+            _ATTEMPT = attempt
+            with multiprocessing.get_context("fork").Pool(k) as pool:
+                results = pool.map(_attempt_worker, orders, chunksize=1)
+        else:
+            results = [attempt(orders[0])]
+        for gave_up, routes in results:
+            done += 1
+            print(f"  legalisation {done}: {len(conns) - len(gave_up)}/{len(conns)} routed" +
+                  (f"; open: {', '.join(sorted(conns[c][2] for c in gave_up))}" if gave_up else ""), flush=True)
+            if best is None or len(gave_up) < len(best[0]):
+                best = (list(gave_up), routes)
+                save(best[1])                          # kept after every round: a long run may be cut off
+        if not best[0]:
             break
-        order = gave_up + [c for c in order if c not in gave_up]   # the hard ones first next time
     gave_up = best[0]
     if keep is not None:                               # merge mode: the routes stored before stay
         found = json.loads(MAZE_JSON.read_text())
