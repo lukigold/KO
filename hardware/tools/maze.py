@@ -12,6 +12,7 @@ Copper pours are ignored on purpose: they are refilled afterwards and flow aroun
 """
 import heapq
 import math
+import random
 import multiprocessing
 
 import numpy as np
@@ -599,8 +600,9 @@ class Negotiator:
             self._hcache_key = key
         return self._hcache
 
-    def conflicts(self, conns):
-        """Connections whose path runs through cells another net's footprint also covers."""
+    def conflicts(self, conns, cells=None):
+        """Connections whose path runs through cells another net's footprint also covers. With a dict as
+        `cells`, the shared cells of each such path are collected in it (cid -> [(l, j, i)])."""
         bad = set()
         foreign_of = {}                                # one occupancy-minus-own-net map per net, not per path
         for cid, path in self.paths.items():
@@ -616,7 +618,9 @@ class Negotiator:
                 i, j = self.r.cell(x, y)
                 if foreign[l, j, i] > 0:
                     bad.add(cid)
-                    break
+                    if cells is None:
+                        break
+                    cells.setdefault(cid, []).append((l, j, i))
         return bad
 
     def _route_batch(self, batch, conns, pres, hist_w, nets_of, max_nodes, workers):
@@ -649,6 +653,7 @@ class Negotiator:
         the whole board again)."""
         nets_of = {cid: c[0] for cid, c in enumerate(conns)}
         todo = list(range(len(conns)))
+        rnd = random.Random(11)
         pres, hist_w = 1.0, 0.5
         nofail = {}
         size = 2 * workers if workers > 1 else 1
@@ -662,17 +667,22 @@ class Negotiator:
                         self.set_path(cid, path, hw, vr)
                     else:
                         nofail[cid] = nofail.get(cid, 0) + 1
-            bad = self.conflicts(conns)
+            shared = {}
+            bad = self.conflicts(conns, shared)
             unrouted = [c for c in range(len(conns)) if c not in self.paths]
             log(f"    iteration {it + 1}: {len(bad)} in conflict, {len(unrouted)} unroutable")
             if not bad:
                 break
-            for cid in bad:
-                for x, y, l in self.paths[cid]:
-                    i, j = self.r.cell(x, y)
-                    self.hist[l, j, i] += 1.0
+            # history only where paths actually overlap (PathFinder), widened by a cell: raising it along the
+            # whole path of every connection in conflict spread it over the board and it stopped steering
+            for cid, cl in shared.items():
+                for l, j, i in cl:
+                    self.hist[l, max(0, j - 1):j + 2, max(0, i - 1):i + 2] += 1.0
             self._hver += 1
+            # a fresh order every iteration: connections that fight each other must not share a batch (the
+            # members of one batch never see each other's paths) iteration after iteration
             todo = sorted(bad)
+            rnd.shuffle(todo)
             pres *= 1.5
         return self.paths
 

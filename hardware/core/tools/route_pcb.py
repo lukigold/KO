@@ -72,7 +72,7 @@ STITCH_PITCH = 2.5
 CLR_VIA = 0.2                  # via copper to other-net copper (net classes ask 0.15)
 CLR_STUB = 0.17
 PRE_GND_PADS = {("U106", "2"), ("U303", "3"), ("U201", "45"), ("C114", "2"), ("C115", "2"),
-                ("R311", "2"), ("R312", "2")}   # U303.3: through the top pour (a via there walls
+                ("R311", "2"), ("R312", "2"), ("R304", "2"), ("R306", "2"), ("R308", "2")}   # U303.3: through the top pour (a via there walls
 # in OV2); U201.45: hand-routed via clear of SWDIO's only way out   # GND pads tied to a via by the hand routes
 EXTRA_GND_VIAS = {("U101", "15"): 2, ("U103", "2"): 2, ("U104", "4"): 2, ("U106", "2"): 2}
 
@@ -196,6 +196,8 @@ STRIP_TRACKS = [
     ("VBUS_A", F, 0.5, [(8.4, 7.15), (5.53, 7.15), (5.53, 4.35), (4.88, 4.35)]),
     ("VBUS_A", F, 0.6, [(13.2, 6.12), (13.2, 7.45)]),
     ("VBUS_A", B, 0.6, [(8.4, 7.45), (8.4, 9.4), (13.2, 9.4), (13.2, 7.45)]),
+    ("VBUS_A", F, 0.3, [(10.75, 9.4), (10.15, 9.55), (9.7, 10.0), (9.7, 10.75), (9.8, 10.85), (9.8, 11.0)]),   # ESD pin 5:
+    ("VBUS_A", B, 0.3, [(9.8, 11.0), (11.6, 9.4)]),                  # between its pins 3/4 to a via, back to TP522
     ("/USB/USB_A_DN", F, 0.2, [(10.55, 6.12), (10.55, 8.45)]),
     ("/USB/USB_A_DN", F, 0.2, [(11.55, 6.12), (11.55, 7.95), (10.55, 7.95)]),
     ("/USB/USB_A_DP", F, 0.2, [(10.05, 6.12), (10.05, 7.35)]),
@@ -222,17 +224,26 @@ STRIP_TRACKS = [
     ("LED_5V", I2, 1.0, [(9.25, 20.2), (10.0, 20.95), (10.0, 24.4), (3.0, 24.4), (3.0, 27.0), (1.2, 27.0), (1.2, 31.0)]),
     ("LED_5V", B, 0.6, [(9.25, 20.2), (9.75, 20.7), (9.75, 26.7)]),
     ("GND", F, 0.2, [(3.45, 5.15), (3.6, 6.05)]),                    # TPS2121 GND pin 3, walled in by VBUS_B and its pins
+    # GND ends of the mux dividers R308/R306/R304, joined and taken to one via on the right: fan-out vias
+    # below them walled in the mux's top pins (USB_DP/USB_DN/USB_SEL leave U304 upwards)
+    ("GND", F, 0.25, [(3.1, 11.11), (6.25, 11.11)]),
+    # the charger's I2C and interrupt pins face a closed pocket (SW above, SYS below, L101 right): each to its
+    # own via beside the pins, left of the SYS trunk on B (FRONT_TRACKS), top to bottom in pin order
+    ("I2C_SCL", F, 0.15, [(11.9, 54.81), (12.6, 54.81), (13.05, 54.4)]),
+    ("I2C_SDA", F, 0.15, [(11.9, 55.21), (13.05, 55.21), (13.05, 55.25)]),
+    ("CHG_INT", F, 0.15, [(11.9, 55.61), (12.4, 55.61), (12.85, 56.06), (12.85, 56.15)]),
 ]
 STRIP_VIAS = [
     ("VBUS", (2.5, 3.5), 0.8, 0.4),
-    ("VBUS_A", (8.4, 7.45), 0.6, 0.3), ("VBUS_A", (13.2, 7.45), 0.6, 0.3),
+    ("VBUS_A", (8.4, 7.45), 0.6, 0.3), ("VBUS_A", (13.2, 7.45), 0.6, 0.3), ("VBUS_A", (9.8, 11.0), 0.6, 0.3),
     ("/USB/USB_A_DP", (10.05, 7.35), 0.5, 0.25), ("/USB/USB_A_DP", (11.05, 7.35), 0.5, 0.25),
     ("/USB/USB_A_DP", (11.7, 11.65), 0.5, 0.25),
     ("CC2", (9.2, 7.4), 0.5, 0.25), ("CC2", (12.7, 11.65), 0.5, 0.25),
     ("SYS", (9.6, 31.0), 0.8, 0.4), ("SYS", (4.9, 30.4), 0.8, 0.4),
     ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (4.95, 21.2), 0.5, 0.25),
     ("GND", (2.65, 55.15), 0.5, 0.25), ("GND", (2.65, 59.15), 0.5, 0.25),
-    ("GND", (3.6, 6.05), 0.5, 0.25),
+    ("GND", (3.6, 6.05), 0.5, 0.25), ("GND", (6.25, 11.11), 0.5, 0.25),
+    ("I2C_SCL", (13.05, 54.4), 0.5, 0.25), ("I2C_SDA", (13.05, 55.25), 0.5, 0.25), ("CHG_INT", (12.85, 56.15), 0.5, 0.25),
 ]
 
 # Copper in front of the 5 V block, written in the coordinates of the 16 mm strip and moved right with its parts
@@ -240,8 +251,10 @@ STRIP_VIAS = [
 FRONT_TRACKS = [
     ("VBUS", B, 1.0, [(5.4, 34.9), (6.9, 34.9), (6.9, 52.85), (6.5, 53.25), (5.65, 53.25)]),
     ("VBUS", B, 1.0, [(6.5, 53.25), (6.5, 53.6)]),
-    ("SYS", F, 0.8, [(13.52, 59.25), (12.4, 59.25)]),
-    ("SYS", B, 1.0, [(12.4, 59.25), (12.4, 53.6), (10.3, 51.5), (10.3, 33.3)]),   # clear of the charger's GND vias
+    ("SYS", F, 0.8, [(13.52, 59.25), (13.0, 59.25)]),
+    # clear of the charger's GND vias, and far enough right for the escape vias of its I2C/interrupt pins;
+    # the bend runs midway between the SCL escape via and the bootstrap via
+    ("SYS", B, 1.0, [(13.0, 59.25), (13.0, 53.89), (10.3, 51.19), (10.3, 33.3)]),
     ("VBAT", F, 0.8, [(9.12, 58.4), (8.55, 58.95), (8.55, 61.85), (8.9, 62.2), (8.9, 68.8), (6.4, 69.4), (6.4, 70.6)]),
     ("GND", F, 0.15, [(11.55, 45.9), (11.55, 43.15)]),                       # module pad 45 to pad 46 (SWDIO's way out)
     # module VCC (pad 17) is walled in by its neighbours; its only way out is left between pads 61 and 62
@@ -264,7 +277,7 @@ FRONT_TRACKS = [
     ("GND", F, 0.3, [(8.6, 34.32), (8.6, 33.55)]),                   # C204's GND pad: the pour pocket between XL1/XL2 needs a via
 ]
 FRONT_VIAS = [
-    ("SYS", (12.4, 59.25), 0.8, 0.4),
+    ("SYS", (13.0, 59.25), 0.8, 0.4),
     ("3V0", (1.2, 38.2), 0.5, 0.25), ("3V0", (2.2, 35.43), 0.5, 0.25),
     ("GND", (8.6, 33.55), 0.5, 0.25),
 ]
@@ -762,6 +775,9 @@ def step_maze() -> None:
         pa, pc = (a["pos"]["x"], a["pos"]["y"]), (c["pos"]["x"], c["pos"]["y"])
         conns.append((prio, math.dist(pa, pc), net, ends(a, net), ends(c, net)))
     conns.sort(key=lambda t: t[:2])
+    only = os.environ.get("MAZE_ONLY")                 # tuning: route only these nets (comma separated)
+    if only:
+        conns = [c for c in conns if c[2] in only.split(",")]
 
     # negotiated congestion first: every connection gets a path, fights are priced out over iterations
     spec = []
@@ -783,7 +799,7 @@ def step_maze() -> None:
         print(f"  negotiation result taken from cache ({len(cached)} of {len(conns)} connections)")
     else:
         neg = maze.Negotiator(r)
-        paths = neg.run(spec, iters=16, log=print, workers=int(os.environ.get("MAZE_WORKERS", os.cpu_count() or 1)),
+        paths = neg.run(spec, iters=int(os.environ.get("MAZE_ITERS", "16")), log=print, workers=int(os.environ.get("MAZE_WORKERS", os.cpu_count() or 1)),
                         max_nodes=1_200_000)
         if cache:
             pathlib.Path(cache).write_text(json.dumps({"key": key, "paths": paths}))
@@ -864,7 +880,7 @@ def step_maze() -> None:
             for x, y in vias:
                 found["vias"].append({"net": net, "x": round(x - OX, 4), "y": round(y - OY, 4),
                                       "dia": round(vr * 2, 3), "drill": dr})
-        MAZE_JSON.write_text(json.dumps(found, indent=1) + "\n")
+        pathlib.Path(os.environ.get("MAZE_OUT", MAZE_JSON)).write_text(json.dumps(found, indent=1) + "\n")
 
     def attempt(order):
         failed = legalize(order)
