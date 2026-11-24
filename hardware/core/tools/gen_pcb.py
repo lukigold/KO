@@ -41,7 +41,9 @@ USB_SHELL = (6.0, 15.6, 5.3)     # x0, x1, y1: no top-layer copper under the rec
 FRONT_DX = 1.0                   # D-45: everything from the crystal row forward (module, charger, LDO, battery)
                                  # sits 1 mm further right than on the 16 mm strip, the antenna still at the
                                  # right edge; the lane along contacts 18-33 is 1 mm wider on every layer
-CHARGER_SHIFT = (3.1 + FRONT_DX, 49.0)   # charger: BQ25628E and its parts, translated
+CHARGER_DY = 2.0                 # charger, LDO and fuel gauge 2 mm further forward: the band between the module's
+                                 # front pad rows and the charger, where ~25 lines turn to the contacts, was full
+CHARGER_SHIFT = (3.1 + FRONT_DX, 49.0 + CHARGER_DY)   # charger: BQ25628E and its parts, translated
 RAILS_ROT = ((22.7, 20.8), (10.1, 22.9))   # boost / 5 V mux / LED switch: turned 90 deg CCW about the first
                                           # point (block centre on the old board), which lands on the second
 
@@ -127,6 +129,13 @@ PLACEMENT = {
 FRONT_PARTS = ["Y201", "C204", "C205", "C202", "C201", "U201", "C203", "U103", "C110", "C111", "R107", "U102",
                "C109", "R106", "R201", "R202", "J101", "J102", "J103", "J501", "J503"]
 PLACEMENT.update(_shift({k: PLACEMENT[k] for k in FRONT_PARTS}, FRONT_DX, 0.0))
+# the LDO below the charger moves with it; the fuel gauge and its pull-ups only half as far (the battery
+# connector J101 and the VBAT track below them stay)
+PLACEMENT.update(_shift({k: PLACEMENT[k] for k in ["U103", "C110", "C111", "R107"]}, 0.0, CHARGER_DY))
+PLACEMENT.update(_shift({k: PLACEMENT[k] for k in ["U102", "C109", "R106", "R201", "R202"]}, 0.0, CHARGER_DY))
+PLACEMENT.update({                       # the pull-ups closer under the fuel gauge, clear of J101 and the VBAT track
+    "R201": (6.0, 67.4, 0, "T"), "R202": (6.0, 68.45, 0, "T"),
+    "R106": (5.6, 64.9, 90, "T")})        # FG_ALRT pull-up beside the fuel gauge's ALRT pin
 PLACEMENT.update(_shift({                # charger, as placed and hand-routed on the 50 x 32 mm board
     "U101": (6.4, 6.2, 0, "T"),
     "C102": (6.6, 2.8, 0, "T"),        # PMID 10u 0805, right above PMID/GND pads
@@ -171,8 +180,8 @@ PLACEMENT.update(_turn({                 # boost, 5 V mux and LED switch, as on 
 TP_POS = {
     "TP501": (2.6, 16.5), "TP522": (11.6, 9.4),                                   # on the VBUS and VBUS_A copper
     "TP509": (9.2, 13.8), "TP510": (11.4, 13.8),                                  # USB_DP, USB_DN
-    "TP506": (8.6, 32.4), "TP516": (13.6 + FRONT_DX, 60.6),                       # VBOOST (clear of C204's GND via), CHG_QON
-    "TP503": (9.7 + FRONT_DX, 69.6),                                              # VBAT
+    "TP506": (8.6, 32.4), "TP516": (13.6 + FRONT_DX, 60.6 + CHARGER_DY),                       # VBOOST (clear of C204's GND via), CHG_QON
+    "TP503": (9.7 + FRONT_DX, 69.6 + CHARGER_DY),                                              # VBAT
 }
 
 STANDIN_MODELS = {"J101": "JST_PH_S2B-PH-SM4-TB_standin"}

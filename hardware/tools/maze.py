@@ -765,7 +765,8 @@ class Negotiator:
             found = dict(pool.imap_unordered(_route_worker, order, chunksize=1))
         return [(cid, found[cid]) for cid in batch]
 
-    def run(self, conns, iters=10, log=print, workers=1, max_nodes=2_500_000, give_up=2):
+    def run(self, conns, iters=10, log=print, workers=1, max_nodes=2_500_000, give_up=2, reroute_all=False,
+            seed=11):
         """conns: list of (net code, starts, goals, hw, via_r, drill). Returns {cid: path}.
 
         With workers > 1 each iteration is routed in batches of 2 x workers connections: a batch sees the
@@ -774,7 +775,7 @@ class Negotiator:
         the whole board again)."""
         nets_of = {cid: c[0] for cid, c in enumerate(conns)}
         todo = list(range(len(conns)))
-        rnd = random.Random(11)
+        rnd = random.Random(seed)
         pres, hist_w = 1.0, 0.5
         nofail = {}
         size = 2 * workers if workers > 1 else 1
@@ -802,7 +803,9 @@ class Negotiator:
             self._hver += 1
             # a fresh order every iteration: connections that fight each other must not share a batch (the
             # members of one batch never see each other's paths) iteration after iteration
-            todo = sorted(bad)
+            # reroute_all: every connection again (classic PathFinder), so a path that is in nobody's way yet
+            # sits where others need room moves too; else only the ones in conflict
+            todo = list(range(len(conns))) if reroute_all else sorted(bad)
             rnd.shuffle(todo)
             pres *= 1.5
         return self.paths

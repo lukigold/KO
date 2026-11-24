@@ -228,12 +228,6 @@ STRIP_TRACKS = [
     # GND ends of the mux dividers R308/R306/R304, joined and taken to one via on the right: fan-out vias
     # below them walled in the mux's top pins (USB_DP/USB_DN/USB_SEL leave U304 upwards)
     ("GND", F, 0.25, [(3.1, 11.11), (6.25, 11.11)]),
-    # the charger's CE, I2C and interrupt pins face a closed pocket (SW above, SYS below, L101 right): each to its
-    # own via beside the pins, left of the SYS trunk on B (FRONT_TRACKS), top to bottom in pin order
-    ("/Battery and charger/CHG_CE", F, 0.15, [(12.1, 54.35), (12.6, 53.85)]),   # from the L pad's foot
-    ("I2C_SCL", F, 0.15, [(11.9, 54.81), (12.65, 54.81), (12.85, 54.61)]),
-    ("I2C_SDA", F, 0.15, [(11.9, 55.21), (12.8, 55.21), (12.99, 55.4)]),
-    ("CHG_INT", F, 0.15, [(11.9, 55.61), (12.4, 55.61), (12.85, 56.06), (12.85, 56.2)]),
     # LED_FAULT (P0.26) and the underglow data EXP_IO2 (P0.28) from the module's top row north on In2 (D-47):
     # EXP_IO2 to U501's left side, LED_FAULT past U501 on the right to U106 and its pull-up R115
     ("EXP_IO2", F, 0.15, [(8.15, 37.1), (8.85, 36.4)]),
@@ -253,22 +247,36 @@ STRIP_VIAS = [
     ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (4.95, 21.2), 0.5, 0.25),
     ("GND", (2.65, 55.15), 0.5, 0.25), ("GND", (2.65, 59.15), 0.5, 0.25),
     ("GND", (3.6, 6.05), 0.5, 0.25), ("GND", (6.25, 11.11), 0.5, 0.25),
-    ("/Battery and charger/CHG_CE", (12.6, 53.85), 0.5, 0.25),
-    ("I2C_SCL", (12.85, 54.61), 0.5, 0.25), ("I2C_SDA", (12.99, 55.4), 0.5, 0.25), ("CHG_INT", (12.85, 56.2), 0.5, 0.25),
     ("EXP_IO2", (8.85, 36.4), 0.5, 0.25), ("EXP_IO2", (11.0, 30.0), 0.5, 0.25),
     ("LED_FAULT", (9.45, 36.05), 0.5, 0.25), ("LED_FAULT", (13.3, 21.7), 0.5, 0.25),
 ]
 
+
+# Charger pin escapes, in board coordinates of CHARGER_DY = 0 and moved with the charger.
+_et, _ev = _moved([
+    # the charger's CE, I2C and interrupt pins face a closed pocket (SW above, SYS below, L101 right): each to its
+    # own via beside the pins, left of the SYS trunk on B (FRONT_TRACKS), top to bottom in pin order
+    ("/Battery and charger/CHG_CE", F, 0.15, [(12.1, 54.35), (12.6, 53.85)]),   # from the L pad's foot
+    ("I2C_SCL", F, 0.15, [(11.9, 54.81), (12.65, 54.81), (12.85, 54.61)]),
+    ("I2C_SDA", F, 0.15, [(11.9, 55.21), (12.8, 55.21), (12.99, 55.4)]),
+    ("CHG_INT", F, 0.15, [(11.9, 55.61), (12.4, 55.61), (12.85, 56.06), (12.85, 56.2)]),
+], [
+    ("/Battery and charger/CHG_CE", (12.6, 53.85), 0.5, 0.25),
+    ("I2C_SCL", (12.85, 54.61), 0.5, 0.25), ("I2C_SDA", (12.99, 55.4), 0.5, 0.25), ("CHG_INT", (12.85, 56.2), 0.5, 0.25),
+], (0.0, gen_pcb.CHARGER_DY))
+
 # Copper in front of the 5 V block, written in the coordinates of the 16 mm strip and moved right with its parts
 # by gen_pcb.FRONT_DX (D-45): the VBUS and SYS trunks under the module, VBAT, module VCC, the crystal.
+_DY = gen_pcb.CHARGER_DY           # the charger end of these routes moves with the charger
 FRONT_TRACKS = [
-    ("VBUS", B, 1.0, [(5.4, 34.9), (6.9, 34.9), (6.9, 52.85), (6.5, 53.25), (5.65, 53.25)]),
-    ("VBUS", B, 1.0, [(6.5, 53.25), (6.5, 53.6)]),
-    ("SYS", F, 0.8, [(13.52, 59.25), (13.0, 59.25)]),
+    ("VBUS", B, 1.0, [(5.4, 34.9), (6.9, 34.9), (6.9, 52.85 + _DY), (6.5, 53.25 + _DY), (5.65, 53.25 + _DY)]),
+    ("VBUS", B, 1.0, [(6.5, 53.25 + _DY), (6.5, 53.6 + _DY)]),
+    ("SYS", F, 0.8, [(13.52, 59.25 + _DY), (13.0, 59.25 + _DY)]),
     # clear of the charger's GND vias, and far enough right for the escape vias of its I2C/interrupt pins;
     # the bend runs midway between the SCL escape via and the bootstrap via
-    ("SYS", B, 1.0, [(13.0, 59.25), (13.0, 53.89), (10.3, 51.19), (10.3, 33.3)]),
-    ("VBAT", F, 0.8, [(9.12, 58.4), (8.55, 58.95), (8.55, 61.85), (8.9, 62.2), (8.9, 68.8), (6.4, 69.4), (6.4, 70.6)]),
+    ("SYS", B, 1.0, [(13.0, 59.25 + _DY), (13.0, 53.89 + _DY), (10.3, 51.19 + _DY), (10.3, 33.3)]),
+    ("VBAT", F, 0.8, [(9.12, 58.4 + _DY), (8.55, 58.95 + _DY), (8.55, 61.85 + _DY), (8.9, 62.2 + _DY), (8.9, 69.7),
+                      (6.4, 69.7), (6.4, 70.6)]),
     ("GND", F, 0.15, [(11.55, 45.9), (11.55, 43.15)]),                       # module pad 45 to pad 46 (SWDIO's way out)
     # module VCC (pad 17) is walled in by its neighbours; its only way out is left between pads 61 and 62
     # (0.6 mm gap, 0.175 mm each side of the 0.25 mm track), then a via to the SWD pad J501.1 below and up
@@ -290,13 +298,19 @@ FRONT_TRACKS = [
     ("GND", F, 0.3, [(8.6, 34.32), (8.6, 33.55)]),                   # C204's GND pad: the pour pocket between XL1/XL2 needs a via
 ]
 FRONT_VIAS = [
-    ("SYS", (13.0, 59.25), 0.8, 0.4),
+    ("SYS", (13.0, 59.25 + _DY), 0.8, 0.4),
     ("3V0", (1.2, 38.2), 0.5, 0.25), ("3V0", (2.2, 35.43), 0.5, 0.25),
     ("GND", (8.6, 33.55), 0.5, 0.25),
 ]
 _ft, _fv = _moved(FRONT_TRACKS, FRONT_VIAS, (gen_pcb.FRONT_DX, 0.0))
-PRE_TRACKS = _ct + _rt + STRIP_TRACKS + _ft
-PRE_VIAS = _cv + _rv + STRIP_VIAS + _fv
+# Pinned routes: router-found paths for the connections the full run kept leaving open, found on their own on the
+# board with everything above (MAZE_ONLY/MAZE_OUT), checked, and locked like the hand routes.
+PINNED_JSON = ROUTE / "ko-core-pinned.json"
+_pn = json.loads(PINNED_JSON.read_text()) if PINNED_JSON.exists() else {"tracks": [], "vias": []}
+_pt = [(t["net"], t["layer"], t["width"], [tuple(q) for q in t["points"]]) for t in _pn["tracks"]]
+_pv = [(v["net"], (v["x"], v["y"]), v["dia"], v["drill"]) for v in _pn["vias"]]
+PRE_TRACKS = _ct + _rt + STRIP_TRACKS + _et + _ft + _pt
+PRE_VIAS = _cv + _rv + STRIP_VIAS + _ev + _fv + _pv
 LAYERS = {"F.Cu": pcbnew.F_Cu, "In2.Cu": pcbnew.In2_Cu, "B.Cu": pcbnew.B_Cu}
 
 
@@ -812,8 +826,10 @@ def step_maze() -> None:
         print(f"  negotiation result taken from cache ({len(cached)} of {len(conns)} connections)")
     else:
         neg = maze.Negotiator(r)
-        paths = neg.run(spec, iters=int(os.environ.get("MAZE_ITERS", "16")), log=print, workers=int(os.environ.get("MAZE_WORKERS", os.cpu_count() or 1)),
-                        max_nodes=1_200_000)
+        paths = neg.run(spec, iters=int(os.environ.get("MAZE_ITERS", "16")), log=print,
+                        workers=int(os.environ.get("MAZE_WORKERS", os.cpu_count() or 1)),
+                        reroute_all=bool(os.environ.get("MAZE_ALL")), seed=int(os.environ.get("MAZE_SEED", "11")),
+                        max_nodes=int(os.environ.get("MAZE_NODES", "6000000")))
         if cache:
             pathlib.Path(cache).write_text(json.dumps({"key": key, "paths": paths}))
 
@@ -905,7 +921,7 @@ def step_maze() -> None:
     workers = max(1, int(os.environ.get("MAZE_WORKERS", os.cpu_count() or 1)))
     attempts = int(os.environ.get("MAZE_ATTEMPTS", "4"))
     base = list(range(len(conns)))
-    best, done, rnd = None, 0, random.Random(7)
+    best, done, rnd = None, 0, random.Random(int(os.environ.get("MAZE_SEED", "7")))
     while done < attempts:
         k = min(workers, attempts - done)
         orders = []
