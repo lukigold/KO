@@ -29,7 +29,7 @@ Rev A is deliberately simple. Its job is a daily-usable wireless keyboard and pr
                  │ D± A ─┬─ TS3USB221A ─► BMD-340 (nRF52840) ◄─ I²C ─ MAX17048      └ V5 ─ AP22653 ─► LED_5V
  D± B (contacts) ╪═══════┘   (S = ST)          │  32.768 kHz XTAL                               │
                  │  switch pads ─► LDO EN       ├─ SWD pads, test points                        │
-                 │  underglow pads ◄─ buffer ◄──┤  (P0.26)                                      │
+                 │  underglow pads ◄─ buffer ◄──┤  (P0.28)                                      │
                  │                              └─ haptic pads                                  │
                  └──────────┬────────────────────────────────────────────────────────────────────┘
                             ╘═ 33 castellated contacts ═► switch board: rows, column chain, I²C,
@@ -118,7 +118,7 @@ Firmware board support must use exactly this map.
 | RSV_INT | P0.24 (42) | Reserved for Hall-effect switch boards |
 | I2C_SDA, I2C_SCL | P0.12, P0.19 (28, 37) | TWIM, 4.7 kΩ pull-ups to 3V0. SDA moved from P0.06 (D-35); SCL moved from P0.08 (pad 24, walled in by unused pads) to the outer front row on the strip |
 | LED_SDB, LED_EN, BOOST_EN | P1.05, P1.06, P1.07 (48–50) LF | Static outputs; LED_EN and BOOST_EN have 100 kΩ pull-downs |
-| LED_FAULT, CHG_INT | P0.28 (9), P1.08 (51) | Open-drain inputs, 10 kΩ pull-ups. Moved from P1.10/P1.11 for routing (D-35) |
+| LED_FAULT, CHG_INT | P0.26 (7), P1.08 (51) | Open-drain inputs, 10 kΩ pull-ups. Moved from P1.10/P1.11 for routing (D-35), LED_FAULT from P0.28 (D-47) |
 | FG_ALRT | P1.00 (56) | Open-drain input, 10 kΩ pull-up; inner front row, towards the fuel gauge (D-43). SWO is not used |
 | HAPTIC_EN | P0.23 (41) | Haptic pads J503 (CORE-064) |
 | CC1_B, CC2_B | P0.29/AIN5, P0.30/AIN6 (10, 11) LF | SAADC: port B current advertisement, as CC1/CC2. Back pad row, then under the module to contacts 21/23 (D-43) |
@@ -127,7 +127,7 @@ Firmware board support must use exactly this map.
 | USB | USB_D+, USB_D− (68, 67); VBUS (66) | Direct to port A in rev A |
 | SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39) | Solder pads J501 (3V0, SWCLK, SWDIO, GND, RESET; D-46) on the bottom, D-43; SWO not connected: probe-rs and defmt use RTT over SWD (D-35) |
 | (unused) | P0.25, P0.27, P1.09 | Former expansion-header lines, unconnected since D-42 |
-| Underglow strip data | P0.26 (EXP_IO2) | Through U501 (74AHCT1G125, 5 V) and R501 330 Ω to pad DAT of J504; WS2812 timing from the nRF52840 PWM or I2S peripheral (D-40) |
+| Underglow strip data | P0.28 (EXP_IO2, D-47) | Through U501 (74AHCT1G125, 5 V) and R501 330 Ω to pad DAT of J504; WS2812 timing from the nRF52840 PWM or I2S peripheral (D-40) |
 | Spare | P0.03/AIN1, P0.04/AIN2, P0.05/AIN3, P0.08 (19, 20, 21, 24); P1.12–P1.15 (61–64) | Unconnected on the strip: the left pad columns sit near the castellated edge |
 | Not connected | P0.06, P0.07, P0.09, P0.10, P0.11, P1.10, P1.11 | Free for later revisions |
 
@@ -276,7 +276,7 @@ completely, so it grew to 17 mm (D-45). This section describes the 17 × 80 mm s
      would otherwise report as a copper sliver.
   5. **Stitching vias** on a 2.5 mm grid where all layers are free, then all pours are filled.
 - **Underglow strip port (D-40, D-43):** solder pads J504 on the bottom: LED (LED_5V on the 0.6 mm bottom
-  track), DAT, GND. The data comes from P0.26 (EXP_IO2). U501 74AHCT1G125 runs from LED_5V, so its TTL inputs
+  track), DAT, GND. The data comes from P0.28 (EXP_IO2, D-47). U501 74AHCT1G125 runs from LED_5V, so its TTL inputs
   take the 3.0 V signal and it is unpowered whenever the rail is off; C501 100 nF; R501 330 Ω at the strip
   input. The strip shares the LED rail's 1.5 A limit with the switch board. Inside the case, so no ESD array.
 - **Power switch (CORE-007, D-43):** pads J103 (SYS, EN) for an off-board SPST switch that drives the 3.0 V

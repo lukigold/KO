@@ -234,6 +234,14 @@ STRIP_TRACKS = [
     ("I2C_SCL", F, 0.15, [(11.9, 54.81), (12.65, 54.81), (12.85, 54.61)]),
     ("I2C_SDA", F, 0.15, [(11.9, 55.21), (12.8, 55.21), (12.99, 55.4)]),
     ("CHG_INT", F, 0.15, [(11.9, 55.61), (12.4, 55.61), (12.85, 56.06), (12.85, 56.2)]),
+    # LED_FAULT (P0.26) and the underglow data EXP_IO2 (P0.28) from the module's top row north on In2 (D-47):
+    # EXP_IO2 to U501's left side, LED_FAULT past U501 on the right to U106 and its pull-up R115
+    ("EXP_IO2", F, 0.15, [(8.15, 37.1), (8.85, 36.4)]),
+    ("EXP_IO2", I2, 0.15, [(8.85, 36.4), (9.05, 33.4), (9.25, 33.1), (11.0, 30.0)]),
+    ("EXP_IO2", F, 0.15, [(11.0, 30.0), (12.05, 28.5), (12.15, 28.3), (12.4, 28.15), (13.0, 28.0)]),
+    ("LED_FAULT", F, 0.15, [(9.25, 37.1), (9.45, 36.05)]),
+    ("LED_FAULT", I2, 0.15, [(9.45, 36.05), (11.5, 30.1), (13.3, 21.7)]),
+    ("LED_FAULT", F, 0.15, [(13.3, 21.7), (12.9, 21.3), (12.05, 20.45), (11.9, 18.1)]),
 ]
 STRIP_VIAS = [
     ("VBUS", (2.5, 3.5), 0.8, 0.4),
@@ -247,6 +255,8 @@ STRIP_VIAS = [
     ("GND", (3.6, 6.05), 0.5, 0.25), ("GND", (6.25, 11.11), 0.5, 0.25),
     ("/Battery and charger/CHG_CE", (12.6, 53.85), 0.5, 0.25),
     ("I2C_SCL", (12.85, 54.61), 0.5, 0.25), ("I2C_SDA", (12.99, 55.4), 0.5, 0.25), ("CHG_INT", (12.85, 56.2), 0.5, 0.25),
+    ("EXP_IO2", (8.85, 36.4), 0.5, 0.25), ("EXP_IO2", (11.0, 30.0), 0.5, 0.25),
+    ("LED_FAULT", (9.45, 36.05), 0.5, 0.25), ("LED_FAULT", (13.3, 21.7), 0.5, 0.25),
 ]
 
 # Copper in front of the 5 V block, written in the coordinates of the 16 mm strip and moved right with its parts
@@ -1170,9 +1180,7 @@ def step_repair() -> None:
 
     def restore(snap):
         routes, e, w, nrid = snap
-        r.routes = dict(routes)
-        r._rt.clear()
-        r._rv.clear()
+        r.set_routes(routes)
         ends_of.clear()
         ends_of.update(e)
         width_of.clear()

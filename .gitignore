@@ -12,3 +12,7 @@ _autosave-*
 # Python
 __pycache__/
 *.pyc
+
+# compiled maze search (hardware/tools/astar.c, built on first use)
+hardware/tools/_astar*.so
+hardware/tools/_astar*.tmp

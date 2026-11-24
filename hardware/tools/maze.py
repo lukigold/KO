@@ -24,7 +24,7 @@ DIRS = ((1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0),
         (1, 1, SQ2), (1, -1, SQ2), (-1, 1, SQ2), (-1, -1, SQ2))
 
 
-def _astar(ok, vok, box, S, G, max_nodes, via_cost, M=None, A=None):
+def _astar_py(ok, vok, box, S, G, max_nodes, via_cost, M=None, A=None):
     """A* over a (layer, row, column) grid inside box = (i_lo, i_hi, j_lo, j_hi); the search both routers share.
 
     ok: bool array (L, NY, NX) of passable cells; vok: bool array (NY, NX) where a via may stand.
@@ -124,6 +124,68 @@ def _astar(ok, vok, box, S, G, max_nodes, via_cost, M=None, A=None):
                         push(openh, (g2 + h(i, j), g2, s2))
     return None
 
+
+
+_LIB = None
+
+
+def _lib():
+    """The C search (astar.c), compiled next to this file on first use; None when no C compiler is there."""
+    global _LIB
+    if _LIB is None:
+        import ctypes, os, pathlib, subprocess
+        src = pathlib.Path(__file__).with_name("astar.c")
+        so = src.with_name("_astar.so")
+        try:
+            if not so.exists() or so.stat().st_mtime < src.stat().st_mtime:
+                tmp = so.with_suffix(f".{os.getpid()}.tmp")
+                subprocess.run([os.environ.get("CC", "cc"), "-O3", "-march=native", "-shared", "-fPIC",
+                                str(src), "-o", str(tmp), "-lm"], check=True, capture_output=True)
+                os.replace(tmp, so)
+            lib = ctypes.CDLL(str(so))
+            P = ctypes.c_void_p
+            lib.astar.restype = ctypes.c_int64
+            lib.astar.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, P, P, P, P, P, ctypes.c_double,
+                                  P, ctypes.c_int, P, ctypes.c_int, ctypes.c_int64, P, ctypes.c_int64]
+            _LIB = lib
+        except (OSError, subprocess.CalledProcessError, FileNotFoundError):
+            _LIB = False
+    return _LIB or None
+
+
+def _astar(ok, vok, box, S, G, max_nodes, via_cost, M=None, A=None):
+    """A* over the grid window (see _astar_py for the arguments); in C when it can be built, with the same
+    paths as the Python search."""
+    lib = _lib()
+    if lib is None:
+        return _astar_py(ok, vok, box, S, G, max_nodes, via_cost, M, A)
+    i_lo, i_hi, j_lo, j_hi = box
+    L = ok.shape[0]
+    W, NY = i_hi - i_lo + 1, j_hi - j_lo + 1
+    win = (slice(None), slice(j_lo, j_hi + 1), slice(i_lo, i_hi + 1))
+    c = lambda a, t: np.ascontiguousarray(a, dtype=t)
+    okw = c(ok[win], np.uint8)
+    vokw = c(vok[win[1:]], np.uint8)
+    Mw = c(M[win], np.float64) if M is not None else None
+    Aw = c(A[win], np.float64) if A is not None else None
+    vcw = None if isinstance(via_cost, (int, float)) else c(via_cost[win[1:]], np.float64)
+    st = np.array([(l * NY + (j - j_lo)) * W + (i - i_lo) for (i, j), l in S], dtype=np.int64)
+    go = np.array([(l * NY + (j - j_lo)) * W + (i - i_lo) for (i, j), l in G], dtype=np.int64)
+    cap = L * NY * W
+    out = np.empty(cap, dtype=np.int64)
+    ptr = lambda a: a.ctypes.data if a is not None else None
+    n = lib.astar(L, NY, W, ptr(okw), ptr(vokw), ptr(Mw), ptr(Aw), ptr(vcw),
+                  float(via_cost) if vcw is None else 0.0, ptr(st), len(st), ptr(go), len(go),
+                  int(max_nodes), ptr(out), cap)
+    if n <= 0:
+        return None
+    NYW = NY * W
+    res = []
+    for s in out[:n].tolist():
+        l, rem = divmod(s, NYW)
+        j, i = divmod(rem, W)
+        res.append((i + i_lo, j + j_lo, l))
+    return res
 
 def _mm(v: int) -> float:
     return v / 1e6
@@ -290,33 +352,80 @@ class Router:
             self._base_v[key] = m
         return self._base_v[key]
 
-    def _route_items(self):
-        items, nets, ids = [], [], []
+    # Maps of the routes the router keeps, per track half-width / via size, updated in place when a route is
+    # added or removed (re-rasterising every route on every change was most of the legalisation time). Per
+    # cell: number of stamps, sum and sum of squares of the route ids and of the nets (all stamps of one value
+    # <=> cnt * sum2 == sum**2), and stamps of plain holes (via maps); from these the owner maps follow exactly
+    # as _raster would draw them: FREE, the one owner, or BLOCKED.
+    def _new_layer(self, planes, infl_track, infl_hole):
+        z = lambda dt: np.zeros((planes, self.ny, self.nx), dtype=dt)
+        lay = {"planes": planes, "it": infl_track, "ih": infl_hole, "cnt": z(np.int32), "sid": z(np.int64),
+               "sid2": z(np.int64), "snet": z(np.int64), "snet2": z(np.int64), "blk": z(np.int32),
+               "net": z(np.int32), "id": z(np.int32), "masks": {}}
         for rid, (net, its, _) in self.routes.items():
-            items += its
-            nets += [net] * len(its)
-            ids += [rid] * len(its)
-        return items, nets, ids
+            self._stamp_route(lay, rid, net, its, +1)
+        return lay
+
+    def _stamp_route(self, lay, rid, net, its, sign) -> None:
+        planes = lay["planes"]
+        if sign > 0:
+            ms = []
+            for kind, data, lis, _ in its:
+                if kind == "hole":
+                    infl, lis = lay["ih"], set(range(self.L))
+                    blocked = planes == 1
+                else:
+                    infl, blocked = lay["it"], False
+                if not lis:
+                    continue
+                x0, y0, x1, y1 = self._bounds(kind, data)
+                i0, i1, j0, j1 = self._window(x0 - infl, y0 - infl, x1 + infl, y1 + infl)
+                if i0 >= i1 or j0 >= j1:
+                    continue
+                mask = self._dist(kind, data, i0, i1, j0, j1) <= infl
+                ms.append((tuple(lis) if planes > 1 else (0,), i0, i1, j0, j1, mask, blocked))
+            lay["masks"][rid] = ms
+        else:
+            ms = lay["masks"].pop(rid, [])
+        tag, idt = net, rid + 1
+        for lis, i0, i1, j0, j1, mask, blocked in ms:
+            for li in lis:
+                w = (li, slice(j0, j1), slice(i0, i1))
+                if blocked:
+                    lay["blk"][w] += sign * mask
+                else:
+                    lay["cnt"][w] += sign * mask
+                    lay["sid"][w] += (sign * idt) * mask
+                    lay["sid2"][w] += (sign * idt * idt) * mask
+                    lay["snet"][w] += (sign * tag) * mask
+                    lay["snet2"][w] += (sign * tag * tag) * mask
+                c, b = lay["cnt"][w], lay["blk"][w]
+                cs = np.maximum(c, 1)
+                one_id = c * lay["sid2"][w] == lay["sid"][w] ** 2
+                one_net = c * lay["snet2"][w] == lay["snet"][w] ** 2
+                lay["id"][w] = np.where(b > 0, BLOCKED, np.where(c == 0, FREE,
+                                        np.where(one_id, lay["sid"][w] // cs, BLOCKED)))
+                lay["net"][w] = np.where(b > 0, BLOCKED, np.where(c == 0, FREE,
+                                         np.where(one_net, lay["snet"][w] // cs, BLOCKED)))
 
     def route_track(self, hw):
         """(owner-net map, owner-route-id map) of the maze routes for this track half-width."""
         if hw not in self._rt:
-            items, nets, ids = self._route_items()
-            self._rt[hw] = (self._raster(items, hw + self.clr, hw + self.hclr, self.L, nets),
-                            self._raster(items, hw + self.clr, hw + self.hclr, self.L, [i + 1 for i in ids]))
-        return self._rt[hw]
+            self._rt[hw] = self._new_layer(self.L, hw + self.clr, hw + self.hclr)
+        lay = self._rt[hw]
+        return lay["net"], lay["id"]
 
     def route_via(self, r, drill):
         key = (r, drill)
         if key not in self._rv:
-            items, nets, ids = self._route_items()
-            hole = max(r, drill / 2) + self.hclr
-            self._rv[key] = (self._raster(items, r + self.clr, hole, 1, nets)[0],
-                             self._raster(items, r + self.clr, hole, 1, [i + 1 for i in ids])[0])
-        return self._rv[key]
+            self._rv[key] = self._new_layer(1, r + self.clr, max(r, drill / 2) + self.hclr)
+        lay = self._rv[key]
+        return lay["net"][0], lay["id"][0]
 
     # ------------------------------------------------------------------ routes kept by the router
     def add(self, rid, net, segs, vias, hw, via_r, drill) -> None:
+        if rid in self.routes:
+            self.remove(rid)
         its = []
         for layer, pts in segs:
             for a, c in zip(pts, pts[1:]):
@@ -325,13 +434,25 @@ class Router:
             its.append(("circle", ((x, y), via_r), set(range(self.L)), net))
             its.append(("hole", ((x, y), drill / 2), set(), net))
         self.routes[rid] = (net, its, (segs, vias, hw, via_r, drill))
-        self._rt.clear()
-        self._rv.clear()
+        for lay in list(self._rt.values()) + list(self._rv.values()):
+            self._stamp_route(lay, rid, net, its, +1)
+
+    def set_routes(self, routes: dict) -> None:
+        """Make the kept routes equal to `routes` (a snapshot of self.routes), changing only what differs."""
+        for rid in [k for k, v in self.routes.items() if routes.get(k) is not v]:
+            self.remove(rid)
+        for rid, val in routes.items():
+            if rid not in self.routes:
+                self.routes[rid] = val
+                for lay in list(self._rt.values()) + list(self._rv.values()):
+                    self._stamp_route(lay, rid, val[0], val[1], +1)
 
     def remove(self, rid) -> None:
-        self.routes.pop(rid, None)
-        self._rt.clear()
-        self._rv.clear()
+        val = self.routes.pop(rid, None)
+        if val is None:
+            return
+        for lay in list(self._rt.values()) + list(self._rv.values()):
+            self._stamp_route(lay, rid, val[0], val[1], -1)
 
     # ------------------------------------------------------------------ search
     def cell(self, x, y):

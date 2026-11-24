@@ -244,7 +244,7 @@ s.add("U201", "ko:BMD-340", "BMD-340-A-R", {
     # lines to the castellated edge do not cross
     "31": "ROW7", "32": "ROW6", "33": "ROW5", "34": "ROW4", "35": "RSV_MISO", "36": "COL_LAT", "39": "NRESET",
     "37": "I2C_SCL", "38": "COL_DAT", "40": "COL_CLK", "41": "HAPTIC_EN", "42": "RSV_INT",
-    "6": "NC", "7": "EXP_IO2", "8": "NC", "9": "LED_FAULT", "10": "CC1_B", "11": "CC2_B",
+    "6": "NC", "7": "LED_FAULT", "8": "NC", "9": "EXP_IO2", "10": "CC1_B", "11": "CC2_B",
     "12": "CC2",
     "56": "FG_ALRT", "57": "ROW0", "58": "ROW1", "59": "ROW2", "60": "ROW3", "48": "LED_SDB", "49": "LED_EN",
     "50": "BOOST_EN", "51": "CHG_INT", "52": "NC", "53": "NC", "54": "NC", "61": "NC",
@@ -337,7 +337,7 @@ s.add("J503", "Connector_Generic:Conn_01x06", "HAPTIC PADS", {
     "1": "V5", "2": "3V0", "3": "GND", "4": "I2C_SDA", "5": "I2C_SCL", "6": "HAPTIC_EN"},
     footprint="ko:WireGrid_Haptic", in_bom=False, description="Future body haptic driver (CORE-064)")
 # Underglow strip port (D-40): an addressable 5 V strip (WS2812/SK6812 class) on the switched, current-limited LED rail.
-# EXP_IO2 (P0.26) carries the data; the AHCT buffer, powered from LED_5V, lifts the 3.0 V logic to 5 V levels and is
+# EXP_IO2 (P0.28, D-47) carries the data; the AHCT buffer, powered from LED_5V, lifts the 3.0 V logic to 5 V levels and is
 # unpowered whenever the LED rail is off. (Symbol: the 74LVC1G125 base symbol, same pins as the 74AHCT1G125.)
 s.add("U501", "74xGxx:74LVC1G125", "74AHCT1G125", {"1": "GND", "2": "EXP_IO2", "3": "GND", "4": "UG_BUF", "5": "LED_5V"},
       footprint="Package_TO_SOT_SMD:SOT-353_SC-70-5", **lcsc("U_AHCT125"))

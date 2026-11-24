@@ -2701,7 +2701,7 @@
 		)
 		(uuid "44abf02a-601b-5d09-8f76-f03419511000")
 	)
-	(global_label "EXP_IO2"
+	(global_label "LED_FAULT"
 		(shape passive)
 		(at 35.56 128.27 180)
 		(fields_autoplaced yes)
@@ -2737,7 +2737,7 @@
 		)
 		(uuid "a7d42b68-9b9b-525f-90c6-731a13a8ea5f")
 	)
-	(global_label "LED_FAULT"
+	(global_label "EXP_IO2"
 		(shape passive)
 		(at 35.56 133.35 180)
 		(fields_autoplaced yes)

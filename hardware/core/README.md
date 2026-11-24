@@ -57,9 +57,10 @@ drawn in code, a GND via for every SMD GND pad, the stored maze-router tracks
 (set `MAZE_CACHE=/some/file.json` to keep the slow negotiation step between runs).
 `route_pcb.py --repair` closes connections that are still open by moving only the stored routes in their way;
 `route_pcb.py --polish` removes dead router leftovers. The negotiation runs in one worker process per CPU core
-(`MAZE_WORKERS=N` to choose); the search works on plain Python lists of its window, about 3-5× faster than
-indexing numpy cell by cell, with identical paths. On 8 threads the 16 negotiation rounds take about 10 minutes
-and 16 legalisation attempts about 15 minutes. WSL2 may show fewer threads than the CPU has: set
+(`MAZE_WORKERS=N` to choose). The A* search is C (`hardware/tools/astar.c`, compiled by `maze.py` on first use;
+needs a C compiler, e.g. `apt install build-essential`, else it falls back to the slow Python search with the same
+paths), and the maps of the kept routes are updated in place. On 8 threads `--maze` with `MAZE_ITERS=40
+MAZE_ATTEMPTS=32` takes about 4-5 minutes and `--repair` about 2 minutes (before: about 80 minutes in all). WSL2 may show fewer threads than the CPU has: set
 `processors=<n>` under `[wsl2]` in `%UserProfile%\.wslconfig` and run `wsl --shutdown`.
 
 ### Running the routing on your own computer
