@@ -77,10 +77,10 @@
 		(roundrect_rratio 0.15)
 		(uuid "98c12784-e6ca-53a6-b471-36c3f94bb4fd")
 	)
-	(fp_text user "DIO"
+	(fp_text user "CLK"
 		(at 0 -2.7 0)
 		(layer "F.SilkS")
-		(uuid "c11ee274-d677-56dc-9217-926637bf2aa2")
+		(uuid "61cbaffe-723f-5ba5-8c51-e5c9d4aba9e5")
 		(effects
 			(font
 				(size 0.8 0.5)
@@ -95,10 +95,10 @@
 		(roundrect_rratio 0.15)
 		(uuid "29113aea-08cf-579b-9a31-99bc8f39ebed")
 	)
-	(fp_text user "CLK"
+	(fp_text user "DIO"
 		(at 2 -2.7 0)
 		(layer "F.SilkS")
-		(uuid "bf8979b6-712a-5ccf-b64f-5ac6b0e5f210")
+		(uuid "75ff8879-3abc-5656-94bf-0e1aa349f0d9")
 		(effects
 			(font
 				(size 0.8 0.5)
@@ -113,10 +113,10 @@
 		(roundrect_rratio 0.15)
 		(uuid "3c852cc6-16e0-53e1-ad25-d312e1c7ab57")
 	)
-	(fp_text user "RST"
+	(fp_text user "GND"
 		(at -2 0.1 0)
 		(layer "F.SilkS")
-		(uuid "71c379c4-1475-5607-abcd-869fdc31faff")
+		(uuid "df01805d-d54e-5c8d-bb23-9742de104314")
 		(effects
 			(font
 				(size 0.8 0.5)
@@ -131,10 +131,10 @@
 		(roundrect_rratio 0.15)
 		(uuid "8aec4f1a-b020-531e-bbe3-ab7426aa12a8")
 	)
-	(fp_text user "GND"
+	(fp_text user "RST"
 		(at 0 0.1 0)
 		(layer "F.SilkS")
-		(uuid "08967820-8e65-50b0-822e-c3ec93ae3f2f")
+		(uuid "bbb8c170-8110-5d21-a410-bb44d1771c33")
 		(effects
 			(font
 				(size 0.8 0.5)

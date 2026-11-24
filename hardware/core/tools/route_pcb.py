@@ -142,8 +142,9 @@ _rt, _rv = _turned([
     ("VBOOST", F, 0.4, [(28.85, 16.65), (28.85, 18.0)]),
     ("V5", F, 0.3, [(26.66, 16.15), (28.7, 16.15), (29.5, 15.9)]),
     # mux output -> LED switch input (up to 1.7 A): from C116 via In2 round the boost output to U106 pin 1
-    ("V5", F, 0.5, [(30.0, 15.6), (30.8, 15.6), (30.8, 16.6)]),
-    ("V5", I2, 0.5, [(30.8, 16.6), (22.3, 16.6), (22.3, 19.2), (22.7, 19.6)]),
+    # V5 drops to In2 on the C116 stub, below the cap: a stub up past C116 to a via walled in the USB mux's
+    # bottom pins (U304, port A and B data)
+    ("V5", I2, 0.5, [(28.95, 15.95), (28.3, 16.6), (22.3, 16.6), (22.3, 19.2), (22.7, 19.6)]),
     ("V5", F, 0.5, [(22.7, 19.6), (22.75, 20.8)]),
     ("V5", F, 0.3, [(22.7, 19.6), (23.04, 18.9)]),
     # VBUS from the trunk via into the 5 V mux and its capacitor
@@ -160,7 +161,7 @@ _rt, _rv = _turned([
     ("GND", F, 0.3, [(22.86, 21.8), (21.75, 21.8)]),       # LED switch GND pin, boxed in
 ], [
     ("LED_5V", (25.4, 19.95), 0.6, 0.3), ("LED_5V", (23.2, 25.95), 0.6, 0.3),
-    ("V5", (30.8, 16.6), 0.6, 0.3), ("V5", (22.7, 19.6), 0.6, 0.3),
+    ("V5", (28.95, 15.95), 0.6, 0.3), ("V5", (22.7, 19.6), 0.6, 0.3),
     ("VBOOST", (18.31, 17.2), 0.6, 0.3), ("VBOOST", (19.85, 17.55), 0.6, 0.3),
     ("VBOOST", (24.3, 17.55), 0.6, 0.3), ("VBOOST", (28.85, 18.0), 0.6, 0.3),
     ("VBUS", (25.9, 17.6), 0.6, 0.3),
@@ -227,11 +228,12 @@ STRIP_TRACKS = [
     # GND ends of the mux dividers R308/R306/R304, joined and taken to one via on the right: fan-out vias
     # below them walled in the mux's top pins (USB_DP/USB_DN/USB_SEL leave U304 upwards)
     ("GND", F, 0.25, [(3.1, 11.11), (6.25, 11.11)]),
-    # the charger's I2C and interrupt pins face a closed pocket (SW above, SYS below, L101 right): each to its
+    # the charger's CE, I2C and interrupt pins face a closed pocket (SW above, SYS below, L101 right): each to its
     # own via beside the pins, left of the SYS trunk on B (FRONT_TRACKS), top to bottom in pin order
-    ("I2C_SCL", F, 0.15, [(11.9, 54.81), (12.6, 54.81), (13.05, 54.4)]),
-    ("I2C_SDA", F, 0.15, [(11.9, 55.21), (13.05, 55.21), (13.05, 55.25)]),
-    ("CHG_INT", F, 0.15, [(11.9, 55.61), (12.4, 55.61), (12.85, 56.06), (12.85, 56.15)]),
+    ("/Battery and charger/CHG_CE", F, 0.15, [(12.1, 54.35), (12.6, 53.85)]),   # from the L pad's foot
+    ("I2C_SCL", F, 0.15, [(11.9, 54.81), (12.65, 54.81), (12.85, 54.61)]),
+    ("I2C_SDA", F, 0.15, [(11.9, 55.21), (12.8, 55.21), (12.99, 55.4)]),
+    ("CHG_INT", F, 0.15, [(11.9, 55.61), (12.4, 55.61), (12.85, 56.06), (12.85, 56.2)]),
 ]
 STRIP_VIAS = [
     ("VBUS", (2.5, 3.5), 0.8, 0.4),
@@ -243,7 +245,8 @@ STRIP_VIAS = [
     ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (4.95, 21.2), 0.5, 0.25),
     ("GND", (2.65, 55.15), 0.5, 0.25), ("GND", (2.65, 59.15), 0.5, 0.25),
     ("GND", (3.6, 6.05), 0.5, 0.25), ("GND", (6.25, 11.11), 0.5, 0.25),
-    ("I2C_SCL", (13.05, 54.4), 0.5, 0.25), ("I2C_SDA", (13.05, 55.25), 0.5, 0.25), ("CHG_INT", (12.85, 56.15), 0.5, 0.25),
+    ("/Battery and charger/CHG_CE", (12.6, 53.85), 0.5, 0.25),
+    ("I2C_SCL", (12.85, 54.61), 0.5, 0.25), ("I2C_SDA", (12.99, 55.4), 0.5, 0.25), ("CHG_INT", (12.85, 56.2), 0.5, 0.25),
 ]
 
 # Copper in front of the 5 V block, written in the coordinates of the 16 mm strip and moved right with its parts

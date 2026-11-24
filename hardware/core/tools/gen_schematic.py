@@ -331,7 +331,7 @@ s = design.sheet("Service and expansion", "service.kicad_sch", paper="A4", note=
     "Solder pads for wires (D-43): SWD (J501), haptic driver (J503, CORE-064), underglow strip (J504), with test points\n"
     "on the remaining rails and USB (CORE-063). The rev A expansion header was dropped with the strip layout (D-42)."))
 s.add("J501", "Connector_Generic:Conn_01x05", "SWD PADS", {
-    "1": "3V0", "2": "SWDIO", "3": "SWCLK", "4": "NRESET", "5": "GND"},
+    "1": "3V0", "2": "SWCLK", "3": "SWDIO", "4": "GND", "5": "NRESET"},   # pad order: D-46
     footprint="ko:WireGrid_SWD", in_bom=False, description="SWD wires to a debug probe (first flash, recovery)")
 s.add("J503", "Connector_Generic:Conn_01x06", "HAPTIC PADS", {
     "1": "V5", "2": "3V0", "3": "GND", "4": "I2C_SDA", "5": "I2C_SCL", "6": "HAPTIC_EN"},

@@ -1456,7 +1456,7 @@
 		)
 		(uuid "5a4ab869-167b-5e69-90fd-e622d1f532eb")
 	)
-	(global_label "SWDIO"
+	(global_label "SWCLK"
 		(shape passive)
 		(at 33.02 43.18 180)
 		(fields_autoplaced yes)
@@ -1488,7 +1488,7 @@
 		)
 		(uuid "1f5ac442-ef4e-5daa-a5bc-a242b78f0288")
 	)
-	(global_label "SWCLK"
+	(global_label "SWDIO"
 		(shape passive)
 		(at 33.02 45.72 180)
 		(fields_autoplaced yes)
@@ -1520,24 +1520,68 @@
 		)
 		(uuid "5f60a45b-b762-5740-ac7f-2b45c806c473")
 	)
-	(global_label "NRESET"
-		(shape passive)
-		(at 33.02 48.26 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "7f7d5b8e-485f-5eae-bd6d-69b6c4ab8efc")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+	(symbol
+		(lib_id "power:GND")
+		(at 33.02 48.26 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "be32628a-84a1-5d63-83c4-1059453972da")
+		(property "Reference" "#PWR0701"
 			(at 33.02 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 29.21 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 33.02 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 33.02 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 33.02 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "82d130c1-2aca-5834-be9e-2fe3dd9067e7")
+		)
+		(instances
+			(project "ko-core"
+				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
+					(reference "#PWR0701")
+					(unit 1)
+				)
 			)
 		)
 	)
@@ -1552,68 +1596,24 @@
 		)
 		(uuid "b525cf9a-16cb-5c7a-a227-20fdb1c6b362")
 	)
-	(symbol
-		(lib_id "power:GND")
-		(at 33.02 50.8 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "a3f0ecfd-5fb0-583a-a46e-262c9f00d0a6")
-		(property "Reference" "#PWR0701"
+	(global_label "NRESET"
+		(shape passive)
+		(at 33.02 50.8 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "06254bd4-1800-51c1-81e3-b59af67c93a1")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
 			(at 33.02 50.8 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
 				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 29.21 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 33.02 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 33.02 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 33.02 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "e60a30be-16ff-5789-98f4-ee8aa26dd572")
-		)
-		(instances
-			(project "ko-core"
-				(path "/4614d36d-5410-5c37-b004-d94cd6991feb/ea342400-e799-51f8-8c24-a9bfef262f0e"
-					(reference "#PWR0701")
-					(unit 1)
-				)
 			)
 		)
 	)

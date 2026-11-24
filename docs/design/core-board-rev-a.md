@@ -125,7 +125,7 @@ Firmware board support must use exactly this map.
 | CC1, CC2 | P0.02/AIN0, P0.31/AIN7 (15, 12) LF | SAADC: USB-C current advertisement (default ≈ 0.25–0.61 V, 1.5 A ≈ 0.70–1.16 V, 3 A ≈ 1.31–2.04 V across 5.1 kΩ) |
 | 32.768 kHz crystal | P0.00, P0.01 (13, 14) | LFXO |
 | USB | USB_D+, USB_D− (68, 67); VBUS (66) | Direct to port A in rev A |
-| SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39) | Solder pads J501 (3V0, SWDIO, SWCLK, RESET, GND) on the bottom, D-43; SWO not connected: probe-rs and defmt use RTT over SWD (D-35) |
+| SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39) | Solder pads J501 (3V0, SWCLK, SWDIO, GND, RESET; D-46) on the bottom, D-43; SWO not connected: probe-rs and defmt use RTT over SWD (D-35) |
 | (unused) | P0.25, P0.27, P1.09 | Former expansion-header lines, unconnected since D-42 |
 | Underglow strip data | P0.26 (EXP_IO2) | Through U501 (74AHCT1G125, 5 V) and R501 330 Ω to pad DAT of J504; WS2812 timing from the nRF52840 PWM or I2S peripheral (D-40) |
 | Spare | P0.03/AIN1, P0.04/AIN2, P0.05/AIN3, P0.08 (19, 20, 21, 24); P1.12–P1.15 (61–64) | Unconnected on the strip: the left pad columns sit near the castellated edge |

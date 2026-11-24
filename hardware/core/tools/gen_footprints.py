@@ -357,7 +357,7 @@ def castellated(groups=((1, 17, 0.0), (18, 33, 47.0)), pitch=2.0):
 WIRE_PADS = {
     "Switch": ("POWER SW", ["SYS", "EN"]),
     "NTC": ("NTC", ["NTC", "GND"]),
-    "SWD": ("SWD", ["3V0", "DIO", "CLK", "RST", "GND"]),
+    "SWD": ("SWD", ["3V0", "CLK", "DIO", "GND", "RST"]),     # order of the module's SWD pins (D-46)
     "Haptic": ("HAPTIC", ["V5", "3V0", "GND", "SDA", "SCL", "EN"]),
     "Underglow": ("UNDERGLOW", ["LED", "DAT", "GND"]),
 }
