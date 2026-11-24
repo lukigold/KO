@@ -19,6 +19,109 @@ import pcbnew
 
 FREE, BLOCKED = 0, -1
 SQ2 = math.sqrt(2)
+DIRS = ((1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0),
+        (1, 1, SQ2), (1, -1, SQ2), (-1, 1, SQ2), (-1, -1, SQ2))
+
+
+def _astar(ok, vok, box, S, G, max_nodes, via_cost, M=None, A=None):
+    """A* over a (layer, row, column) grid inside box = (i_lo, i_hi, j_lo, j_hi); the search both routers share.
+
+    ok: bool array (L, NY, NX) of passable cells; vok: bool array (NY, NX) where a via may stand.
+    Step cost to a cell: gc + c*M + A (float arrays (L, NY, NX) or None); via cost: via_cost, a number or
+    an array (NY, NX). S, G: [((i, j), layer)]. Returns the path as [(i, j, layer)] from a start to a
+    goal, or None.
+
+    Only the search window is copied, into plain Python lists (no numpy access per cell), and the
+    heuristic is cached per cell. The arithmetic (float64) and the order of the states are those of the
+    full-grid search, so the paths are identical; it is just several times faster."""
+    i_lo, i_hi, j_lo, j_hi = box
+    L = ok.shape[0]
+    W, NY = i_hi - i_lo + 1, j_hi - j_lo + 1
+    NYW = NY * W
+    win = (slice(None), slice(j_lo, j_hi + 1), slice(i_lo, i_hi + 1))
+    flat = lambda arr: arr[win].ravel().tolist()
+    okl = flat(ok)
+    vokl = vok[win[1:]].ravel().tolist()
+    Ml = flat(M) if M is not None else None
+    Al = flat(A) if A is not None else None
+    vc_list = not isinstance(via_cost, (int, float))
+    vcl = via_cost[win[1:]].ravel().tolist() if vc_list else via_cost
+    S = [((i - i_lo, j - j_lo), l) for (i, j), l in S]
+    G = [((i - i_lo, j - j_lo), l) for (i, j), l in G]
+    goal_set = {(l * NY + j) * W + i for (i, j), l in G}
+    gi = [ij for ij, _ in G]
+    inf = math.inf
+    hc = {}
+
+    def h(i, j):
+        k = j * W + i
+        v = hc.get(k)
+        if v is None:
+            v = inf
+            for ib, jb in gi:
+                dx, dy = abs(i - ib), abs(j - jb)
+                v = min(v, dx + dy + (SQ2 - 2) * min(dx, dy))
+            hc[k] = v
+        return v
+
+    g = [inf] * (L * NYW)
+    came, openh = {}, []
+    push, pop = heapq.heappush, heapq.heappop
+    for (i, j), l in S:
+        s = (l * NY + j) * W + i
+        g[s] = 0.0
+        came[s] = -1
+        push(openh, (h(i, j), 0.0, s))
+    n = 0
+    imax, jmax = W - 1, NY - 1
+    while openh:
+        f, gc, s = pop(openh)
+        if gc > g[s]:
+            continue
+        if s in goal_set:
+            path = []
+            while s != -1:
+                l, rem = divmod(s, NYW)
+                j, i = divmod(rem, W)
+                path.append((i + i_lo, j + j_lo, l))
+                s = came[s]
+            return path[::-1]
+        n += 1
+        if n > max_nodes:
+            return None
+        l, rem = divmod(s, NYW)
+        j, i = divmod(rem, W)
+        base = l * NYW
+        for di, dj, c in DIRS:
+            i2, j2 = i + di, j + dj
+            if i2 < 0 or i2 > imax or j2 < 0 or j2 > jmax:
+                continue
+            s2 = s + dj * W + di
+            if not okl[s2]:
+                continue
+            if di and dj and not (okl[base + j * W + i2] or okl[base + j2 * W + i]):
+                continue
+            if Ml is not None:
+                g2 = gc + c * Ml[s2] + Al[s2]
+            elif Al is not None:
+                g2 = gc + c + Al[s2]
+            else:
+                g2 = gc + c
+            if g2 < g[s2]:
+                g[s2] = g2
+                came[s2] = s
+                push(openh, (g2 + h(i2, j2), g2, s2))
+        if vokl[rem]:
+            vc = vcl[rem] if vc_list else vcl
+            for l2 in range(L):
+                s2 = l2 * NYW + rem
+                if l2 != l and okl[s2]:
+                    g2 = gc + vc
+                    if g2 < g[s2]:
+                        g[s2] = g2
+                        came[s2] = s
+                        push(openh, (g2 + h(i, j), g2, s2))
+    return None
 
 
 def _mm(v: int) -> float:
@@ -264,85 +367,35 @@ class Router:
         j_lo = max(0, min(j for _, j in allij) - m)
         j_hi = min(self.ny - 1, max(j for _, j in allij) + m)
         W, NY = self.nx, self.ny
-        goal_set = {(l * NY + j) * W + i for (i, j), l in G}
-        gi = [(i, j) for (i, j), _ in G]
-
-        def h(i, j):
-            best = math.inf
-            for ib, jb in gi:
-                dx, dy = abs(i - ib), abs(j - jb)
-                best = min(best, dx + dy + (SQ2 - 2) * min(dx, dy))
-            return best
-
-        g, came, openh = {}, {}, []
-        for (i, j), l in S:
-            s = (l * NY + j) * W + i
-            g[s] = 0.0
-            came[s] = -1
-            heapq.heappush(openh, (h(i, j), 0.0, s))
-        dirs = [(1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0),
-                (1, 1, SQ2), (1, -1, SQ2), (-1, 1, SQ2), (-1, -1, SQ2)]
-        n = 0
-        while openh:
-            f, gc, s = heapq.heappop(openh)
-            if gc > g.get(s, math.inf):
-                continue
-            if s in goal_set:
-                path, crossed = [], set()
-                while s != -1:
-                    l, rem = divmod(s, NY * W)
-                    j, i = divmod(rem, W)
-                    path.append((float(self.X[i]), float(self.Y[j]), l))
-                    if soft and r_other[l, j, i] and rt_id[l, j, i] > 0:
-                        crossed.add(int(rt_id[l, j, i]) - 1)
-                    s = came[s]
-                path.reverse()
-                if soft:
-                    amb = []                           # cells where several routes overlap: resolve by geometry
-                    for x, y, l in path:
-                        i, j = self.cell(x, y)
-                        if r_other[l, j, i] and rt_id[l, j, i] <= 0:
-                            amb.append((x, y, l, hw + self.clr, False))
-                    for a, c in zip(path, path[1:]):
-                        if a[2] != c[2]:
-                            i, j = self.cell(a[0], a[1])
-                            if v_other[j, i] and rv_id[j, i] > 0:
-                                crossed.add(int(rv_id[j, i]) - 1)
-                            elif v_other[j, i]:
-                                amb.append((a[0], a[1], None, via_r + self.clr, True))
-                    if amb:
-                        crossed |= self._who(amb, net, drill)
-                return path, crossed
-            n += 1
-            if n > max_nodes:
-                break
-            l, rem = divmod(s, NY * W)
-            j, i = divmod(rem, W)
-            okl = ok[l]
-            rol = r_other[l]
-            for di, dj, c in dirs:
-                i2, j2 = i + di, j + dj
-                if i2 < i_lo or i2 > i_hi or j2 < j_lo or j2 > j_hi or not okl[j2, i2]:
-                    continue
-                if di and dj and not (okl[j, i2] or okl[j2, i]):
-                    continue
-                g2 = gc + c + (soft_cost if soft and rol[j2, i2] else 0.0)
-                s2 = s + dj * W + di
-                if g2 < g.get(s2, math.inf):
-                    g[s2] = g2
-                    came[s2] = s
-                    heapq.heappush(openh, (g2 + h(i2, j2), g2, s2))
-            if vok[j, i]:
-                vc = via_cost + (soft_cost * 4 if soft and v_other[j, i] else 0.0)
-                for l2 in range(self.L):
-                    if l2 != l and ok[l2, j, i]:
-                        s2 = (l2 * NY + j) * W + i
-                        g2 = gc + vc
-                        if g2 < g.get(s2, math.inf):
-                            g[s2] = g2
-                            came[s2] = s
-                            heapq.heappush(openh, (g2 + h(i, j), g2, s2))
-        return None, set()
+        if soft:
+            A = np.where(r_other, soft_cost, 0.0)
+            vc = np.where(v_other, via_cost + soft_cost * 4, via_cost)
+        else:
+            A, vc = None, via_cost
+        cells = _astar(ok, vok, (i_lo, i_hi, j_lo, j_hi), S, G, max_nodes, vc, A=A)
+        if cells is None:
+            return None, set()
+        path, crossed = [], set()
+        for i, j, l in cells:
+            path.append((float(self.X[i]), float(self.Y[j]), l))
+            if soft and r_other[l, j, i] and rt_id[l, j, i] > 0:
+                crossed.add(int(rt_id[l, j, i]) - 1)
+        if soft:
+            amb = []                           # cells where several routes overlap: resolve by geometry
+            for x, y, l in path:
+                i, j = self.cell(x, y)
+                if r_other[l, j, i] and rt_id[l, j, i] <= 0:
+                    amb.append((x, y, l, hw + self.clr, False))
+            for a, c in zip(path, path[1:]):
+                if a[2] != c[2]:
+                    i, j = self.cell(a[0], a[1])
+                    if v_other[j, i] and rv_id[j, i] > 0:
+                        crossed.add(int(rv_id[j, i]) - 1)
+                    elif v_other[j, i]:
+                        amb.append((a[0], a[1], None, via_r + self.clr, True))
+            if amb:
+                crossed |= self._who(amb, net, drill)
+        return path, crossed
 
     def _who(self, pts, net, drill) -> set:
         """Route ids whose copper comes too close to any of pts [(x, y, layer|None, reach, is_via)]."""
@@ -469,6 +522,7 @@ class Negotiator:
         self.hist = np.zeros((L, ny, nx), dtype=np.float32)
         self.paths: dict[int, list] = {}
         self.stamps: dict[int, list] = {}
+        self._hver, self._hcache_key, self._hcache = 0, None, None
 
     def _footprint(self, path, hw, via_r):
         r = self.r
@@ -526,79 +580,38 @@ class Negotiator:
         j_lo = max(0, min(j for _, j in allij) - m)
         j_hi = min(r.ny - 1, max(j for _, j in allij) + m)
         W, NY = r.nx, r.ny
-        goal_set = {(l * NY + j) * W + i for (i, j), l in G}
-        gi = [(i, j) for (i, j), _ in G]
-        vfor = foreign.max(axis=0)
-        histv = self.hist.max(axis=0)
+        M, vbase = self._hist_costs(hist_w, via_cost)
+        A = pres * foreign.astype(np.float64)
+        vc = vbase + pres * 4 * foreign.max(axis=0).astype(np.float64)
+        cells = _astar(ok, vok, (i_lo, i_hi, j_lo, j_hi), S, G, max_nodes, vc, M=M, A=A)
+        if cells is None:
+            return None
+        return [(float(r.X[i]), float(r.Y[j]), l) for i, j, l in cells]
 
-        def h(i, j):
-            best = math.inf
-            for ib, jb in gi:
-                dx, dy = abs(i - ib), abs(j - jb)
-                best = min(best, dx + dy + (SQ2 - 2) * min(dx, dy))
-            return best
-
-        g, came, openh = {}, {}, []
-        for (i, j), l in S:
-            s = (l * NY + j) * W + i
-            g[s] = 0.0
-            came[s] = -1
-            heapq.heappush(openh, (h(i, j), 0.0, s))
-        dirs = [(1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0),
-                (1, 1, SQ2), (1, -1, SQ2), (-1, 1, SQ2), (-1, -1, SQ2)]
-        n = 0
-        while openh:
-            f, gc, s = heapq.heappop(openh)
-            if gc > g.get(s, math.inf):
-                continue
-            if s in goal_set:
-                path = []
-                while s != -1:
-                    l, rem = divmod(s, NY * W)
-                    j, i = divmod(rem, W)
-                    path.append((float(r.X[i]), float(r.Y[j]), l))
-                    s = came[s]
-                return path[::-1]
-            n += 1
-            if n > max_nodes:
-                return None
-            l, rem = divmod(s, NY * W)
-            j, i = divmod(rem, W)
-            okl, fl, hl = ok[l], foreign[l], self.hist[l]
-            for di, dj, c in dirs:
-                i2, j2 = i + di, j + dj
-                if i2 < i_lo or i2 > i_hi or j2 < j_lo or j2 > j_hi or not okl[j2, i2]:
-                    continue
-                if di and dj and not (okl[j, i2] or okl[j2, i]):
-                    continue
-                g2 = gc + c * (1.0 + hist_w * hl[j2, i2]) + pres * fl[j2, i2]
-                s2 = s + dj * W + di
-                if g2 < g.get(s2, math.inf):
-                    g[s2] = g2
-                    came[s2] = s
-                    heapq.heappush(openh, (g2 + h(i2, j2), g2, s2))
-            if vok[j, i]:
-                vc = via_cost * (1.0 + hist_w * histv[j, i]) + pres * 4 * vfor[j, i]
-                for l2 in range(r.L):
-                    if l2 != l and ok[l2, j, i]:
-                        s2 = (l2 * NY + j) * W + i
-                        g2 = gc + vc
-                        if g2 < g.get(s2, math.inf):
-                            g[s2] = g2
-                            came[s2] = s
-                            heapq.heappush(openh, (g2 + h(i, j), g2, s2))
-        return None
+    def _hist_costs(self, hist_w, via_cost):
+        """Step multiplier per cell and via base cost, from the history; computed once per iteration (in
+        the parent before the workers fork, so they inherit it)."""
+        key = (self._hver, hist_w, via_cost)
+        if self._hcache_key != key:
+            h64 = self.hist.astype(np.float64)
+            self._hcache = (1.0 + hist_w * h64,
+                            via_cost * (1.0 + hist_w * self.hist.max(axis=0).astype(np.float64)))
+            self._hcache_key = key
+        return self._hcache
 
     def conflicts(self, conns):
         """Connections whose path runs through cells another net's footprint also covers."""
         bad = set()
+        foreign_of = {}                                # one occupancy-minus-own-net map per net, not per path
         for cid, path in self.paths.items():
             net = conns[cid][0]
-            own = np.zeros_like(self.occ)
-            for other, p in self.paths.items():
-                if conns[other][0] == net:
-                    self._apply(self.stamps[other], +1, own)
-            foreign = self.occ - own
+            if net not in foreign_of:
+                own = np.zeros_like(self.occ)
+                for other in self.paths:
+                    if conns[other][0] == net:
+                        self._apply(self.stamps[other], +1, own)
+                foreign_of[net] = self.occ - own
+            foreign = foreign_of[net]
             for x, y, l in path[3:-3]:                 # the ends sit in their own pads
                 i, j = self.r.cell(x, y)
                 if foreign[l, j, i] > 0:
@@ -614,9 +627,18 @@ class Negotiator:
         if workers <= 1 or len(batch) <= 1:
             return [(cid, self.route(cid, conns[cid], pres, hist_w, nets_of, max_nodes=max_nodes)) for cid in batch]
         global _WORK
+        self._hist_costs(hist_w, 30.0)                 # once here, inherited by every worker
         _WORK = (self, conns, pres, hist_w, nets_of, max_nodes)
+
+        def span(cid):                                 # rough search effort: start-to-goal distance
+            (x0, y0, _), (x1, y1, _) = conns[cid][1][0], conns[cid][2][0]
+            return -math.hypot(x1 - x0, y1 - y0)
+        # the longest searches go out first, so no worker is left with one at the end of the batch;
+        # the results come back in batch order (the paths do not depend on the order they are found in)
+        order = sorted(batch, key=span)
         with multiprocessing.get_context("fork").Pool(min(workers, len(batch))) as pool:
-            return pool.map(_route_worker, batch, chunksize=1)
+            found = dict(pool.imap_unordered(_route_worker, order, chunksize=1))
+        return [(cid, found[cid]) for cid in batch]
 
     def run(self, conns, iters=10, log=print, workers=1, max_nodes=2_500_000, give_up=2):
         """conns: list of (net code, starts, goals, hw, via_r, drill). Returns {cid: path}.
@@ -649,6 +671,7 @@ class Negotiator:
                 for x, y, l in self.paths[cid]:
                     i, j = self.r.cell(x, y)
                     self.hist[l, j, i] += 1.0
+            self._hver += 1
             todo = sorted(bad)
             pres *= 1.5
         return self.paths

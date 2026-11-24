@@ -12,7 +12,7 @@ Builds hardware/core/ko-core.kicad_pcb from the schematic, so the PCB always mat
 Routing is a separate step. Run with KiCad's Python:
     /usr/bin/python3 hardware/core/tools/gen_pcb.py
 
-Board orientation (D-41): a 22 x 80 mm strip right of the key area. Left edge = 33 castellated contacts
+Board orientation (D-41, D-43, D-45): a 17 x 80 mm strip right of the key area. Left edge = 33 castellated contacts
 soldered to the switch board, top edge = back of the keyboard (USB-C port A), right edge = case wall
 (antenna, power switch), bottom edge = front (battery). See docs/design/core-board-rev-a.md section 9.
 """
@@ -30,7 +30,7 @@ CORE = HERE.parent
 sys.path.insert(0, str(CORE.parent / "tools"))
 from kisch.sexpr import find, find_all, parse  # noqa: E402
 
-BOARD_W, BOARD_H = 16.0, 80.0
+BOARD_W, BOARD_H = 17.0, 80.0    # 16 mm (D-43) left too little room for routing; 17 mm (D-45)
 OX, OY = 100.0, 100.0           # board origin in KiCad page coordinates
 RF_STRIP = 4.2                   # BMD-340 datasheet 6.1: no copper within 4.4 mm of the antenna edge, which
                                  # stands 0.2 mm beyond the board edge
@@ -38,7 +38,10 @@ RF_Y = (32.0, 51.0)              # keep-out strip along the right edge, beside t
 USB_SHELL = (6.0, 15.6, 5.3)     # x0, x1, y1: no top-layer copper under the receptacle body but its pads
 
 # Blocks of the 50 x 32 mm placement whose hand routes (route_pcb.py) move with them.
-CHARGER_SHIFT = (3.1, 49.0)      # charger: BQ25628E and its parts, translated
+FRONT_DX = 1.0                   # D-45: everything from the crystal row forward (module, charger, LDO, battery)
+                                 # sits 1 mm further right than on the 16 mm strip, the antenna still at the
+                                 # right edge; the lane along contacts 18-33 is 1 mm wider on every layer
+CHARGER_SHIFT = (3.1 + FRONT_DX, 49.0)   # charger: BQ25628E and its parts, translated
 RAILS_ROT = ((22.7, 20.8), (10.1, 22.9))   # boost / 5 V mux / LED switch: turned 90 deg CCW about the first
                                           # point (block centre on the old board), which lands on the second
 
@@ -58,7 +61,7 @@ def _turn(d: dict) -> dict:
 
 
 # ref: (x, y, rotation_deg, side)   side "T" top or "B" bottom. Rotation is KiCad's (CCW positive).
-# Strip of 16 x 80 mm (D-43): x = 0 is the castellated edge soldered to the switch board, x = 16 the right
+# Strip of 17 x 80 mm (D-43, D-45): x = 0 is the castellated edge soldered to the switch board, x = 17 the right
 # case wall (antenna), y = 0 the back edge (USB-C port A), y = 80 the front edge (battery).
 PLACEMENT = {
     # --- back: USB-C port A, VBUS mux, ESD, data switch
@@ -87,9 +90,9 @@ PLACEMENT = {
     "C501": (14.6, 25.6, 90, "T"),
     "R501": (13.9, 30.4, 0, "T"),
     # --- in front of the 5 V block: crystal and module decoupling above the module
-    "Y201": (6.0, 34.8, 180, "T"),     # 32.768 kHz next to module pads 13/14
-    "C204": (8.6, 34.8, 90, "T"),
-    "C205": (9.6, 34.8, 90, "T"),
+    "Y201": (6.0, 34.8, 0, "T"),       # 32.768 kHz next to module pads 13/14; XL2 left (above pad 14), XL1 right
+    "C204": (8.6, 34.8, 90, "T"),      # XL1 load cap, its XL1 pad down towards the crystal's XL1 pad
+    "C205": (9.6, 34.8, 270, "T"),     # XL2 load cap, its XL2 pad up, reached above the crystal
     "C202": (3.15, 34.95, 90, "T"),    # VCC 100n next to VCC pad 17
     "C201": (10.8, 34.5, 90, "T"),     # VCC 10u
     "C401": (2.95, 15.6, 90, "T"),     # 3V0 at contact 8
@@ -115,9 +118,15 @@ PLACEMENT = {
     "J102": (5.7, 69.6, 0, "B"),       # pack NTC          } under the battery connector, right-aligned
     "J103": (13.7, 69.6, 0, "B"),      # power switch      } so the edge lane stays free for contacts 30-33
     "J501": (3.2, 38.0, 0, "B"),       # SWD, under the module next to its SWD pins
-    "J503": (3.2, 43.75, 0, "B"),      # haptic driver, under the module next to I2C and HAPTIC_EN
+    "J503": (12.2, 75.6, 0, "B"),      # haptic driver, front right next to the LDO (3V0) and the I2C pull-ups,
+                                       # out of the crowded bottom layer under the module
     "J504": (12.2, 27.6, 0, "B"),      # underglow strip, under its buffer
 }
+# D-45: the parts from the crystal row forward move right by FRONT_DX with the module (the charger block
+# through CHARGER_SHIFT); the castellated contacts, the CC_B resistors at their contacts and the back stay.
+FRONT_PARTS = ["Y201", "C204", "C205", "C202", "C201", "U201", "C203", "U103", "C110", "C111", "R107", "U102",
+               "C109", "R106", "R201", "R202", "J101", "J102", "J103", "J501", "J503"]
+PLACEMENT.update(_shift({k: PLACEMENT[k] for k in FRONT_PARTS}, FRONT_DX, 0.0))
 PLACEMENT.update(_shift({                # charger, as placed and hand-routed on the 50 x 32 mm board
     "U101": (6.4, 6.2, 0, "T"),
     "C102": (6.6, 2.8, 0, "T"),        # PMID 10u 0805, right above PMID/GND pads
@@ -162,8 +171,8 @@ PLACEMENT.update(_turn({                 # boost, 5 V mux and LED switch, as on 
 TP_POS = {
     "TP501": (2.6, 16.5), "TP522": (11.6, 9.4),                                   # on the VBUS and VBUS_A copper
     "TP509": (9.2, 13.8), "TP510": (11.4, 13.8),                                  # USB_DP, USB_DN
-    "TP506": (8.6, 33.6), "TP516": (13.6, 60.6),                                  # VBOOST, CHG_QON
-    "TP503": (9.7, 69.6),                                                         # VBAT
+    "TP506": (8.6, 32.4), "TP516": (13.6 + FRONT_DX, 60.6),                       # VBOOST (clear of C204's GND via), CHG_QON
+    "TP503": (9.7 + FRONT_DX, 69.6),                                              # VBAT
 }
 
 STANDIN_MODELS = {"J101": "JST_PH_S2B-PH-SM4-TB_standin"}

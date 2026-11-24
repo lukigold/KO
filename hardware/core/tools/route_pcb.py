@@ -191,8 +191,7 @@ STRIP_TRACKS = [
     ("VBUS", B, 1.0, [(2.6, 14.5), (2.6, 19.0), (3.3, 19.7), (6.9, 19.7)]),
     # on to the charger inside the castellated edge's lane, so the matrix lines to contacts 18-33 keep the bottom
     # layer along the edge in front of the module
-    ("VBUS", B, 1.0, [(3.3, 19.7), (3.3, 31.8), (6.9, 35.4), (6.9, 52.85), (6.5, 53.25), (5.65, 53.25)]),
-    ("VBUS", B, 1.0, [(6.5, 53.25), (6.5, 53.6)]),
+    ("VBUS", B, 1.0, [(3.3, 19.7), (3.3, 31.8), (6.4, 34.9)]),      # on in FRONT_TRACKS, above J501
     ("VBUS_A", F, 0.6, [(8.4, 6.12), (8.4, 7.45)]),
     ("VBUS_A", F, 0.5, [(8.4, 7.15), (5.53, 7.15), (5.53, 4.35), (4.88, 4.35)]),
     ("VBUS_A", F, 0.6, [(13.2, 6.12), (13.2, 7.45)]),
@@ -208,23 +207,21 @@ STRIP_TRACKS = [
     ("CC2", I2, 0.15, [(9.2, 7.4), (9.2, 12.25), (12.4, 12.25), (12.7, 11.95), (12.7, 11.65)]),
     ("CC2", F, 0.15, [(12.7, 11.65), (12.66, 10.35)]),
     ("/USB/USB_SEL", F, 0.15, [(4.95, 2.85), (5.25, 2.6), (5.65, 2.6)]),   # ST pin boxed in: via to In2
-    ("GND", F, 0.15, [(11.55, 45.9), (11.55, 43.15)]),                       # module pad 45 to pad 46 (SWDIO's way out)
     ("GND", F, 0.3, [(4.95, 22.4), (4.95, 21.2)]),                           # boost output cap C114, beside VBUS
     ("CC1_B", F, 0.2, [(1.6, 53.49), (2.65, 53.49)]),                        # port B Rd at the edge: contact 21,
     ("GND", F, 0.3, [(2.65, 54.51), (2.65, 55.15)]),                         #   its GND via against the edge
     ("CC2_B", F, 0.2, [(1.6, 57.49), (2.65, 57.49)]),                        #   contact 23
     ("GND", F, 0.3, [(2.65, 58.51), (2.65, 59.15)]),
     ("GND", F, 0.25, [(5.22, 20.4), (4.95, 21.2)]),                          # and the mux input cap C115
-    ("SYS", F, 0.8, [(13.52, 59.25), (12.4, 59.25)]),
-    ("SYS", B, 1.0, [(12.4, 59.25), (12.4, 53.6), (10.3, 51.5), (10.3, 31.7), (9.6, 31.0)]),   # clear of the charger's GND vias
+    ("SYS", B, 1.0, [(11.3, 33.3), (10.3, 32.3), (10.3, 31.7), (9.6, 31.0)]),   # from FRONT_TRACKS, clear of TP506
     ("SYS", F, 0.8, [(9.6, 31.0), (8.67, 31.0)]),
     ("SYS", B, 1.0, [(9.6, 31.0), (9.0, 30.4), (4.9, 30.4)]),
     ("SYS", F, 0.8, [(4.9, 30.4), (4.9, 29.07)]),
     ("SYS", F, 0.3, [(8.2, 28.71), (8.2, 29.35)]),
     ("SYS", F, 0.6, [(8.2, 29.35), (8.67, 29.8), (8.67, 31.0)]),
-    ("VBAT", F, 0.8, [(9.12, 58.4), (8.55, 58.95), (8.55, 61.85), (8.9, 62.2), (8.9, 68.8), (6.4, 69.4), (6.4, 70.6)]),
     ("LED_5V", I2, 1.0, [(9.25, 20.2), (10.0, 20.95), (10.0, 24.4), (3.0, 24.4), (3.0, 27.0), (1.2, 27.0), (1.2, 31.0)]),
     ("LED_5V", B, 0.6, [(9.25, 20.2), (9.75, 20.7), (9.75, 26.7)]),
+    ("GND", F, 0.2, [(3.45, 5.15), (3.6, 6.05)]),                    # TPS2121 GND pin 3, walled in by VBUS_B and its pins
 ]
 STRIP_VIAS = [
     ("VBUS", (2.5, 3.5), 0.8, 0.4),
@@ -232,12 +229,48 @@ STRIP_VIAS = [
     ("/USB/USB_A_DP", (10.05, 7.35), 0.5, 0.25), ("/USB/USB_A_DP", (11.05, 7.35), 0.5, 0.25),
     ("/USB/USB_A_DP", (11.7, 11.65), 0.5, 0.25),
     ("CC2", (9.2, 7.4), 0.5, 0.25), ("CC2", (12.7, 11.65), 0.5, 0.25),
-    ("SYS", (12.4, 59.25), 0.8, 0.4), ("SYS", (9.6, 31.0), 0.8, 0.4), ("SYS", (4.9, 30.4), 0.8, 0.4),
+    ("SYS", (9.6, 31.0), 0.8, 0.4), ("SYS", (4.9, 30.4), 0.8, 0.4),
     ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (4.95, 21.2), 0.5, 0.25),
     ("GND", (2.65, 55.15), 0.5, 0.25), ("GND", (2.65, 59.15), 0.5, 0.25),
+    ("GND", (3.6, 6.05), 0.5, 0.25),
 ]
-PRE_TRACKS = _ct + _rt + STRIP_TRACKS
-PRE_VIAS = _cv + _rv + STRIP_VIAS
+
+# Copper in front of the 5 V block, written in the coordinates of the 16 mm strip and moved right with its parts
+# by gen_pcb.FRONT_DX (D-45): the VBUS and SYS trunks under the module, VBAT, module VCC, the crystal.
+FRONT_TRACKS = [
+    ("VBUS", B, 1.0, [(5.4, 34.9), (6.9, 34.9), (6.9, 52.85), (6.5, 53.25), (5.65, 53.25)]),
+    ("VBUS", B, 1.0, [(6.5, 53.25), (6.5, 53.6)]),
+    ("SYS", F, 0.8, [(13.52, 59.25), (12.4, 59.25)]),
+    ("SYS", B, 1.0, [(12.4, 59.25), (12.4, 53.6), (10.3, 51.5), (10.3, 33.3)]),   # clear of the charger's GND vias
+    ("VBAT", F, 0.8, [(9.12, 58.4), (8.55, 58.95), (8.55, 61.85), (8.9, 62.2), (8.9, 68.8), (6.4, 69.4), (6.4, 70.6)]),
+    ("GND", F, 0.15, [(11.55, 45.9), (11.55, 43.15)]),                       # module pad 45 to pad 46 (SWDIO's way out)
+    # module VCC (pad 17) is walled in by its neighbours; its only way out is left between pads 61 and 62
+    # (0.6 mm gap, 0.175 mm each side of the 0.25 mm track), then a via to the SWD pad J501.1 below and up
+    # the bottom-layer lane between J501.4 and J501.5 to the 100 nF capacitor C202
+    ("3V0", F, 0.25, [(2.75, 38.2), (1.2, 38.2)]),
+    ("3V0", B, 0.25, [(1.2, 38.2), (1.2, 39.4)]),
+    ("3V0", B, 0.25, [(1.2, 38.2), (2.2, 38.2), (2.2, 35.43)]),
+    ("3V0", F, 0.25, [(2.2, 35.43), (3.15, 35.43)]),
+    # 32.768 kHz crystal (Y201 turned so that XL2 is on the left): XL2 straight up from module pad 14 (second
+    # row) between pads 13 and 15 to Y201.2, then above the crystal to its load cap C205; XL1 from pad 13 up
+    # between the crystal's pads (under its body) into Y201.1 from the left and on to C204, leaving the lane
+    # above the back pad row free for pads 11, 9 and 7. No crossing, no via.
+    ("/MCU and radio/XL2", F, 0.15, [(4.4, 38.0), (4.4, 36.1), (4.75, 35.75), (4.75, 34.8)]),
+    ("/MCU and radio/XL2", F, 0.15, [(4.75, 33.9), (5.2, 33.45), (5.75, 33.45), (6.25, 32.95), (9.1, 32.95),
+                                     (9.6, 33.45), (9.6, 34.32)]),   # high enough for C204's GND via
+    ("/MCU and radio/XL1", F, 0.15, [(4.95, 37.1), (5.75, 36.3), (5.75, 35.3), (6.25, 34.8), (7.25, 34.8)]),
+    ("/MCU and radio/XL1", F, 0.15, [(7.25, 35.28), (8.6, 35.28)]),
+    ("GND", F, 0.3, [(9.6, 35.28), (9.6, 36.4), (9.35, 37.1)]),      # C205's GND pad, boxed in: to module GND pad 5
+    ("GND", F, 0.3, [(8.6, 34.32), (8.6, 33.55)]),                   # C204's GND pad: the pour pocket between XL1/XL2 needs a via
+]
+FRONT_VIAS = [
+    ("SYS", (12.4, 59.25), 0.8, 0.4),
+    ("3V0", (1.2, 38.2), 0.5, 0.25), ("3V0", (2.2, 35.43), 0.5, 0.25),
+    ("GND", (8.6, 33.55), 0.5, 0.25),
+]
+_ft, _fv = _moved(FRONT_TRACKS, FRONT_VIAS, (gen_pcb.FRONT_DX, 0.0))
+PRE_TRACKS = _ct + _rt + STRIP_TRACKS + _ft
+PRE_VIAS = _cv + _rv + STRIP_VIAS + _fv
 LAYERS = {"F.Cu": pcbnew.F_Cu, "In2.Cu": pcbnew.In2_Cu, "B.Cu": pcbnew.B_Cu}
 
 
@@ -821,6 +854,7 @@ def step_maze() -> None:
         return gave_up
 
     def save(routes) -> None:
+        ROUTE.mkdir(exist_ok=True)                     # git keeps no empty folder
         found = {"tracks": [], "vias": []}
         for cid, (code, _, (segs, vias, hw, vr, dr)) in sorted(routes.items()):
             net = conns[cid][2]
@@ -851,8 +885,9 @@ def step_maze() -> None:
                 orders.append(base)
             elif best is not None and i == 0:          # the hard ones of the best attempt first
                 orders.append(best[0] + [c for c in base if c not in best[0]])
-            elif i % 2:                                # the longest connections first
-                orders.append(sorted(base, key=lambda c: -conns[c][1]))
+            elif i % 2:                                # the longest connections first, each attempt with its
+                jit = [rnd.uniform(0.7, 1.3) for _ in base]   # own jitter (one fixed order gave identical attempts)
+                orders.append(sorted(base, key=lambda c: -conns[c][1] * (jit[c] if done or i > 1 else 1.0)))
             else:
                 o = list(base)
                 rnd.shuffle(o)
@@ -953,7 +988,14 @@ def step_repair_prep() -> None:
         for it in v["items"][:2]:
             q = pcbnew.VECTOR2I(int(round(it["pos"]["x"] * 1e6)), int(round(it["pos"]["y"] * 1e6)))
             hit = [g for g in isl if any(item.HitTest(q, 20000) for item, _ in g)]
-            pts = [p for item, pp in (hit[0] if hit else []) for p in pp] or conn_ends(it, net)
+            pts = []
+            for item, pp in (hit[0] if hit else []):
+                ref = item.GetParentFootprint().GetReference() if item.GetClass() == "PAD" else ""
+                if ref == "J401":                      # castellated contact: its centre is on the board edge,
+                    pts += [(x + 1.2, y, li) for x, y, li in pp]   # which the router keeps clear (as step_maze)
+                else:
+                    pts += pp
+            pts = pts or conn_ends(it, net)
             if net in ESCAPE_NETS:                     # the prepared escape via counts as part of its pad
                 for n, (x, y), _, _ in PRE_VIAS:
                     if n == net and any(math.dist((OX + x, OY + y), pt[:2]) < 2.5 for pt in pts):
@@ -1096,13 +1138,13 @@ def step_repair() -> None:
                 return code, segs, vias, w / 2, vd / 2, vdr
         return None
 
-    def soft(net, st, go, w0):
+    def soft(net, st, go, w0, cost=6.0):
         code = b.FindNet(net).GetNetCode()
         _, vd, vdr = MAZE_WIDTH[net_class(net)]
-        _, crossed = r.route(code, st, go, w0 / 2, vd / 2, vdr, margin=60.0, soft=True)
+        _, crossed = r.route(code, st, go, w0 / 2, vd / 2, vdr, margin=60.0, soft=True, soft_cost=cost)
         return crossed
 
-    state = {"rid": rid, "budget": 1500}
+    state = {"rid": rid, "budget": 4000}
 
     def snapshot():
         return dict(r.routes), dict(ends_of), dict(width_of), state["rid"]
@@ -1137,10 +1179,20 @@ def step_repair() -> None:
             return True
         if depth == 0:
             return False
-        crossed = soft(net, st, go, w0)
-        crossed = {x for x in crossed if x in r.routes}
-        if not crossed or crossed & protected or len(crossed) > 8:
-            return False
+        # Candidate rip-up sets: the routes the cheapest crossing path runs through, then the ones a path finds
+        # when crossings are priced up (it looks for a way past fewer or other routes). Each candidate is tried
+        # all or nothing.
+        tried = []
+        for cost in (6.0, 30.0, 150.0):
+            crossed = {x for x in soft(net, st, go, w0, cost) if x in r.routes}
+            if not crossed or crossed & protected or len(crossed) > 8 or crossed in tried:
+                continue
+            tried.append(crossed)
+            if rip_and_route(net, st, go, w0, depth, protected, crossed):
+                return True
+        return False
+
+    def rip_and_route(net, st, go, w0, depth, protected, crossed):
         snap = snapshot()
         ripped = []
         for x in crossed:
@@ -1158,6 +1210,8 @@ def step_repair() -> None:
         mine = set(protected) | {place(net, st, go, res)}
         for _, n2, s2, g2, w2 in sorted(ripped, key=lambda t: math.dist(t[2][0][:2], t[3][0][:2])):
             if not attempt(n2, s2, g2, w2, depth - 1, mine):
+                if os.environ.get("REPAIR_DEBUG"):
+                    print(f"    [{depth}] {net}: ripped-up {n2} found no way back")
                 restore(snap)
                 return False
         protected |= mine
@@ -1555,7 +1609,8 @@ if __name__ == "__main__":
                 break
     if a.maze:
         print("maze (on the board without stitching vias):")
-        run_step("finish", "nostitch")
+        # without MAZE_MERGE the stored routes are replaced, so they must not block the new search either
+        run_step("finish", "nostitch", *([] if os.environ.get("MAZE_MERGE") else ["nomaze"]))
         run_step("fill")
         run_step("maze")
     print("finish:")

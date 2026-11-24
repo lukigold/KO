@@ -20,7 +20,7 @@ Rev A is deliberately simple. Its job is a daily-usable wireless keyboard and pr
 ## 2. Block diagram (rev A)
 
 ```
-                 ┌──────────────────────── Core board rev A (strip 16 × 80 mm, D-43) ────────────────┐
+                 ┌──────────────────────── Core board rev A (strip 17 × 80 mm, D-45) ────────────────┐
  USB-C port A ───┤ ESD ─ VBUS_A ─┐                                                                 │
   (core, back)   │  Rd, CC→MCU   ├─ TPS2121 ─ VBUS ─┬─ BQ25628E charger ─ SYS ─┬─ TPS7A02 3.0 V ─► 3V0
  USB-C port B ═══╪═ VBUS_B ──────┘  (A first)  │    │   │ I²C, INT             └─ TPS61023 boost ─┐ │
@@ -128,7 +128,7 @@ Firmware board support must use exactly this map.
 | SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39) | Solder pads J501 (3V0, SWDIO, SWCLK, RESET, GND) on the bottom, D-43; SWO not connected: probe-rs and defmt use RTT over SWD (D-35) |
 | (unused) | P0.25, P0.27, P1.09 | Former expansion-header lines, unconnected since D-42 |
 | Underglow strip data | P0.26 (EXP_IO2) | Through U501 (74AHCT1G125, 5 V) and R501 330 Ω to pad DAT of J504; WS2812 timing from the nRF52840 PWM or I2S peripheral (D-40) |
-| Spare | P0.03/AIN1, P0.04/AIN2, P0.05/AIN3, P0.08 (19, 20, 21, 24); P1.12–P1.15 (61–64) | Unconnected on the 16 mm strip: the left pad columns sit at the castellated edge |
+| Spare | P0.03/AIN1, P0.04/AIN2, P0.05/AIN3, P0.08 (19, 20, 21, 24); P1.12–P1.15 (61–64) | Unconnected on the strip: the left pad columns sit near the castellated edge |
 | Not connected | P0.06, P0.07, P0.09, P0.10, P0.11, P1.10, P1.11 | Free for later revisions |
 
 Rev C needs four analog inputs for module signature detection; the map is reassigned in that revision
@@ -184,10 +184,10 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
 
 The first rev A layout (50 × 32 mm board under the keys, 24-pin FFC to the switch board, D-34/D-35) was
 routed and DRC clean on 2026-11-22. The owner then moved the core board beside the keys (D-41, 22 × 80 mm,
-DRC clean on 2026-11-23) and asked for it narrower and simpler (D-43). This section describes the 16 × 80 mm
-strip that replaced both.
+DRC clean on 2026-11-23) and asked for it narrower and simpler (D-43). The 16 × 80 mm strip did not route
+completely, so it grew to 17 mm (D-45). This section describes the 17 × 80 mm strip that replaced both.
 
-- **Outline:** **16 × 80 mm strip**, 4 layers, JLCPCB impedance-controlled stackup, **1.0 mm** thick. It sits
+- **Outline:** **17 × 80 mm strip**, 4 layers, JLCPCB impedance-controlled stackup, **1.0 mm** thick. It sits
   right of the key area, its back end level with the switch board's back edge.
 - **Edges:**
   - Left edge: **33 castellated contacts** (0.8 mm plated half holes on the edge, 2.0 mm pitch, copper
@@ -197,7 +197,7 @@ strip that replaced both.
   - Back edge: USB-C port A, a long-body receptacle (HX TYPE-C 16P L10.0) whose mouth stands 3.9 mm proud of
     the board edge, so it reaches through an aluminium or printed back wall.
   - Right edge (case wall): BMD-340 with its antenna 0.2 mm beyond the edge (the module may overhang; it leaves
-    room for three tracks beside its left pad column). Nothing else reaches the wall: the power switch is off the
+    room beside its left pad column for the lines that pass it). Nothing else reaches the wall: the power switch is off the
     board (pads J103).
   - Front edge: the battery connector (JST PH, opening to the front), so the cable drops under the switch
     board where the battery sits (MECH-003).
@@ -220,20 +220,23 @@ strip that replaced both.
   - y 15–32 mm: boost, 5 V mux and LED rail switch, the block of the first layout turned by 90° with its hand
     routes (mux towards the USB-C, boost towards the charger's SYS, LED switch output towards the right);
     the underglow buffer beside it at the right wall.
-  - y 32–36 mm: 32.768 kHz crystal next to module pads 13/14, VCC decoupling (100 nF 3 mm from VCC pad 17,
-    10 µF), LED_5V capacitor.
+  - y 32–36 mm: 32.768 kHz crystal next to module pads 13/14, turned so that its XL2 pad sits above pad 14
+    and its XL1 pad on the side of the load capacitors (the two lines no longer cross); VCC decoupling (100 nF
+    about 5 mm of track from VCC pad 17, 10 µF), LED_5V capacitor; the VBOOST test point on the bottom behind
+    the load capacitors.
   - y 36–47 mm: BMD-340 across the full width, antenna 0.2 mm beyond the right edge. Its left pad column sits
-    1.85 mm inside the castellated edge, so it keeps only its fixed-function pads (VCC, VBUS, USB D±); the rows
-    moved to the front pad row, in the order of contacts 19–33, and port B's CC lines to analog pins on the back
+    2.85 mm inside the castellated edge (1.85 mm on the 16 mm strip), so it keeps only its fixed-function pads
+    (VCC, VBUS, USB D±); the rows moved to the front pad row, in the order of contacts 19–33, and port B's CC lines to analog pins on the back
     row (§5).
   - y 47–62 mm: C203 (VBUS 4.7 µF) 5 mm from the module's VBUS pad; port B's CC Rd resistors at contacts 21/23;
     the charger, moved as one block from the first layout with its hand-routed switching loop.
   - y 62–69 mm: 3.0 V LDO, fuel gauge, I²C pull-ups.
   - y 70–80 mm: battery connector.
-  - Bottom side, copper only: solder pads for wires, each labelled on the silkscreen: J501 SWD and J503 haptic
-    driver as 3 × 2 grids under the module, next to the module pins they serve (eight lines fewer through the
-    busy front zone); J102 NTC and J103 power switch under the battery connector; J504 underglow under its
-    buffer. Test points on VBUS, VBUS_A, VBAT, VBOOST, CHG_QON and the module's USB D±. Nets with a
+  - Bottom side, copper only: solder pads for wires, each labelled on the silkscreen: J501 SWD as a 3 × 2 grid
+    under the module, next to the SWD pins; J503 haptic driver as a 3 × 2 grid at the front right beside the
+    battery connector, next to the 3.0 V LDO and the I²C pull-ups (under the module it left too little of the
+    bottom layer for the lines that cross the module zone; only V5 and HAPTIC_EN now run to it from behind);
+    J102 NTC and J103 power switch under the battery connector; J504 underglow under its buffer. Test points on VBUS, VBUS_A, VBAT, VBOOST, CHG_QON and the module's USB D±. Nets with a
     wire pad are probed there; port B's VBUS and CC lines at their castellated contacts. No part is assembled
     on the bottom.
 - **Contact order:** unchanged from D-41; only the positions moved (D-43). Port B power and data, 3V0, I²C
@@ -252,7 +255,13 @@ strip that replaced both.
      trunk under the module to the boost input (0.8/0.4 vias), good for the ≈ 1.7 A the boost draws on battery
      with the LEDs on. VBAT: 0.8 mm on top from the charger's BAT capacitor past the fuel gauge to the battery
      connector. LED_5V: from the LED switch on a 1 mm In2 track to contacts 14–16 (the castellated pads are on
-     every layer) and on a 0.6 mm bottom track to the underglow pads.
+     every layer) and on a 0.6 mm bottom track to the underglow pads. Module VCC (pad 17, walled in by its
+     neighbours): 0.25 mm on top through the 0.6 mm gap between pads 61 and 62 (0.175 mm clearance each side),
+     a via to the SWD pad J501.1 and up the bottom-layer lane between J501.4 and J501.5 to C202. Crystal: XL2
+     straight up from pad 14 between pads 13 and 15 to the crystal and above it to C205; XL1 from pad 13
+     between the crystal's pads into its XL1 pad and on to C204 (no crossing, no via). GND stubs and vias for
+     three pads the fan-out cannot reach: C204 (the pour pocket between XL1 and XL2), C205 (to module GND
+     pad 5) and the TPS2121's GND pin 3.
   2. **GND fan-out:** every SMD GND pad gets its own short stub and via to the In1 plane where there is room;
      the few boxed-in pads connect through the top pour.
   3. **Grid maze router** (`hardware/tools/maze.py`) for every remaining connection: negotiated congestion
@@ -273,7 +282,8 @@ strip that replaced both.
 - **Power switch (CORE-007, D-43):** pads J103 (SYS, EN) for an off-board SPST switch that drives the 3.0 V
   LDO's enable; R107 (1 MΩ) holds it off while the switch is open. Bridge the pads with solder for a board
   that is always on. The switch can sit anywhere in the case (MECH-040, OPEN-07).
-- **Result:** RESULT-PENDING
+- **Result:** not finished (2026-11-24): 105 of 120 connections routed, 0 DRC violations, 0 parity issues,
+  15 open (list and next steps in `hardware/core/README.md`).
 
 ### Ordering at JLCPCB
 
@@ -281,7 +291,7 @@ strip that replaced both.
 
 | File | Use |
 |---|---|
-| `ko-core-rev-a-gerbers.zip` | PCB order: 4 layers, 1.0 mm FR-4, 16 × 80 mm, 1 oz outer copper, standard rules (0.15/0.15 mm, 0.25 mm drill), **"Castellated Holes: Yes"** (left edge) |
+| `ko-core-rev-a-gerbers.zip` | PCB order: 4 layers, 1.0 mm FR-4, 17 × 80 mm, 1 oz outer copper, standard rules (0.15/0.15 mm, 0.25 mm drill), **"Castellated Holes: Yes"** (left edge) |
 | `ko-core-rev-a-bom.csv`, `ko-core-rev-a-cpl.csv` | Assembly (PCBA), top side only: BOM-LINES BOM lines, CPL-PARTS placed parts. The DNP fallback NTC (RT101), the wire pads, test points and the castellated edge J401 (bare-board copper) are left out |
 | `ko-core-rev-a-fit-1to1.pdf` | Print at 100 % (no "fit to page"): page 1 top, page 2 bottom (mirrored, as seen from below). Check the strip against the case: USB-C mouth through the back wall, antenna end at the right wall, battery connector at the front, castellated edge against the switch board's edge; plan the wires to the bottom pads (power switch, NTC, underglow, haptic) |
 | `ko-core-rev-a-top.png`, `-bottom.png`, `-iso.png` | Renders |
