@@ -1227,7 +1227,9 @@ def step_repair() -> None:
         _, crossed = r.route(code, st, go, w0 / 2, vd / 2, vdr, margin=60.0, soft=True, soft_cost=cost)
         return crossed
 
-    state = {"rid": rid, "budget": 4000}
+    REPAIR_DEPTH = int(os.environ.get("REPAIR_DEPTH", 4))
+    REPAIR_MAXRIP = int(os.environ.get("REPAIR_MAXRIP", 8))
+    state = {"rid": rid, "budget": int(os.environ.get("REPAIR_BUDGET", 4000))}
 
     def snapshot():
         return dict(r.routes), dict(ends_of), dict(width_of), state["rid"]
@@ -1264,9 +1266,9 @@ def step_repair() -> None:
         # when crossings are priced up (it looks for a way past fewer or other routes). Each candidate is tried
         # all or nothing.
         tried = []
-        for cost in (6.0, 30.0, 150.0):
+        for cost in (6.0, 30.0, 150.0) + ((2.0, 600.0) if depth > 3 else ()):
             crossed = {x for x in soft(net, st, go, w0, cost) if x in r.routes}
-            if not crossed or crossed & protected or len(crossed) > 8 or crossed in tried:
+            if not crossed or crossed & protected or len(crossed) > REPAIR_MAXRIP or crossed in tried:
                 continue
             tried.append(crossed)
             if rip_and_route(net, st, go, w0, depth, protected, crossed):
@@ -1314,7 +1316,7 @@ def step_repair() -> None:
             opens.append((v["net"], [tuple(p) for p in v["starts"]], [tuple(p) for p in v["goals"]],
                           MAZE_WIDTH[net_class(v["net"])][0]))
     failed = []
-    for depth in (1, 2, 3, 4):                      # cheap fixes first, deeper rip-up chains for the rest
+    for depth in range(1, REPAIR_DEPTH + 1):        # cheap fixes first, deeper rip-up chains for the rest
         left = []
         for net, st, go, w0 in (opens if depth == 1 else failed_conns):
             if not attempt(net, st, go, w0, depth, set()):

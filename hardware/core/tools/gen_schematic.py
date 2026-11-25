@@ -236,15 +236,15 @@ s = design.sheet("MCU and radio", "mcu_radio.kicad_sch", paper="A4", note=(
     "32.768 kHz crystal ECS-.327-12.5-34B (CL 12.5 pF) with 18 pF load capacitors. I2C pull-ups 4.7 kOhm to 3V0."))
 s.add("U201", "ko:BMD-340", "BMD-340-A-R", {
     # pins chosen for the 16 mm strip (D-43): the module's left pad column sits at the castellated edge and only
-    # keeps its fixed-function pins (VCC, VBUS, USB); rows leave through the front pad row, port B's CC lines use
-    # analog pins on the back row
-    "13": "XL1", "14": "XL2", "15": "CC1", "19": "NC", "20": "NC", "21": "CC2_B",   # D-48
-    "22": "NC", "23": "NC", "24": "NC", "25": "NC", "26": "NC", "27": "NC", "28": "I2C_SCL",
-    # front pad row, left to right in the order of contacts 19-33 (rows 7-4, then the column chain), so the
+    # keeps its fixed-function pins (VCC, VBUS, USB); rows leave through the front pad row; port B's CC lines and
+    # ROW4 use left-column pins next to their edge contacts (D-48, D-53)
+    "13": "XL1", "14": "XL2", "15": "CC1", "19": "CC1_B", "20": "NC", "21": "CC2_B",   # D-48, D-53
+    "22": "NC", "23": "ROW4", "24": "NC", "25": "NC", "26": "NC", "27": "NC", "28": "I2C_SCL",
+    # front pad row, left to right in the order of contacts 19-33 (rows 7-5, then the column chain), so the
     # lines to the castellated edge do not cross
-    "31": "ROW7", "32": "ROW6", "33": "ROW5", "34": "ROW4", "35": "RSV_MISO", "36": "COL_LAT", "39": "NRESET",
+    "31": "ROW7", "32": "ROW6", "33": "ROW5", "34": "NC", "35": "RSV_MISO", "36": "COL_LAT", "39": "NRESET",
     "37": "I2C_SDA", "38": "COL_DAT", "40": "COL_CLK", "41": "CHG_INT", "42": "RSV_INT",
-    "6": "HAPTIC_EN", "7": "LED_FAULT", "8": "NC", "9": "EXP_IO2", "10": "CC1_B", "11": "NC",
+    "6": "HAPTIC_EN", "7": "LED_FAULT", "8": "NC", "9": "EXP_IO2", "10": "NC", "11": "NC",
     "12": "CC2",
     "56": "FG_ALRT", "57": "ROW0", "58": "ROW1", "59": "ROW2", "60": "ROW3", "48": "LED_SDB", "49": "LED_EN",
     "50": "BOOST_EN", "51": "NC", "52": "NC", "53": "NC", "54": "NC", "61": "NC",
