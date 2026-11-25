@@ -1123,6 +1123,35 @@ def maze_components(data, on_base=lambda net, x, y, li: False):
     return out
 
 
+def step_refine_drop() -> None:
+    """Rip up the stored maze routes near the connections still open (REFINE_DIST mm from the straight line
+    between their ends, default 1.5), so the next merge run renegotiates that region with the rest fixed."""
+    dist = float(os.environ.get("REFINE_DIST", "1.5"))
+    lines = [((u["items"][0]["pos"]["x"], u["items"][0]["pos"]["y"]), (u["items"][1]["pos"]["x"], u["items"][1]["pos"]["y"]))
+             for u in drc_unconnected(BOARD)]
+
+    def near(x, y):
+        for (ax, ay), (bx, by) in lines:
+            dx, dy = bx - ax, by - ay
+            t = max(0.0, min(1.0, ((x - ax) * dx + (y - ay) * dy) / ((dx * dx + dy * dy) or 1e-12)))
+            if math.hypot(x - ax - t * dx, y - ay - t * dy) <= dist:
+                return True
+        return False
+    data = json.loads(MAZE_JSON.read_text())
+    keep, dropped = {"tracks": [], "vias": []}, 0
+    for c in maze_components(data):
+        if any(near(x, y) for _, _, _, pts in c["tracks"] for x, y in pts) or any(near(v[1], v[2]) for v in c["vias"]):
+            dropped += 1
+            continue
+        for net, li, w, pts in c["tracks"]:
+            keep["tracks"].append({"net": net, "layer": LAYER_NAMES[li], "width": w,
+                                   "points": [[round(x - OX, 4), round(y - OY, 4)] for x, y in pts]})
+        for net, x, y, d, dr in c["vias"]:
+            keep["vias"].append({"net": net, "x": round(x - OX, 4), "y": round(y - OY, 4), "dia": d, "drill": dr})
+    MAZE_JSON.write_text(json.dumps(keep, indent=1) + "\n")
+    print(f"  refine: {len(lines)} open, {dropped} stored routes near them ripped up")
+
+
 def step_repair() -> None:
     """Route the recorded open connections, ripping up only the stored maze routes in their way."""
     b = pcbnew.LoadBoard(str(BOARD))              # rebuilt without maze routes
@@ -1592,6 +1621,8 @@ if __name__ == "__main__":
     ap.add_argument("--maze", action="store_true", help="maze-route the connections still open, then rebuild")
     ap.add_argument("--repair", action="store_true",
                     help="route what is still open, moving only the stored maze routes in the way, then rebuild")
+    ap.add_argument("--refine", type=int, default=0, metavar="N",
+                    help="N rounds: rip up the routes near what is still open and renegotiate that region")
     ap.add_argument("--polish", action="store_true",
                     help="remove router leftovers KiCad reports as dangling, then rebuild")
     ap.add_argument("--step", nargs="+", help=argparse.SUPPRESS)
@@ -1609,6 +1640,8 @@ if __name__ == "__main__":
             step_repair_prep()
         elif a.step[0] == "repair":
             step_repair()
+        elif a.step[0] == "refine-drop":
+            step_refine_drop()
         elif a.step[0] == "polish":
             step_polish()
         sys.stdout.flush()
@@ -1648,6 +1681,46 @@ if __name__ == "__main__":
                 shutil.copy(best_copy, MAZE_JSON)
                 print("  no improvement, best result kept")
                 break
+        best_copy.unlink(missing_ok=True)
+        OPEN_JSON.unlink(missing_ok=True)
+    if a.refine:
+        def count():
+            r = subprocess.run([sys.executable, __file__, "--step", "repair-prep"], capture_output=True, text=True)
+            m = re.search(r"(\d+) connections open, (\d+) copper", r.stdout)
+            return int(m.group(1)) + int(m.group(2)) if m else 10 ** 6
+        print("refine:")
+        run_step("finish", "nostitch")
+        run_step("fill")
+        best = count()
+        best_copy = MAZE_JSON.with_suffix(".best")
+        shutil.copy(MAZE_JSON, best_copy)
+        print(f"  start: {best} open")
+        for n in range(a.refine):
+            if best == 0:
+                break
+            os.environ["MAZE_SEED"] = str(100 + n)       # another order each round
+            run_step("refine-drop")
+            run_step("finish", "nostitch")
+            run_step("fill")
+            os.environ["MAZE_MERGE"] = "1"
+            run_step("maze")
+            os.environ.pop("MAZE_MERGE")
+            run_step("finish", "nostitch")             # repair starts from the open connections of the full board
+            run_step("fill")
+            run_step("repair-prep")
+            run_step("finish", "nostitch", "nomaze")
+            run_step("repair")
+            run_step("finish", "nostitch")
+            run_step("fill")
+            c = count()
+            print(f"  round {n + 1}: {c} open" + (" (kept)" if c < best else ""))
+            if c < best:
+                best = c
+                shutil.copy(MAZE_JSON, best_copy)
+            else:
+                shutil.copy(best_copy, MAZE_JSON)
+                run_step("finish", "nostitch")         # the next round looks at the best board's open connections
+                run_step("fill")
         best_copy.unlink(missing_ok=True)
         OPEN_JSON.unlink(missing_ok=True)
     if a.polish:
