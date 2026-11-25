@@ -112,7 +112,8 @@ Firmware board support must use exactly this map.
 
 | Function | nRF52840 pin (BMD-340 pad) | Notes |
 |---|---|---|
-| ROW0–ROW3 | P1.01–P1.04 (57–60) LF | Inputs, internal pull-down, wake (SENSE) |
+| ROW0, ROW1 | P1.01, P1.02 (57, 58) LF | Inputs, internal pull-down, wake (SENSE) |
+| ROW2, ROW3 | P1.15 (64) LF, P0.11 (27) | Inputs, internal pull-down, wake (SENSE). Left pad columns, out towards contacts 32 and 33 (D-54; were P1.03/P1.04 on the inner front row, walled in by the lines crossing under the module) |
 | ROW7, ROW6, ROW5 | P0.13, P0.14, P0.15 (31–33) | Inputs, internal pull-down, wake (SENSE). Left end of the front pad row: the front row runs left to right in the order of contacts 19–33, so the lines to the castellated edge do not cross (D-43) |
 | ROW4 | P0.07 (23) | Input, internal pull-down, wake (SENSE). Left pad column, straight out to contact 24 (D-53; was P0.16) |
 | RSV_MISO, COL_LAT, COL_DAT, COL_CLK | P0.17, P0.21, P0.20, P0.22 (35, 36, 38, 40) | COL_CLK/COL_DAT = SPIM SCK/MOSI, COL_LAT = latch GPIO, RSV_MISO reserved (Hall-effect boards); full-speed pins |
@@ -127,9 +128,9 @@ Firmware board support must use exactly this map.
 | 32.768 kHz crystal | P0.00, P0.01 (13, 14) | LFXO |
 | USB | USB_D+, USB_D− (68, 67); VBUS (66) | Direct to port A in rev A |
 | SWD | SWDIO, SWCLK (44, 43); P0.18/RESET (39) | Solder pads J501 (3V0, SWCLK, SWDIO, GND, RESET; D-46) on the bottom, D-43; SWO not connected: probe-rs and defmt use RTT over SWD (D-35) |
-| (unused) | P0.16, P0.27, P0.29, P1.08, P1.09 | Unconnected: former expansion-header lines (D-42) or freed by D-51 and D-53 |
+| (unused) | P0.16, P0.27, P0.29, P1.03, P1.04, P1.08, P1.09 | Unconnected: former expansion-header lines (D-42) or freed by D-51, D-53 and D-54 |
 | Underglow strip data | P0.28 (EXP_IO2, D-47) | Through U501 (74AHCT1G125, 5 V) and R501 330 Ω to pad DAT of J504; WS2812 timing from the nRF52840 PWM or I2S peripheral (D-40) |
-| Spare | P0.04/AIN2, P0.08 (20, 24); P1.12–P1.15 (61–64) | Unconnected on the strip: the left pad columns sit near the castellated edge |
+| Spare | P0.04/AIN2, P0.08 (20, 24); P1.12–P1.14 (61–63) | Unconnected on the strip: the left pad columns sit near the castellated edge |
 | Not connected | P0.06, P0.09, P0.10, P0.11, P1.10, P1.11 | Free for later revisions |
 
 Rev C needs four analog inputs for module signature detection; the map is reassigned in that revision

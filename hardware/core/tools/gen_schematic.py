@@ -237,18 +237,18 @@ s = design.sheet("MCU and radio", "mcu_radio.kicad_sch", paper="A4", note=(
 s.add("U201", "ko:BMD-340", "BMD-340-A-R", {
     # pins chosen for the 16 mm strip (D-43): the module's left pad column sits at the castellated edge and only
     # keeps its fixed-function pins (VCC, VBUS, USB); rows leave through the front pad row; port B's CC lines and
-    # ROW4 use left-column pins next to their edge contacts (D-48, D-53)
+    # ROW2-ROW4 use left-column pins next to their edge contacts (D-48, D-53, D-54)
     "13": "XL1", "14": "XL2", "15": "CC1", "19": "CC1_B", "20": "NC", "21": "CC2_B",   # D-48, D-53
-    "22": "NC", "23": "ROW4", "24": "NC", "25": "NC", "26": "NC", "27": "NC", "28": "I2C_SCL",
+    "22": "NC", "23": "ROW4", "24": "NC", "25": "NC", "26": "NC", "27": "ROW3", "28": "I2C_SCL",   # D-54
     # front pad row, left to right in the order of contacts 19-33 (rows 7-5, then the column chain), so the
     # lines to the castellated edge do not cross
     "31": "ROW7", "32": "ROW6", "33": "ROW5", "34": "NC", "35": "RSV_MISO", "36": "COL_LAT", "39": "NRESET",
     "37": "I2C_SDA", "38": "COL_DAT", "40": "COL_CLK", "41": "CHG_INT", "42": "RSV_INT",
     "6": "HAPTIC_EN", "7": "LED_FAULT", "8": "NC", "9": "EXP_IO2", "10": "NC", "11": "NC",
     "12": "CC2",
-    "56": "FG_ALRT", "57": "ROW0", "58": "ROW1", "59": "ROW2", "60": "ROW3", "48": "LED_SDB", "49": "LED_EN",
+    "56": "FG_ALRT", "57": "ROW0", "58": "ROW1", "59": "NC", "60": "NC", "48": "LED_SDB", "49": "LED_EN",
     "50": "BOOST_EN", "51": "NC", "52": "NC", "53": "NC", "54": "NC", "61": "NC",
-    "62": "NC", "63": "NC", "64": "NC", "44": "SWDIO", "43": "SWCLK", "68": "USB_DP", "67": "USB_DN",
+    "62": "NC", "63": "NC", "64": "ROW2", "44": "SWDIO", "43": "SWCLK", "68": "USB_DP", "67": "USB_DN",
     "17": "3V0", "65": "3V0", "66": "VBUS", "GND": "GND"},
     footprint="ko:u-blox_BMD-340", **lcsc("U_BMD340"))
 C(s, "C201", "10u", "C_10u_0603_10V", "3V0")
