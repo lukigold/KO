@@ -12,7 +12,7 @@ Builds hardware/core/ko-core.kicad_pcb from the schematic, so the PCB always mat
 Routing is a separate step. Run with KiCad's Python:
     /usr/bin/python3 hardware/core/tools/gen_pcb.py
 
-Board orientation (D-41, D-43, D-45): a 17 x 80 mm strip right of the key area. Left edge = 33 castellated contacts
+Board orientation (D-41, D-43, D-45, D-55): a 18 x 80 mm strip right of the key area. Left edge = 33 castellated contacts
 soldered to the switch board, top edge = back of the keyboard (USB-C port A), right edge = case wall
 (antenna, power switch), bottom edge = front (battery). See docs/design/core-board-rev-a.md section 9.
 """
@@ -30,7 +30,7 @@ CORE = HERE.parent
 sys.path.insert(0, str(CORE.parent / "tools"))
 from kisch.sexpr import find, find_all, parse  # noqa: E402
 
-BOARD_W, BOARD_H = 17.0, 80.0    # 16 mm (D-43) left too little room for routing; 17 mm (D-45)
+BOARD_W, BOARD_H = 18.0, 80.0    # 16 mm (D-43) left too little room for routing; 17 mm (D-45); 18 mm (D-55)
 OX, OY = 100.0, 100.0           # board origin in KiCad page coordinates
 RF_STRIP = 4.2                   # BMD-340 datasheet 6.1: no copper within 4.4 mm of the antenna edge, which
                                  # stands 0.2 mm beyond the board edge
@@ -38,7 +38,7 @@ RF_Y = (32.0, 51.0)              # keep-out strip along the right edge, beside t
 USB_SHELL = (6.0, 15.6, 5.3)     # x0, x1, y1: no top-layer copper under the receptacle body but its pads
 
 # Blocks of the 50 x 32 mm placement whose hand routes (route_pcb.py) move with them.
-FRONT_DX = 1.0                   # D-45: everything from the crystal row forward (module, charger, LDO, battery)
+FRONT_DX = 2.0                   # D-45, D-55: everything from the crystal row forward (module, charger, LDO, battery)
                                  # sits 1 mm further right than on the 16 mm strip, the antenna still at the
                                  # right edge; the lane along contacts 18-33 is 1 mm wider on every layer
 CHARGER_DY = 2.0                 # charger, LDO and fuel gauge 2 mm further forward: the band between the module's
@@ -63,7 +63,7 @@ def _turn(d: dict) -> dict:
 
 
 # ref: (x, y, rotation_deg, side)   side "T" top or "B" bottom. Rotation is KiCad's (CCW positive).
-# Strip of 17 x 80 mm (D-43, D-45): x = 0 is the castellated edge soldered to the switch board, x = 17 the right
+# Strip of 18 x 80 mm (D-43, D-45, D-55): x = 0 is the castellated edge soldered to the switch board, x = 18 the right
 # case wall (antenna), y = 0 the back edge (USB-C port A), y = 80 the front edge (battery).
 PLACEMENT = {
     # --- back: USB-C port A, VBUS mux, ESD, data switch

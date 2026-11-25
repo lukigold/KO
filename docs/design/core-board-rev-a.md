@@ -20,7 +20,7 @@ Rev A is deliberately simple. Its job is a daily-usable wireless keyboard and pr
 ## 2. Block diagram (rev A)
 
 ```
-                 ┌──────────────────────── Core board rev A (strip 17 × 80 mm, D-45) ────────────────┐
+                 ┌──────────────────────── Core board rev A (strip 18 × 80 mm, D-45, D-55) ────────────────┐
  USB-C port A ───┤ ESD ─ VBUS_A ─┐                                                                 │
   (core, back)   │  Rd, CC→MCU   ├─ TPS2121 ─ VBUS ─┬─ BQ25628E charger ─ SYS ─┬─ TPS7A02 3.0 V ─► 3V0
  USB-C port B ═══╪═ VBUS_B ──────┘  (A first)  │    │   │ I²C, INT             └─ TPS61023 boost ─┐ │
@@ -187,9 +187,9 @@ PPK2 measurements on rev A replace these estimates (CORE-008, SYS-03).
 The first rev A layout (50 × 32 mm board under the keys, 24-pin FFC to the switch board, D-34/D-35) was
 routed and DRC clean on 2026-11-22. The owner then moved the core board beside the keys (D-41, 22 × 80 mm,
 DRC clean on 2026-11-23) and asked for it narrower and simpler (D-43). The 16 × 80 mm strip did not route
-completely, so it grew to 17 mm (D-45). This section describes the 17 × 80 mm strip that replaced both.
+completely, so it grew to 17 mm (D-45), and to 18 mm when the last two connections would not close (D-55). This section describes the 18 × 80 mm strip that replaced both.
 
-- **Outline:** **17 × 80 mm strip**, 4 layers, JLCPCB impedance-controlled stackup, **1.0 mm** thick. It sits
+- **Outline:** **18 × 80 mm strip**, 4 layers, JLCPCB impedance-controlled stackup, **1.0 mm** thick. It sits
   right of the key area, its back end level with the switch board's back edge.
 - **Edges:**
   - Left edge: **33 castellated contacts** (0.8 mm plated half holes on the edge, 2.0 mm pitch, copper
@@ -294,7 +294,7 @@ completely, so it grew to 17 mm (D-45). This section describes the 17 × 80 mm s
 
 | File | Use |
 |---|---|
-| `ko-core-rev-a-gerbers.zip` | PCB order: 4 layers, 1.0 mm FR-4, 17 × 80 mm, 1 oz outer copper, standard rules (0.15/0.15 mm, 0.25 mm drill), **"Castellated Holes: Yes"** (left edge) |
+| `ko-core-rev-a-gerbers.zip` | PCB order: 4 layers, 1.0 mm FR-4, 18 × 80 mm, 1 oz outer copper, standard rules (0.15/0.15 mm, 0.25 mm drill), **"Castellated Holes: Yes"** (left edge) |
 | `ko-core-rev-a-bom.csv`, `ko-core-rev-a-cpl.csv` | Assembly (PCBA), top side only: BOM-LINES BOM lines, CPL-PARTS placed parts. The DNP fallback NTC (RT101), the wire pads, test points and the castellated edge J401 (bare-board copper) are left out |
 | `ko-core-rev-a-fit-1to1.pdf` | Print at 100 % (no "fit to page"): page 1 top, page 2 bottom (mirrored, as seen from below). Check the strip against the case: USB-C mouth through the back wall, antenna end at the right wall, battery connector at the front, castellated edge against the switch board's edge; plan the wires to the bottom pads (power switch, NTC, underglow, haptic) |
 | `ko-core-rev-a-top.png`, `-bottom.png`, `-iso.png` | Renders |

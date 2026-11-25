@@ -241,7 +241,7 @@ STRIP_TRACKS = [
     ("EXP_IO2", I2, 0.15, [(8.85, 36.4), (9.05, 33.4), (9.25, 33.1), (11.0, 30.0)]),
     ("EXP_IO2", F, 0.15, [(11.0, 30.0), (12.05, 28.5), (12.15, 28.3), (12.4, 28.15), (13.0, 28.0)]),
     ("LED_FAULT", F, 0.15, [(9.25, 37.1), (9.45, 36.05)]),
-    ("LED_FAULT", I2, 0.15, [(9.45, 36.05), (11.5, 30.1), (13.3, 21.7)]),
+    ("LED_FAULT", I2, 0.15, [(9.45, 36.05), (10.6, 33.0), (11.5, 30.1), (13.3, 21.7)]),   # bend: D-55
     ("LED_FAULT", F, 0.15, [(13.3, 21.7), (12.9, 21.3), (12.05, 20.45), (11.9, 18.1)]),
 ]
 STRIP_VIAS = [
@@ -272,7 +272,7 @@ _et, _ev = _moved([
 ], [
     ("/Battery and charger/CHG_CE", (12.6, 53.85), 0.5, 0.25),
     ("I2C_SCL", (12.85, 54.61), 0.5, 0.25), ("I2C_SDA", (12.99, 55.4), 0.5, 0.25), ("CHG_INT", (12.85, 56.2), 0.5, 0.25),
-], (0.0, gen_pcb.CHARGER_DY))
+], (gen_pcb.FRONT_DX - 1.0, gen_pcb.CHARGER_DY))
 
 # Copper in front of the 5 V block, written in the coordinates of the 16 mm strip and moved right with its parts
 # by gen_pcb.FRONT_DX (D-45): the VBUS and SYS trunks under the module, VBAT, module VCC, the crystal.
@@ -318,8 +318,17 @@ PINNED_JSON = ROUTE / "ko-core-pinned.json"
 _pn = json.loads(PINNED_JSON.read_text()) if PINNED_JSON.exists() else {"tracks": [], "vias": []}
 _pt = [(t["net"], t["layer"], t["width"], [tuple(q) for q in t["points"]]) for t in _pn["tracks"]]
 _pv = [(v["net"], (v["x"], v["y"]), v["dia"], v["drill"]) for v in _pn["vias"]]
-PRE_TRACKS = _ct + _rt + STRIP_TRACKS + _et + _ft + _pt
-PRE_VIAS = _cv + _rv + STRIP_VIAS + _ev + _fv + _pv
+
+# D-55: STRIP_TRACKS/STRIP_VIAS were written for FRONT_DX = 1.0 (17 mm strip). Their points in the front block
+# (from the crystal row forward, y > 32.5) move right by the extra FRONT_DX; points at the castellated edge
+# (x < 3.0: contacts, CC_B resistors and their vias) stay.
+_extra = gen_pcb.FRONT_DX - 1.0
+_fr = lambda x, y: (round(x + _extra, 3), y) if (y > 32.5 and x >= 3.0) else (x, y)
+_st = [(n, layer, w, [_fr(*q) for q in pts]) for n, layer, w, pts in STRIP_TRACKS]
+_sv = [(n, _fr(*q), dia, drill) for n, q, dia, drill in STRIP_VIAS]
+
+PRE_TRACKS = _ct + _rt + _st + _et + _ft + _pt
+PRE_VIAS = _cv + _rv + _sv + _ev + _fv + _pv
 LAYERS = {"F.Cu": pcbnew.F_Cu, "In2.Cu": pcbnew.In2_Cu, "B.Cu": pcbnew.B_Cu}
 
 
