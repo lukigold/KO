@@ -228,6 +228,9 @@ STRIP_TRACKS = [
     # GND ends of the mux dividers R308/R306/R304, joined and taken to one via on the right: fan-out vias
     # below them walled in the mux's top pins (USB_DP/USB_DN/USB_SEL leave U304 upwards)
     ("GND", F, 0.25, [(3.1, 11.11), (6.25, 11.11)]),
+    # CC2_B (D-48): module pad 21 out to the left between pads 63 and 64 to a via past the module's edge, where
+    # the strip edge has no contact; on from there on In2
+    ("CC2_B", F, 0.15, [(3.75, 40.4), (2.35, 40.4), (2.0, 40.75)]),
     # LED_FAULT (P0.26) and the underglow data EXP_IO2 (P0.28) from the module's top row north on In2 (D-47):
     # EXP_IO2 to U501's left side, LED_FAULT past U501 on the right to U106 and its pull-up R115
     ("EXP_IO2", F, 0.15, [(8.15, 37.1), (8.85, 36.4)]),
@@ -247,6 +250,7 @@ STRIP_VIAS = [
     ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (4.95, 21.2), 0.5, 0.25),
     ("GND", (2.65, 55.15), 0.5, 0.25), ("GND", (2.65, 59.15), 0.5, 0.25),
     ("GND", (3.6, 6.05), 0.5, 0.25), ("GND", (6.25, 11.11), 0.5, 0.25),
+    ("CC2_B", (2.0, 40.75), 0.5, 0.25),
     ("EXP_IO2", (8.85, 36.4), 0.5, 0.25), ("EXP_IO2", (11.0, 30.0), 0.5, 0.25),
     ("LED_FAULT", (9.45, 36.05), 0.5, 0.25), ("LED_FAULT", (13.3, 21.7), 0.5, 0.25),
 ]
