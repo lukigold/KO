@@ -120,14 +120,14 @@ PLACEMENT = {
     "J102": (5.7, 69.6, 0, "B"),       # pack NTC          } under the battery connector, right-aligned
     "J103": (13.7, 69.6, 0, "B"),      # power switch      } so the edge lane stays free for contacts 30-33
     "J501": (3.2, 38.0, 0, "B"),       # SWD, under the module next to its SWD pins
-    "J503": (12.2, 75.6, 0, "B"),      # haptic driver, front right next to the LDO (3V0) and the I2C pull-ups,
-                                       # out of the crowded bottom layer under the module
+    "J503": (14.0, 17.3, 0, "B"),      # haptic driver, back right beside the 5 V block (V5, 3V0 and I2C run
+                                       # there), out of the band in front of the module (D-50)
     "J504": (12.2, 27.6, 0, "B"),      # underglow strip, under its buffer
 }
 # D-45: the parts from the crystal row forward move right by FRONT_DX with the module (the charger block
 # through CHARGER_SHIFT); the castellated contacts, the CC_B resistors at their contacts and the back stay.
 FRONT_PARTS = ["Y201", "C204", "C205", "C202", "C201", "U201", "C203", "U103", "C110", "C111", "R107", "U102",
-               "C109", "R106", "R201", "R202", "J101", "J102", "J103", "J501", "J503"]
+               "C109", "R106", "R201", "R202", "J101", "J102", "J103", "J501"]
 PLACEMENT.update(_shift({k: PLACEMENT[k] for k in FRONT_PARTS}, FRONT_DX, 0.0))
 # the LDO below the charger moves with it; the fuel gauge and its pull-ups only half as far (the battery
 # connector J101 and the VBAT track below them stay)

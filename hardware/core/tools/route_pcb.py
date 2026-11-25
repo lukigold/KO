@@ -228,6 +228,10 @@ STRIP_TRACKS = [
     # GND ends of the mux dividers R308/R306/R304, joined and taken to one via on the right: fan-out vias
     # below them walled in the mux's top pins (USB_DP/USB_DN/USB_SEL leave U304 upwards)
     ("GND", F, 0.25, [(3.1, 11.11), (6.25, 11.11)]),
+    # SWD out of the module's front right corner to vias right of the SYS trunk, SWDIO above SWCLK, so the
+    # haptic enable from pad 41 passes below both on the top layer towards J503
+    ("SWDIO", F, 0.15, [(12.0, 45.0), (12.0, 46.45), (12.3, 46.75)]),
+    ("SWCLK", F, 0.15, [(11.45, 45.9), (11.45, 47.2), (11.9, 47.65), (12.3, 47.65)]),
     # CC2_B (D-48): module pad 21 out to the left between pads 63 and 64 to a via past the module's edge, where
     # the strip edge has no contact; on from there on In2
     ("CC2_B", F, 0.15, [(3.75, 40.4), (2.35, 40.4), (2.0, 40.75)]),
@@ -250,6 +254,7 @@ STRIP_VIAS = [
     ("/USB/USB_SEL", (5.65, 2.6), 0.5, 0.25), ("GND", (4.95, 21.2), 0.5, 0.25),
     ("GND", (2.65, 55.15), 0.5, 0.25), ("GND", (2.65, 59.15), 0.5, 0.25),
     ("GND", (3.6, 6.05), 0.5, 0.25), ("GND", (6.25, 11.11), 0.5, 0.25),
+    ("SWDIO", (12.3, 46.75), 0.5, 0.25), ("SWCLK", (12.3, 47.65), 0.5, 0.25),
     ("CC2_B", (2.0, 40.75), 0.5, 0.25),
     ("EXP_IO2", (8.85, 36.4), 0.5, 0.25), ("EXP_IO2", (11.0, 30.0), 0.5, 0.25),
     ("LED_FAULT", (9.45, 36.05), 0.5, 0.25), ("LED_FAULT", (13.3, 21.7), 0.5, 0.25),

@@ -120,7 +120,7 @@ Firmware board support must use exactly this map.
 | LED_SDB, LED_EN, BOOST_EN | P1.05, P1.06, P1.07 (48–50) LF | Static outputs; LED_EN and BOOST_EN have 100 kΩ pull-downs |
 | LED_FAULT, CHG_INT | P0.26 (7), P1.08 (51) | Open-drain inputs, 10 kΩ pull-ups. Moved from P1.10/P1.11 for routing (D-35), LED_FAULT from P0.28 (D-47) |
 | FG_ALRT | P1.00 (56) | Open-drain input, 10 kΩ pull-up; inner front row, towards the fuel gauge (D-43). SWO is not used |
-| HAPTIC_EN | P0.23 (41) | Haptic pads J503 (CORE-064) |
+| HAPTIC_EN | P0.25 (6) | Haptic pads J503 (CORE-064); from the back pad row north like LED_FAULT (D-50) |
 | CC1_B, CC2_B | P0.29/AIN5 (10) LF, P0.05/AIN3 (21) | SAADC: port B current advertisement, as CC1/CC2. CC1_B from the back pad row under the module to contact 21 (D-43); CC2_B from the left pad column out past the module's left edge and down to contact 23 (D-48) |
 | CC1, CC2 | P0.02/AIN0, P0.31/AIN7 (15, 12) LF | SAADC: USB-C current advertisement (default ≈ 0.25–0.61 V, 1.5 A ≈ 0.70–1.16 V, 3 A ≈ 1.31–2.04 V across 5.1 kΩ) |
 | 32.768 kHz crystal | P0.00, P0.01 (13, 14) | LFXO |
@@ -233,9 +233,9 @@ completely, so it grew to 17 mm (D-45). This section describes the 17 × 80 mm s
   - y 62–69 mm: 3.0 V LDO, fuel gauge, I²C pull-ups.
   - y 70–80 mm: battery connector.
   - Bottom side, copper only: solder pads for wires, each labelled on the silkscreen: J501 SWD as a 3 × 2 grid
-    under the module, next to the SWD pins; J503 haptic driver as a 3 × 2 grid at the front right beside the
-    battery connector, next to the 3.0 V LDO and the I²C pull-ups (under the module it left too little of the
-    bottom layer for the lines that cross the module zone; only V5 and HAPTIC_EN now run to it from behind);
+    under the module, next to the SWD pins; J503 haptic driver as a 3 × 2 grid at the back right beside the
+    5 V block, where V5, 3V0 and I²C already run (D-50; at the front, D-44, its five lines crowded the band in front
+    of the module);
     J102 NTC and J103 power switch under the battery connector; J504 underglow under its buffer. Test points on VBUS, VBUS_A, VBAT, VBOOST, CHG_QON and the module's USB D±. Nets with a
     wire pad are probed there; port B's VBUS and CC lines at their castellated contacts. No part is assembled
     on the bottom.

@@ -2650,37 +2650,9 @@
 			)
 		)
 	)
-	(wire
-		(pts
-			(xy 38.1 120.65)
-			(xy 35.56 120.65)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9aa8d51e-ce6d-5d63-9eb2-fb2eb0c310cd")
-	)
-	(global_label "HAPTIC_EN"
-		(shape passive)
-		(at 35.56 120.65 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "ea49b87e-307a-5b30-aa7c-72d98d6b6de9")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 35.56 120.65 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
+	(no_connect
+		(at 38.1 120.65)
+		(uuid "ff77d1f8-c712-54b9-96d1-34ad48c8d900")
 	)
 	(wire
 		(pts
@@ -2714,9 +2686,37 @@
 			)
 		)
 	)
-	(no_connect
-		(at 38.1 125.73)
-		(uuid "8b1fc0e3-363f-5687-87d5-13210b77b67b")
+	(wire
+		(pts
+			(xy 38.1 125.73)
+			(xy 35.56 125.73)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7fedd48e-75c7-55a2-8cc1-be787953612d")
+	)
+	(global_label "HAPTIC_EN"
+		(shape passive)
+		(at 35.56 125.73 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "cfca8bfc-07ea-51d0-9971-4bbc1482b01a")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 35.56 125.73 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 	)
 	(wire
 		(pts
