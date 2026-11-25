@@ -116,9 +116,9 @@ Firmware board support must use exactly this map.
 | ROW7, ROW6, ROW5, ROW4 | P0.13, P0.14, P0.15, P0.16 (31–34) | Inputs, internal pull-down, wake (SENSE). Left end of the front pad row: the front row runs left to right in the order of contacts 19–33, so the lines to the castellated edge do not cross (D-43) |
 | RSV_MISO, COL_LAT, COL_DAT, COL_CLK | P0.17, P0.21, P0.20, P0.22 (35, 36, 38, 40) | COL_CLK/COL_DAT = SPIM SCK/MOSI, COL_LAT = latch GPIO, RSV_MISO reserved (Hall-effect boards); full-speed pins |
 | RSV_INT | P0.24 (42) | Reserved for Hall-effect switch boards |
-| I2C_SDA, I2C_SCL | P0.12, P0.19 (28, 37) | TWIM, 4.7 kΩ pull-ups to 3V0. SDA moved from P0.06 (D-35); SCL moved from P0.08 (pad 24, walled in by unused pads) to the outer front row on the strip |
+| I2C_SDA, I2C_SCL | P0.19, P0.12 (37, 28) | TWIM, 4.7 kΩ pull-ups to 3V0. SDA moved from P0.06 (D-35); SCL moved from P0.08 (pad 24, walled in by unused pads) to the outer front row on the strip; SDA and SCL then swapped pins, in the order of the charger's pins (D-52) |
 | LED_SDB, LED_EN, BOOST_EN | P1.05, P1.06, P1.07 (48–50) LF | Static outputs; LED_EN and BOOST_EN have 100 kΩ pull-downs |
-| LED_FAULT, CHG_INT | P0.26 (7), P1.08 (51) | Open-drain inputs, 10 kΩ pull-ups. Moved from P1.10/P1.11 for routing (D-35), LED_FAULT from P0.28 (D-47) |
+| LED_FAULT, CHG_INT | P0.26 (7), P0.23 (41) | Open-drain inputs, 10 kΩ pull-ups. Moved from P1.10/P1.11 for routing (D-35), LED_FAULT from P0.28 (D-47), CHG_INT from P1.08 to the front row above the charger (D-51) |
 | FG_ALRT | P1.00 (56) | Open-drain input, 10 kΩ pull-up; inner front row, towards the fuel gauge (D-43). SWO is not used |
 | HAPTIC_EN | P0.25 (6) | Haptic pads J503 (CORE-064); from the back pad row north like LED_FAULT (D-50) |
 | CC1_B, CC2_B | P0.29/AIN5 (10) LF, P0.05/AIN3 (21) | SAADC: port B current advertisement, as CC1/CC2. CC1_B from the back pad row under the module to contact 21 (D-43); CC2_B from the left pad column out past the module's left edge and down to contact 23 (D-48) |

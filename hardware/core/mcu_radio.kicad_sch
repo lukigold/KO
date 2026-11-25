@@ -2309,7 +2309,7 @@
 		)
 		(uuid "7293a4c1-1131-5542-b05a-5bf719d207f5")
 	)
-	(global_label "I2C_SDA"
+	(global_label "I2C_SCL"
 		(shape passive)
 		(at 35.56 92.71 180)
 		(fields_autoplaced yes)
@@ -2533,7 +2533,7 @@
 		)
 		(uuid "be4b6930-8ae1-5f15-8baf-7974b5dbfa66")
 	)
-	(global_label "I2C_SCL"
+	(global_label "I2C_SDA"
 		(shape passive)
 		(at 35.56 110.49 180)
 		(fields_autoplaced yes)
@@ -2650,9 +2650,37 @@
 			)
 		)
 	)
-	(no_connect
-		(at 38.1 120.65)
-		(uuid "ff77d1f8-c712-54b9-96d1-34ad48c8d900")
+	(wire
+		(pts
+			(xy 38.1 120.65)
+			(xy 35.56 120.65)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9aa8d51e-ce6d-5d63-9eb2-fb2eb0c310cd")
+	)
+	(global_label "CHG_INT"
+		(shape passive)
+		(at 35.56 120.65 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "ea49b87e-307a-5b30-aa7c-72d98d6b6de9")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 35.56 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 	)
 	(wire
 		(pts
@@ -3110,37 +3138,9 @@
 			)
 		)
 	)
-	(wire
-		(pts
-			(xy 73.66 97.79)
-			(xy 76.2 97.79)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "633a231c-b1e9-5cc0-8003-12a090a53f43")
-	)
-	(global_label "CHG_INT"
-		(shape passive)
-		(at 76.2 97.79 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "99ff00ab-44cc-52a4-9545-df91605ec27d")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 76.2 97.79 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
+	(no_connect
+		(at 73.66 97.79)
+		(uuid "c9f48d18-ba2a-53eb-be2b-03baafe33e0b")
 	)
 	(no_connect
 		(at 73.66 100.33)

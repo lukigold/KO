@@ -1688,17 +1688,8 @@ if __name__ == "__main__":
             r = subprocess.run([sys.executable, __file__, "--step", "repair-prep"], capture_output=True, text=True)
             m = re.search(r"(\d+) connections open, (\d+) copper", r.stdout)
             return int(m.group(1)) + int(m.group(2)) if m else 10 ** 6
-        print("refine:")
-        run_step("finish", "nostitch")
-        run_step("fill")
-        best = count()
-        best_copy = MAZE_JSON.with_suffix(".best")
-        shutil.copy(MAZE_JSON, best_copy)
-        print(f"  start: {best} open")
-        for n in range(a.refine):
-            if best == 0:
-                break
-            os.environ["MAZE_SEED"] = str(100 + n)       # another order each round
+
+        def refine_round():
             run_step("refine-drop")
             run_step("finish", "nostitch")
             run_step("fill")
@@ -1712,7 +1703,24 @@ if __name__ == "__main__":
             run_step("repair")
             run_step("finish", "nostitch")
             run_step("fill")
-            c = count()
+        print("refine:")
+        run_step("finish", "nostitch")
+        run_step("fill")
+        best = count()
+        best_copy = MAZE_JSON.with_suffix(".best")
+        shutil.copy(MAZE_JSON, best_copy)
+        print(f"  start: {best} open")
+        for n in range(a.refine):
+            if best == 0:
+                break
+            os.environ["MAZE_SEED"] = str(100 + n + int(os.environ.get("REFINE_SEED", "0")))   # another order each round
+            try:
+                refine_round()
+                c = count()
+            except SystemExit as e:                    # a failed step: this round counts as no better
+                print(f"  round {n + 1} failed ({e})")
+                os.environ.pop("MAZE_MERGE", None)
+                c = 10 ** 6
             print(f"  round {n + 1}: {c} open" + (" (kept)" if c < best else ""))
             if c < best:
                 best = c
