@@ -2,7 +2,7 @@
 
 - **Contract:** [docs/contracts/core-board.md](../../docs/contracts/core-board.md)
 - **Design note (parts, power tree, pin map, schematic decisions):** [docs/design/core-board-rev-a.md](../../docs/design/core-board-rev-a.md)
-- **Status:** rev A as a 19 × 80 mm strip beside the keys (D-41, D-43, D-45, D-55, D-56): schematic verified, PCB placed by script, routing in progress (2 connections open: ROW4, USB_DN; 4 layers), JLCPCB files in `fab/`. Only USB-C port A and the battery connector are connectors; switch, NTC, SWD, haptic and underglow wires solder to pads on the bottom.
+- **Status:** rev A as a 19 × 80 mm strip beside the keys (D-41, D-43, D-45, D-55, D-56): schematic verified, PCB placed by script, fully routed (4 layers, DRC clean, D-56), JLCPCB files in `fab/`. Only USB-C port A and the battery connector are connectors; switch, NTC, SWD, haptic and underglow wires solder to pads on the bottom.
 
 ## The schematic is generated
 
@@ -116,14 +116,11 @@ clean.
 - Schematic, contracts, placement and the hand-drawn copper are done and DRC clean before routing (ERC and
   netlist check pass). The strip is 19 × 80 mm now (D-45, D-55, D-56): on 16 mm the router stopped at about 100 of 120
   connections with any placement.
-- Latest run (2026-11-25, 18 mm strip, D-54, D-55): full reroutes `MAZE_ALL=1 MAZE_ITERS=40 MAZE_ATTEMPTS=32`, then
-  `--repair`: seed 5 best (0 DRC violations, 3 open), seeds 11, 23, 37: 3-4 open. `--refine 4` on seed 5 reached
-  **2 open: `ROW4`, `USB_DN`**, 0 DRC violations, 0 parity issues (committed); 6 more refine rounds
-  (`REFINE_SEED=10`) were worse (4-5 open). On the 17 mm strip pin changes D-46 to D-54 had ended at 2 open
-  (ROW2, ROW3); every full reroute there left 4-7 open.
-- Next: hand routes for ROW4 and USB_DN (in `route_pcb.py`, or drawn in KiCad and stored as locked routes), then
-  `--polish`, DRC. Never close a connection by relaxing clearances. Afterwards: `fab_outputs.py`, the design
-  note's result line (§9), the verification record (`docs/verification/p1.md`), commit.
+- Latest run (2026-11-26, 19 mm strip, D-56): `MAZE_SEED=11 MAZE_ALL=1 MAZE_ITERS=40 MAZE_ATTEMPTS=32`, then
+  `--repair` and `--polish`: **all connections routed, DRC 0 violations, 0 warnings, 0 unconnected, 0 parity issues.**
+  Seeds 5 and 37 left 2-3 open. On 18 mm (D-55) the best was 2 open (ROW4, USB_DN), on 17 mm 2 open (ROW2,
+  ROW3) after pin changes D-46 to D-54.
+- Next: owner review (1:1 print fit check, JLCPCB placement preview), then order.
 - `--maze` without `MAZE_MERGE` now ignores the stored routes (it replaces them); delete
   `route/ko-core-maze.json` before routing a changed placement from scratch.
 

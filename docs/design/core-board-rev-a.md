@@ -1,6 +1,6 @@
 # Design note: Core board rev A
 
-**Implements:** [core-board.md](../contracts/core-board.md) (P1 scope) · **Status:** layout in progress: placed by script, 19 × 80 mm strip (D-55), 2 connections open (0 DRC violations, 0 parity issues, 2 open: ROW4, USB_DN, 2026-11-25); JLCPCB files only after a clean DRC · **Date:** 2026-11-15, schematic 2026-11-18, layout 2026-11-20
+**Implements:** [core-board.md](../contracts/core-board.md) (P1 scope) · **Status:** layout done: 19 × 80 mm strip (D-56), placed and routed by script, DRC clean (0 violations, 0 unconnected, 0 parity issues, 2026-11-26); JLCPCB files in `hardware/core/fab/` · **Date:** 2026-11-15, schematic 2026-11-18, layout 2026-11-20
 
 Design notes explain *how* a contract is implemented. They never override a contract; if they disagree,
 fix one of them in the same change.
@@ -284,8 +284,8 @@ completely, so it grew to 17 mm (D-45), to 18 mm when the last two connections w
 - **Power switch (CORE-007, D-43):** pads J103 (SYS, EN) for an off-board SPST switch that drives the 3.0 V
   LDO's enable; R107 (1 MΩ) holds it off while the switch is open. Bridge the pads with solder for a board
   that is always on. The switch can sit anywhere in the case (MECH-040, OPEN-07).
-- **Result:** not finished (2026-11-25): on the 18 mm strip (D-55) 0 DRC violations, 0 parity issues,
-  2 open (ROW4, USB_DN; next steps in `hardware/core/README.md`). On the way: D-46 to D-55 (pin and placement
+- **Result:** done (2026-11-26): on the 19 mm strip (D-56) all connections routed, 0 DRC violations,
+  0 warnings, 0 parity issues. On the way: D-46 to D-56 (pin and placement
   changes for routing), hand routes for pin escapes at U304, the charger, SWD, CC2_B, LED_FAULT and EXP_IO2.
 
 ### Ordering at JLCPCB
