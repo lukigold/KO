@@ -228,19 +228,31 @@ def route(board_path: pathlib.Path, b, iters=40, workers=None) -> None:
         nets.append(net)
     print(f"  maze: {len(conns)} connections")
     board = pcbnew.LoadBoard(str(board_path))
-    r = maze.Router(board, box, KLAYER, clearance=0.18, hole_clearance=0.28)
+    r = maze.Router(board, box, KLAYER, clearance=0.18, hole_clearance=0.36)
     neg = maze.Negotiator(r)
     paths = neg.run(conns, iters=iters, workers=workers or os.cpu_count(), max_nodes=4_000_000,
                     log=lambda s: print(s, flush=True))
     bad = neg.conflicts(conns, {})
+    keep = [cid for cid, path in sorted(paths.items()) if path and cid not in bad]
+
+    def raw(path):
+        segs, vias = [], []
+        for run in maze._runs(path):
+            if run[0] == "seg":
+                segs.append((run[2], [run[1][0], run[1][1]]))
+            else:
+                vias.append(run[1])
+        return segs, vias
+    for cid in keep:                       # every kept route in the router's maps first ...
+        s_, v_ = raw(paths[cid])
+        r.add(cid, conns[cid][0], s_, v_, conns[cid][3], conns[cid][4], conns[cid][5])
     cu = Copper(board)
     done = 0
-    for cid, path in paths.items():
-        if cid in bad or not path:
-            continue
+    for cid in keep:                       # ... so each string-pulled shortcut keeps clear of all the others
         code, hw = conns[cid][0], conns[cid][3]
         net = board.FindNet(nets[cid])
-        segs, vias = r.simplify(path, code, hw)
+        segs, vias = r.simplify(paths[cid], code, hw)
+        r.add(cid, code, segs, vias, hw, conns[cid][4], conns[cid][5])
         for layer, pts in segs:
             for p0, p1 in zip(pts, pts[1:]):
                 cu.track(net, KLAYER[layer], (p0[0] - OX, p0[1] - OY), (p1[0] - OX, p1[1] - OY), 2 * hw, lock=False)
