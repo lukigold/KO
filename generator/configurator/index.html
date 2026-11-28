@@ -1,0 +1,1172 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body><title>KO Layout Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working column. Settings strip on top, the board stage as the centre of the page,
+   key stats under it, then export and saved builds side by side (stacked on phones).
+   Single dark look by request: graphite ground, flat grey keycaps with a faint shadow, light grey legends. */
+:root {
+  color-scheme: dark;
+  --bg: #252629;
+  --panel: #2c2d31;
+  --panel-2: #313236;
+  --line: #3b3d42;
+  --ink: #e8e8e5;
+  --muted: #9a9ca1;
+  --faint: #6f7277;
+  --key: #4a4c51;
+  --key-mod: #3f4146;
+  --key-empty: #303135;
+  --key-hover: #57595f;
+  --legend: #ecebe7;
+  --legend-mod: #b2b4b8;
+  --sel: #f3f1ea;
+  --warn: #e0b06a;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 1280px; margin: 0 auto; padding-block: 22px 56px; display: grid; gap: 18px; }
+h1, h2 { margin: 0; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+h1 { font-size: 20px; }
+h2 { font-size: 15px; }
+p { margin: 0; }
+.label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+.muted { color: var(--muted); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
+
+/* header */
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+.brand { display: flex; align-items: baseline; gap: 12px; }
+.brand b { font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
+.brand span { color: var(--muted); font-size: 15px; }
+.name-field { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.name-field input {
+  width: min(320px, 70vw); background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 8px 12px; font-weight: 500;
+}
+
+/* settings strip */
+.settings { display: flex; flex-wrap: wrap; gap: 14px 22px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+.group { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.seg { display: flex; flex-wrap: wrap; gap: 2px; padding: 3px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; }
+.seg button {
+  border: 0; background: transparent; color: var(--muted); padding: 6px 11px; border-radius: 7px; font-size: 13px; font-weight: 500;
+  white-space: nowrap;
+}
+.seg button:hover:not(:disabled) { color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--key); color: var(--ink); box-shadow: 0 1px 0 rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.22); }
+.seg button:disabled { color: var(--faint); cursor: not-allowed; }
+.seg button small { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; margin-left: 4px; color: var(--faint); }
+
+/* stage */
+.stage { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px; min-width: 0; }
+.stage-scroll { overflow-x: auto; overflow-y: hidden; }
+.stage-scroll svg { display: block; width: 100%; height: auto; margin: 0 auto; }
+.stage-hint { position: absolute; left: 18px; bottom: 12px; font-size: 12px; color: var(--faint); pointer-events: none; }
+
+svg .cap { fill: var(--key); }
+svg .cap.mod { fill: var(--key-mod); }
+svg .cap.extra { fill: var(--key); cursor: pointer; transition: fill .12s; }
+svg .cap.extra.empty { fill: var(--key-empty); stroke: #4a4c52; stroke-width: 2; stroke-dasharray: 7 6; }
+svg .cap.extra:hover { fill: var(--key-hover); }
+svg .cap.extra.selected { stroke: var(--sel); stroke-width: 4; stroke-dasharray: none; }
+svg .lg { fill: var(--legend); font-family: var(--font-ui); font-weight: 500; pointer-events: none; }
+svg .lg.mod { fill: var(--legend-mod); font-weight: 500; }
+svg .lg.extra { fill: var(--legend); font-weight: 500; }
+svg .plus-empty { stroke: #6a6d72; stroke-width: 3; stroke-linecap: round; fill: none; pointer-events: none; }
+svg .ctl { cursor: pointer; }
+svg .ctl circle { fill: var(--bg); stroke: #5f6267; stroke-width: 2.5; transition: stroke .12s, fill .12s; }
+svg .ctl path { stroke: #b9bbbf; stroke-width: 4; stroke-linecap: round; fill: none; }
+svg .ctl:hover circle, svg .ctl:focus-visible circle { stroke: var(--sel); fill: var(--panel-2); }
+svg .ctl:focus { outline: none; }
+svg .ctl.small path { stroke-width: 3; }
+
+/* popover */
+.pop {
+  position: absolute; z-index: 20; width: 340px; max-width: calc(100% - 16px); background: var(--panel-2); border: 1px solid #45474c;
+  border-radius: 14px; box-shadow: 0 18px 40px rgba(0,0,0,.45); padding: 14px; display: grid; gap: 12px;
+}
+.pop-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pop-head h2 { font-size: 14px; }
+.icon-btn { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; width: 30px; height: 30px; display: grid; place-items: center; color: var(--muted); }
+.icon-btn:hover { color: var(--ink); }
+.fn-groups { display: grid; gap: 10px; max-height: 52vh; overflow-y: auto; padding-right: 2px; }
+.fn-group { display: grid; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  border: 1px solid var(--line); background: var(--key-mod); border-radius: 8px; padding: 5px 9px; font-size: 12.5px; color: var(--ink);
+  box-shadow: 0 1px 0 rgba(0,0,0,.3);
+}
+.chip:hover { background: var(--key-hover); }
+.chip[aria-pressed="true"] { background: var(--sel); color: #1e1f22; border-color: var(--sel); }
+.custom-row { display: flex; gap: 6px; }
+.custom-row input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; }
+.btn {
+  border: 1px solid var(--line); background: var(--key); color: var(--ink); border-radius: 9px; padding: 8px 13px; font-size: 13px; font-weight: 500;
+  box-shadow: 0 1px 0 rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.2);
+}
+.btn:hover:not(:disabled) { background: var(--key-hover); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--sel); color: #1e1f22; border-color: var(--sel); }
+.btn.primary:hover:not(:disabled) { background: #ffffff; }
+.btn.ghost { background: transparent; box-shadow: none; }
+.pop-foot { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.pop-foot .muted { font-size: 12px; }
+
+/* switch chips: fit state */
+.seg button .mark { margin-left: 5px; font-size: 11px; color: var(--faint); }
+.seg button.no { color: var(--faint); }
+.seg button.no .mark { color: #c97a6f; }
+.seg button.turn .mark { color: var(--warn); }
+.seg button.own { color: var(--faint); cursor: not-allowed; }
+
+/* switch fit overview */
+.fit { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.fit-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+.fit-status { font-size: 13px; color: var(--muted); }
+.fit-body { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 720px) { .fit-body { grid-template-columns: minmax(0, 1fr); } }
+.fit-fp { margin: 0; display: grid; gap: 8px; justify-items: center; }
+.fit-fp svg { width: 100%; max-width: 240px; height: auto; display: block; }
+.fit-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); justify-content: center; }
+.fit-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.fit-matrix { overflow-x: auto; min-width: 0; }
+.fit-matrix table { border-collapse: separate; border-spacing: 3px; min-width: 0; width: auto; font-size: 12px; }
+.fit-matrix th, .fit-matrix td { border: 0; padding: 0; text-align: center; background: transparent; position: static; letter-spacing: 0; text-transform: none; }
+.fit-matrix th { color: var(--muted); font-weight: 500; font-size: 11.5px; padding: 0 4px; white-space: nowrap; }
+.fit-matrix th.row { text-align: right; padding-right: 8px; }
+.fit-matrix td { width: 34px; height: 28px; border-radius: 6px; background: var(--bg); font-size: 14px; }
+.fit-matrix td.yes { color: #9fd3b0; }
+.fit-matrix td.turn { color: var(--warn); }
+.fit-matrix td.no { color: #6d5452; }
+.fit-matrix td.self { color: var(--faint); }
+.fit-matrix .sel { background: var(--key-mod); color: var(--ink); }
+.fit-matrix td.sel.yes { background: #36463d; }
+.fit-matrix td.sel.turn { background: #4a4131; }
+.fit-matrix td.sel.no { background: #4a3533; color: #e29a90; }
+.fit-key { font-size: 12px; color: var(--faint); margin-top: 8px; }
+
+/* stats */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; display: grid; gap: 2px; }
+.stat b { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.notes { display: grid; gap: 6px; padding: 0; margin: 0; list-style: none; }
+.notes li { font-size: 13px; color: var(--muted); padding-left: 16px; position: relative; max-width: 100ch; }
+.notes li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 6px; height: 6px; border-radius: 2px; background: var(--faint); }
+.notes li.warn::before { background: var(--warn); }
+
+/* export + saved */
+.lower { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .lower { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.card-head { display: grid; gap: 4px; }
+.card-head p { font-size: 13px; color: var(--muted); max-width: 70ch; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+summary:hover { color: var(--ink); }
+textarea {
+  width: 100%; min-height: 220px; resize: vertical; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.5; color: #cfd0cd; margin-top: 10px;
+}
+textarea.short { min-height: 110px; }
+.saved { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.saved li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; }
+.saved .meta { display: grid; gap: 2px; min-width: 0; }
+.saved .meta b { font-weight: 500; overflow-wrap: anywhere; }
+.saved .meta span { font-size: 12px; color: var(--muted); }
+.saved .row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.empty { font-size: 13px; color: var(--muted); padding: 12px; border: 1px dashed var(--line); border-radius: 10px; }
+.status { font-size: 12px; color: var(--faint); }
+footer { font-size: 12px; color: var(--faint); max-width: 100ch; }
+code { font-family: var(--font-mono); font-size: 12px; background: var(--bg); padding: 1px 5px; border-radius: 5px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50;
+  background: var(--sel); color: #1e1f22; padding: 9px 14px; border-radius: 10px; font-size: 13px; font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4); max-width: calc(100% - 32px);
+}
+@media (max-width: 600px) {
+  .pop { position: fixed; left: max(8px, env(safe-area-inset-left, 0px)) !important; right: max(8px, env(safe-area-inset-right, 0px)); width: auto; max-width: none;
+    top: auto !important; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .stage-hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <div class="brand"><b>KO</b><span>Layout builder</span></div>
+    <label class="name-field"><span class="label">Build name</span><input id="build-name" type="text" maxlength="60" spellcheck="false"></label>
+  </header>
+
+  <section class="settings" aria-label="Keyboard settings">
+    <div class="group"><span class="label" id="lbl-size">Size</span><div class="seg" role="group" aria-labelledby="lbl-size" id="seg-size"></div></div>
+    <div class="group"><span class="label" id="lbl-style">Layout</span><div class="seg" role="group" aria-labelledby="lbl-style" id="seg-style"></div></div>
+    <div class="group"><span class="label" id="lbl-std">Standard and legends</span><div class="seg" role="group" aria-labelledby="lbl-std" id="seg-std"></div></div>
+    <div class="group"><span class="label" id="lbl-conn">Connection</span><div class="seg" role="group" aria-labelledby="lbl-conn" id="seg-conn"></div></div>
+    <div class="group"><span class="label" id="lbl-mount">Mounting</span><div class="seg" role="group" aria-labelledby="lbl-mount" id="seg-mount"></div></div>
+    <div class="group"><span class="label" id="lbl-sw">Switches</span><div class="seg" role="group" aria-labelledby="lbl-sw" id="seg-switches"></div></div>
+    <div class="group"><span class="label" id="lbl-feel">Feel</span><div class="seg" role="group" aria-labelledby="lbl-feel" id="seg-feel"></div></div>
+    <div class="group"><span class="label" id="lbl-rgb">Per-key light</span><div class="seg" role="group" aria-labelledby="lbl-rgb" id="seg-rgb"></div></div>
+    <div class="group"><span class="label" id="lbl-glow">Underglow</span><div class="seg" role="group" aria-labelledby="lbl-glow" id="seg-glow"></div></div>
+  </section>
+
+  <section class="stage" id="stage" aria-label="Keyboard layout">
+    <div class="stage-scroll" id="stage-scroll"></div>
+    <p class="stage-hint">⊕ adds keys · click a key to set its function</p>
+    <div class="pop" id="pop" hidden role="dialog" aria-modal="false" aria-labelledby="pop-title"></div>
+  </section>
+
+  <section class="stats" id="stats" aria-label="Summary"></section>
+  <ul class="notes" id="notes"></ul>
+
+  <section class="fit" aria-labelledby="fit-h">
+    <div class="fit-head"><h2 id="fit-h">Switch fit</h2><p class="fit-status" id="fit-status"></p></div>
+    <div class="fit-body">
+      <figure class="fit-fp"><div id="fit-fp"></div><figcaption class="fit-legend" id="fit-legend"></figcaption></figure>
+      <div class="fit-matrix">
+        <table id="fit-matrix" aria-label="Which switch types fit together"></table>
+        <p class="fit-key">✓ fit together · ↻ fit with one turned 180° (no per-key light for it) · ✕ do not fit</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="card">
+      <div class="card-head"><h2>Layout file</h2></div>
+      <div class="actions">
+        <button class="btn primary" id="btn-save" type="button" hidden>Save build</button>
+        <button class="btn" id="btn-download" type="button" hidden>Download .json</button>
+        <button class="btn" id="btn-copy" type="button">Copy JSON</button>
+        <div class="seg" role="group" aria-label="File format" id="seg-format"></div>
+      </div>
+      <details id="json-details">
+        <summary>View the file</summary>
+        <textarea id="json-out" readonly spellcheck="false" aria-label="Layout file"></textarea>
+      </details>
+      <details>
+        <summary>Load a layout file</summary>
+        <div class="actions" style="margin-top:10px">
+          <label class="btn" for="file-in">Choose file…</label>
+          <input id="file-in" type="file" accept=".json,application/json" hidden>
+          <span class="status">or paste the JSON below</span>
+        </div>
+        <textarea id="json-in" class="short" spellcheck="false" placeholder='{"format": "ko-layout", "version": 1, …}' aria-label="Paste a layout file"></textarea>
+        <div class="actions"><button class="btn" id="btn-load" type="button">Load pasted file</button><span class="status" id="load-status"></span></div>
+      </details>
+    </div>
+
+    <div class="card" id="saved-card">
+      <div class="card-head"><h2>Saved builds</h2></div>
+      <ul class="saved" id="saved-list"></ul>
+      <p class="status" id="saved-status"></p>
+    </div>
+  </section>
+
+</div>
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ------------------------------------------------------------------ key definitions */
+const DEF = {};
+function def(id, label, code, kind = "alpha") { DEF[id] = { label, code, kind }; }
+def("esc", "esc", "KC_ESC", "mod");
+for (let i = 1; i <= 12; i++) def("f" + i, "F" + i, "KC_F" + i, "fkey");
+def("prt", "prt sc", "KC_PSCR", "mod"); def("scr", "scr lk", "KC_SCRL", "mod"); def("pause", "pause", "KC_PAUS", "mod");
+def("ins", "ins", "KC_INS", "mod"); def("home", "home", "KC_HOME", "mod"); def("pgup", "pg up", "KC_PGUP", "mod");
+def("del", "del", "KC_DEL", "mod"); def("end", "end", "KC_END", "mod"); def("pgdn", "pg dn", "KC_PGDN", "mod");
+def("up", "↑", "KC_UP", "arrow"); def("left", "←", "KC_LEFT", "arrow"); def("down", "↓", "KC_DOWN", "arrow"); def("right", "→", "KC_RGHT", "arrow");
+def("grv", "`", "KC_GRV");
+for (const d of "1234567890") def("n" + d, d, "KC_" + d);
+def("mins", "-", "KC_MINS"); def("eql", "=", "KC_EQL"); def("bspc", "⌫", "KC_BSPC", "sym");
+def("tab", "⇥", "KC_TAB", "sym");
+for (const c of "abcdefghijklmnopqrstuvwxyz") def(c, c.toUpperCase(), "KC_" + c.toUpperCase());
+def("lbrc", "[", "KC_LBRC"); def("rbrc", "]", "KC_RBRC"); def("bsls", "\\", "KC_BSLS");
+def("caps", "⇪", "KC_CAPS", "sym"); def("scln", ";", "KC_SCLN"); def("quot", "'", "KC_QUOT"); def("nuhs", "#", "KC_NUHS");
+def("ent", "↵", "KC_ENT", "sym"); def("ent_iso", "↵", "KC_ENT", "sym");
+def("lsft", "⇧", "KC_LSFT", "sym"); def("nubs", "\\", "KC_NUBS");
+def("comm", ",", "KC_COMM"); def("dot", ".", "KC_DOT"); def("slsh", "/", "KC_SLSH"); def("rsft", "⇧", "KC_RSFT", "sym");
+def("lctl", "ctrl", "KC_LCTL", "mod"); def("lgui", "win", "KC_LGUI", "mod"); def("lalt", "alt", "KC_LALT", "mod");
+def("spc", "", "KC_SPC", "mod"); def("ralt", "alt", "KC_RALT", "mod"); def("rgui", "win", "KC_RGUI", "mod");
+def("app", "menu", "KC_APP", "mod"); def("rctl", "ctrl", "KC_RCTL", "mod"); def("fn", "fn", "MO(1)", "mod");
+def("nlck", "num", "KC_NUM", "mod"); def("pslash", "/", "KC_PSLS"); def("past", "*", "KC_PAST"); def("pmns", "−", "KC_PMNS");
+for (const d of "0123456789") def("p" + d, d, "KC_P" + d);
+def("pplus", "+", "KC_PPLS"); def("pent", "↵", "KC_PENT", "sym"); def("pdot", ".", "KC_PDOT");
+
+const STANDARDS = [
+  { id: "ansi-us", label: "ANSI · US", std: "ANSI", lang: "US" },
+  { id: "iso-uk", label: "ISO · UK", std: "ISO", lang: "UK" },
+  { id: "iso-de", label: "ISO · DE", std: "ISO", lang: "DE" },
+  { id: "iso-ch", label: "ISO · CH", std: "ISO", lang: "CH" },
+  { id: "iso-fr", label: "ISO · FR", std: "ISO", lang: "FR" },
+];
+const LEGENDS = {
+  US: {},
+  UK: { nuhs: "#", nubs: "\\" },
+  DE: { grv: "^", mins: "ß", eql: "´", y: "Z", z: "Y", lbrc: "Ü", rbrc: "+", scln: "Ö", quot: "Ä", nuhs: "#", nubs: "<", slsh: "-", ralt: "alt gr" },
+  CH: { grv: "§", mins: "'", eql: "^", y: "Z", z: "Y", lbrc: "Ü", rbrc: "¨", scln: "Ö", quot: "Ä", nuhs: "$", nubs: "<", slsh: "-", ralt: "alt gr" },
+  FR: { grv: "²", mins: ")", eql: "=", q: "A", w: "Z", a: "Q", z: "W", m: ",", scln: "M", quot: "Ù", lbrc: "^", rbrc: "$", nuhs: "*", nubs: "<",
+        comm: ";", dot: ":", slsh: "!", ralt: "alt gr" },
+};
+
+const SIZES = [
+  { id: "40", label: "40 %" }, { id: "60", label: "60 %" }, { id: "65", label: "65 %" }, { id: "75", label: "75 %" },
+  { id: "tkl", label: "TKL" }, { id: "96", label: "96 %" }, { id: "100", label: "100 %" },
+];
+// Which switch types share a key position: computed by generator/switches/compat.py from the footprint geometry
+// (holes, copper, hot-swap sockets, LED window). Regenerate with that script; do not edit by hand.
+const COMPAT = /*COMPAT-BEGIN*/{"rules":{"copper_mm":0.2,"hole_mm":0.25,"ring_mm":0.3},"types":{"choc_v1":{"label":"Choc v1","height":"slim","pins":[[0,-5.9,1.2],[5.0,-3.8,1.2]],"holes":[[0,0,3.45],[-5.5,0,1.9],[5.5,0,1.9]],"socket":"choc"},"choc_v2":{"label":"Choc v2","height":"slim","pins":[[0,-5.9,1.2],[5.0,-3.8,1.2]],"holes":[[0,0,5.05],[-5.0,5.15,1.6]],"socket":"choc"},"mx":{"label":"MX","height":"tall","pins":[[-3.81,-2.54,1.5],[2.54,-5.08,1.5]],"holes":[[0,0,4.0],[-5.08,0,1.75],[5.08,0,1.75]],"socket":"mx"},"gateron_lp":{"label":"Gateron LP","height":"slim","pins":[[4.4,-4.7,1.5],[-2.6,-5.75,1.5]],"holes":[[0,0,5.25]],"socket":"gateron_lp"},"mx_lp":{"label":"MX Low Profile","height":"slim","pins":[[0,-6.05,1.2],[-4.13,-3.3,1.2]],"holes":[[0,0,6.25],[0,-3.7,2.3]],"socket":null},"kh":{"label":"Kailh KH","height":"tall","pins":[[-3.8,-2.55,1.5],[3.0,-5.12,1.5]],"holes":[[0,0,4.0],[-4.5,0,1.5],[4.5,0,1.5]],"socket":null},"alps":{"label":"Alps / Matias","height":"tall","pins":[[-2.5,-4.0,1.5],[2.5,-4.5,1.5]],"holes":[],"socket":null},"choc_mini":{"label":"Choc mini","height":"slim","pins":[[2.0,5.4,1.2],[-4.58,5.1,1.2]],"holes":[[-5.29,-4.75,1.2],[5.29,-4.75,1.2]],"socket":null},"kailh_x":{"label":"Kailh X (PG1425)","height":"slim","pins":[[-2.0,-3.4,1.1],[2.9,-3.4,1.1]],"holes":[[5.5,-5.5,1.3],[-5.5,5.5,1.3]],"socket":null}},"sockets":{"mx":{"sleeves":3.05,"pads":[[-7.085,-2.54,2.55,2.5],[5.842,-5.08,2.55,2.5]],"body":[-6.0,-6.8,4.8,-0.8]},"choc":{"sleeves":3.05,"pads":[[-3.5,-6.0,2.55,2.5],[8.5,-3.8,2.55,2.5]],"body":[-2.45,-8.45,7.75,-1.25]},"gateron_lp":{"sleeves":3.0,"pads":[[8.075,-4.7,2.5,2.55],[-6.275,-5.75,2.5,2.55]],"body":[-5.03,-7.92,6.82,-2.52]}},"modes":{"solder":{"light":{"pairs":{"choc_v1|choc_v2":{"ok":"yes","turned":[]},"choc_v1|mx":{"ok":"yes","turned":[]},"choc_v1|gateron_lp":{"ok":"yes","turned":[]},"choc_v1|mx_lp":{"ok":"no","why":"a pin sits in the LED window"},"choc_v1|kh":{"ok":"yes","turned":[]},"choc_v1|alps":{"ok":"yes","turned":[]},"choc_v1|choc_mini":{"ok":"turn","turned":["choc_mini"]},"choc_v1|kailh_x":{"ok":"no","why":"a pin sits in the LED window"},"choc_v2|mx":{"ok":"yes","turned":[]},"choc_v2|gateron_lp":{"ok":"yes","turned":[]},"choc_v2|mx_lp":{"ok":"no","why":"a pin sits in the LED window"},"choc_v2|kh":{"ok":"yes","turned":[]},"choc_v2|alps":{"ok":"yes","turned":[]},"choc_v2|choc_mini":{"ok":"turn","turned":["choc_mini"]},"choc_v2|kailh_x":{"ok":"no","why":"a pin sits in the LED window"},"mx|gateron_lp":{"ok":"yes","turned":[]},"mx|mx_lp":{"ok":"yes","turned":[]},"mx|kh":{"ok":"yes","turned":[]},"mx|alps":{"ok":"yes","turned":[]},"mx|choc_mini":{"ok":"turn","turned":["choc_mini"]},"mx|kailh_x":{"ok":"yes","turned":[]},"gateron_lp|mx_lp":{"ok":"yes","turned":[]},"gateron_lp|kh":{"ok":"yes","turned":[]},"gateron_lp|alps":{"ok":"yes","turned":[]},"gateron_lp|choc_mini":{"ok":"turn","turned":["choc_mini"]},"gateron_lp|kailh_x":{"ok":"no","why":"pins of different contacts 0.08 mm apart"},"mx_lp|kh":{"ok":"yes","turned":[]},"mx_lp|alps":{"ok":"yes","turned":[]},"mx_lp|choc_mini":{"ok":"yes","turned":[]},"mx_lp|kailh_x":{"ok":"no","why":"a hole 0.00 mm from a pin"},"kh|alps":{"ok":"yes","turned":[]},"kh|choc_mini":{"ok":"yes","turned":[]},"kh|kailh_x":{"ok":"yes","turned":[]},"alps|choc_mini":{"ok":"yes","turned":[]},"alps|kailh_x":{"ok":"yes","turned":[]},"choc_mini|kailh_x":{"ok":"no","why":"a hole 0.00 mm from a pin"}},"sets":{"choc_v1":{"turned":[],"swap":[]},"choc_v2":{"turned":[],"swap":[]},"mx":{"turned":[],"swap":[]},"gateron_lp":{"turned":[],"swap":[],"led":"unverified"},"mx_lp":{"turned":[],"swap":[],"led":"unverified"},"kh":{"turned":[],"swap":[],"led":"unverified"},"alps":{"turned":[],"swap":[],"led":"unverified"},"choc_mini":{"turned":[],"swap":[],"led":"unverified"},"kailh_x":{"turned":[],"swap":[],"led":"unverified"},"choc_v1,choc_v2":{"turned":[],"swap":[]},"choc_v1,mx":{"turned":[],"swap":[]},"choc_v1,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,kh":{"turned":[],"swap":[]},"choc_v1,alps":{"turned":[],"swap":[]},"choc_v1,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx":{"turned":[],"swap":[]},"choc_v2,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v2,kh":{"turned":[],"swap":[]},"choc_v2,alps":{"turned":[],"swap":[]},"choc_v2,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"mx,mx_lp":{"turned":[],"swap":["mx_lp"]},"mx,kh":{"turned":[],"swap":[]},"mx,alps":{"turned":[],"swap":[]},"mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp":{"turned":[],"swap":[],"led":"unverified"},"gateron_lp,kh":{"turned":[],"swap":["kh"],"led":"unverified"},"gateron_lp,alps":{"turned":[],"swap":["alps"],"led":"unverified"},"gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["choc_mini"],"led":"unverified"},"mx_lp,kh":{"turned":[],"swap":["kh"],"led":"unverified"},"mx_lp,alps":{"turned":[],"swap":["alps"],"led":"unverified"},"mx_lp,choc_mini":{"turned":[],"swap":[],"led":"unverified"},"kh,alps":{"turned":[],"swap":[],"led":"unverified"},"kh,choc_mini":{"turned":[],"swap":[],"led":"unverified"},"kh,kailh_x":{"turned":[],"swap":[],"led":"unverified"},"alps,choc_mini":{"turned":[],"swap":[],"led":"unverified"},"alps,kailh_x":{"turned":[],"swap":[],"led":"unverified"},"choc_v1,choc_v2,mx":{"turned":[],"swap":[]},"choc_v1,choc_v2,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,kh":{"turned":[],"swap":[]},"choc_v1,choc_v2,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,kh":{"turned":[],"swap":[]},"choc_v1,mx,alps":{"turned":[],"swap":[]},"choc_v1,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,kh,alps":{"turned":[],"swap":[]},"choc_v1,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,kh":{"turned":[],"swap":[]},"choc_v2,mx,alps":{"turned":[],"swap":[]},"choc_v2,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,kh,alps":{"turned":[],"swap":[]},"choc_v2,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,alps":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["mx_lp"]},"mx,kh,alps":{"turned":[],"swap":[]},"mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,kh,kailh_x":{"turned":[],"swap":[]},"mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,alps,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp,kh":{"turned":[],"swap":["kh"],"led":"unverified"},"gateron_lp,mx_lp,alps":{"turned":[],"swap":["alps"],"led":"unverified"},"gateron_lp,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["choc_mini"],"led":"unverified"},"gateron_lp,kh,alps":{"turned":[],"swap":["kh","alps"],"led":"unverified"},"gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["kh","choc_mini"],"led":"unverified"},"gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["alps","choc_mini"],"led":"unverified"},"mx_lp,kh,alps":{"turned":[],"swap":["kh","alps"],"led":"unverified"},"mx_lp,kh,choc_mini":{"turned":[],"swap":["kh"],"led":"unverified"},"mx_lp,alps,choc_mini":{"turned":[],"swap":["alps"],"led":"unverified"},"kh,alps,choc_mini":{"turned":[],"swap":[],"led":"unverified"},"kh,alps,kailh_x":{"turned":[],"swap":[],"led":"unverified"},"choc_v1,choc_v2,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,kh":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,kh,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,kh,alps":{"turned":[],"swap":[]},"choc_v1,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,kh,alps":{"turned":[],"swap":[]},"choc_v2,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp,kh":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,alps":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh,alps":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["mx_lp"]},"mx,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["mx_lp"]},"mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,kh,alps,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp,kh,alps":{"turned":[],"swap":["kh","alps"],"led":"unverified"},"gateron_lp,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["kh","choc_mini"],"led":"unverified"},"gateron_lp,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["alps","choc_mini"],"led":"unverified"},"gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["kh","alps","choc_mini"],"led":"unverified"},"mx_lp,kh,alps,choc_mini":{"turned":[],"swap":["kh","alps"],"led":"unverified"},"choc_v1,choc_v2,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,kh,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,mx_lp,kh,alps":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["mx_lp"]},"gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["kh","alps","choc_mini"],"led":"unverified"},"choc_v1,choc_v2,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]}}},"dark":{"pairs":{"choc_v1|choc_v2":{"ok":"yes","turned":[]},"choc_v1|mx":{"ok":"yes","turned":[]},"choc_v1|gateron_lp":{"ok":"yes","turned":[]},"choc_v1|mx_lp":{"ok":"turn","turned":["mx_lp"]},"choc_v1|kh":{"ok":"yes","turned":[]},"choc_v1|alps":{"ok":"yes","turned":[]},"choc_v1|choc_mini":{"ok":"turn","turned":["choc_mini"]},"choc_v1|kailh_x":{"ok":"no","why":"a hole 0.22 mm from a pin"},"choc_v2|mx":{"ok":"yes","turned":[]},"choc_v2|gateron_lp":{"ok":"yes","turned":[]},"choc_v2|mx_lp":{"ok":"turn","turned":["mx_lp"]},"choc_v2|kh":{"ok":"yes","turned":[]},"choc_v2|alps":{"ok":"yes","turned":[]},"choc_v2|choc_mini":{"ok":"turn","turned":["choc_mini"]},"choc_v2|kailh_x":{"ok":"no","why":"a hole 0.22 mm from a pin"},"mx|gateron_lp":{"ok":"yes","turned":[]},"mx|mx_lp":{"ok":"yes","turned":[]},"mx|kh":{"ok":"yes","turned":[]},"mx|alps":{"ok":"yes","turned":[]},"mx|choc_mini":{"ok":"yes","turned":[]},"mx|kailh_x":{"ok":"yes","turned":[]},"gateron_lp|mx_lp":{"ok":"yes","turned":[]},"gateron_lp|kh":{"ok":"yes","turned":[]},"gateron_lp|alps":{"ok":"yes","turned":[]},"gateron_lp|choc_mini":{"ok":"turn","turned":["choc_mini"]},"gateron_lp|kailh_x":{"ok":"no","why":"pins of different contacts 0.08 mm apart"},"mx_lp|kh":{"ok":"yes","turned":[]},"mx_lp|alps":{"ok":"yes","turned":[]},"mx_lp|choc_mini":{"ok":"yes","turned":[]},"mx_lp|kailh_x":{"ok":"no","why":"a hole 0.00 mm from a pin"},"kh|alps":{"ok":"yes","turned":[]},"kh|choc_mini":{"ok":"yes","turned":[]},"kh|kailh_x":{"ok":"yes","turned":[]},"alps|choc_mini":{"ok":"yes","turned":[]},"alps|kailh_x":{"ok":"yes","turned":[]},"choc_mini|kailh_x":{"ok":"no","why":"a hole 0.00 mm from a pin"}},"sets":{"choc_v1":{"turned":[],"swap":[]},"choc_v2":{"turned":[],"swap":[]},"mx":{"turned":[],"swap":[]},"gateron_lp":{"turned":[],"swap":[]},"mx_lp":{"turned":[],"swap":[]},"kh":{"turned":[],"swap":[]},"alps":{"turned":[],"swap":[]},"choc_mini":{"turned":[],"swap":[]},"kailh_x":{"turned":[],"swap":[]},"choc_v1,choc_v2":{"turned":[],"swap":[]},"choc_v1,mx":{"turned":[],"swap":[]},"choc_v1,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v1,kh":{"turned":[],"swap":[]},"choc_v1,alps":{"turned":[],"swap":[]},"choc_v1,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx":{"turned":[],"swap":[]},"choc_v2,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v2,kh":{"turned":[],"swap":[]},"choc_v2,alps":{"turned":[],"swap":[]},"choc_v2,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"mx,mx_lp":{"turned":[],"swap":["mx_lp"]},"mx,kh":{"turned":[],"swap":[]},"mx,alps":{"turned":[],"swap":[]},"mx,choc_mini":{"turned":[],"swap":[]},"mx,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp":{"turned":[],"swap":[]},"gateron_lp,kh":{"turned":[],"swap":["kh"]},"gateron_lp,alps":{"turned":[],"swap":["alps"]},"gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["choc_mini"]},"mx_lp,kh":{"turned":[],"swap":["kh"]},"mx_lp,alps":{"turned":[],"swap":["alps"]},"mx_lp,choc_mini":{"turned":[],"swap":[]},"kh,alps":{"turned":[],"swap":[]},"kh,choc_mini":{"turned":[],"swap":[]},"kh,kailh_x":{"turned":[],"swap":[]},"alps,choc_mini":{"turned":[],"swap":[]},"alps,kailh_x":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx":{"turned":[],"swap":[]},"choc_v1,choc_v2,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,kh":{"turned":[],"swap":[]},"choc_v1,choc_v2,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx,kh":{"turned":[],"swap":[]},"choc_v1,mx,alps":{"turned":[],"swap":[]},"choc_v1,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,kh,alps":{"turned":[],"swap":[]},"choc_v1,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx,kh":{"turned":[],"swap":[]},"choc_v2,mx,alps":{"turned":[],"swap":[]},"choc_v2,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,kh,alps":{"turned":[],"swap":[]},"choc_v2,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,alps":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,choc_mini":{"turned":[],"swap":["mx_lp"]},"mx,kh,alps":{"turned":[],"swap":[]},"mx,kh,choc_mini":{"turned":[],"swap":[]},"mx,kh,kailh_x":{"turned":[],"swap":[]},"mx,alps,choc_mini":{"turned":[],"swap":[]},"mx,alps,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp,kh":{"turned":[],"swap":["kh"]},"gateron_lp,mx_lp,alps":{"turned":[],"swap":["alps"]},"gateron_lp,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["choc_mini"]},"gateron_lp,kh,alps":{"turned":[],"swap":["kh","alps"]},"gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["kh","choc_mini"]},"gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["alps","choc_mini"]},"mx_lp,kh,alps":{"turned":[],"swap":["kh","alps"]},"mx_lp,kh,choc_mini":{"turned":[],"swap":["kh"]},"mx_lp,alps,choc_mini":{"turned":[],"swap":["alps"]},"kh,alps,choc_mini":{"turned":[],"swap":[]},"kh,alps,kailh_x":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,gateron_lp":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,mx_lp":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx,kh":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,kh,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx,kh,alps":{"turned":[],"swap":[]},"choc_v1,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx,kh,alps":{"turned":[],"swap":[]},"choc_v2,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp,kh":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,alps":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh,alps":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,kh,choc_mini":{"turned":[],"swap":["mx_lp"]},"mx,mx_lp,alps,choc_mini":{"turned":[],"swap":["mx_lp"]},"mx,kh,alps,choc_mini":{"turned":[],"swap":[]},"mx,kh,alps,kailh_x":{"turned":[],"swap":[]},"gateron_lp,mx_lp,kh,alps":{"turned":[],"swap":["kh","alps"]},"gateron_lp,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["kh","choc_mini"]},"gateron_lp,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["alps","choc_mini"]},"gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["kh","alps","choc_mini"]},"mx_lp,kh,alps,choc_mini":{"turned":[],"swap":["kh","alps"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,mx_lp,kh":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx,mx_lp,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,kh,alps":{"turned":[],"swap":[]},"choc_v1,choc_v2,mx,kh,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,mx,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v2,mx,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v2,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"mx,gateron_lp,mx_lp,kh,alps":{"turned":[],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"mx,mx_lp,kh,alps,choc_mini":{"turned":[],"swap":["mx_lp"]},"gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["kh","alps","choc_mini"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,kh":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,alps":{"turned":[],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":[]},"choc_v1,choc_v2,mx,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,mx,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,mx,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v2,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp","mx_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,kh,alps":{"turned":["mx_lp"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,kh,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,kh,alps,choc_mini":{"turned":["choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":[]},"choc_v1,choc_v2,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v2,mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]},"choc_v1,choc_v2,mx,gateron_lp,mx_lp,kh,alps,choc_mini":{"turned":["mx_lp","choc_mini"],"swap":["gateron_lp"]}}}},"hotswap":{"light":{"pairs":{"choc_v1|choc_v2":{"ok":"yes","turned":[]},"choc_v1|mx":{"ok":"no","why":"a socket sits on the LED window"},"choc_v1|gateron_lp":{"ok":"no","why":"a socket sits on the LED window"},"choc_v1|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"choc_v1|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"choc_v1|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_v1|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"choc_v1|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"choc_v2|mx":{"ok":"no","why":"a socket sits on the LED window"},"choc_v2|gateron_lp":{"ok":"no","why":"a socket sits on the LED window"},"choc_v2|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"choc_v2|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"choc_v2|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_v2|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"choc_v2|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"mx|gateron_lp":{"ok":"no","why":"a socket sits on the LED window"},"mx|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"mx|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"mx|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"mx|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"gateron_lp|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"gateron_lp|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"gateron_lp|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"gateron_lp|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"gateron_lp|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"mx_lp|kh":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|alps":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|choc_mini":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|kailh_x":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"kh|alps":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"kh|choc_mini":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"kh|kailh_x":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"alps|choc_mini":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"alps|kailh_x":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_mini|kailh_x":{"ok":"no","why":"Choc mini has no hot-swap socket"}},"sets":{"choc_v1":{"turned":[],"swap":[]},"choc_v2":{"turned":[],"swap":[]},"mx":{"turned":[],"swap":[]},"gateron_lp":{"turned":[],"swap":[],"led":"unverified"},"choc_v1,choc_v2":{"turned":[],"swap":[]}}},"dark":{"pairs":{"choc_v1|choc_v2":{"ok":"yes","turned":[]},"choc_v1|mx":{"ok":"turn","turned":["mx"]},"choc_v1|gateron_lp":{"ok":"turn","turned":["gateron_lp"]},"choc_v1|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"choc_v1|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"choc_v1|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_v1|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"choc_v1|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"choc_v2|mx":{"ok":"no","why":"a hole cuts a socket pad"},"choc_v2|gateron_lp":{"ok":"turn","turned":["gateron_lp"]},"choc_v2|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"choc_v2|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"choc_v2|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_v2|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"choc_v2|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"mx|gateron_lp":{"ok":"turn","turned":["gateron_lp"]},"mx|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"mx|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"mx|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"mx|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"gateron_lp|mx_lp":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"gateron_lp|kh":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"gateron_lp|alps":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"gateron_lp|choc_mini":{"ok":"no","why":"Choc mini has no hot-swap socket"},"gateron_lp|kailh_x":{"ok":"no","why":"Kailh X (PG1425) has no hot-swap socket"},"mx_lp|kh":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|alps":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|choc_mini":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"mx_lp|kailh_x":{"ok":"no","why":"MX Low Profile has no hot-swap socket"},"kh|alps":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"kh|choc_mini":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"kh|kailh_x":{"ok":"no","why":"Kailh KH has no hot-swap socket"},"alps|choc_mini":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"alps|kailh_x":{"ok":"no","why":"Alps / Matias has no hot-swap socket"},"choc_mini|kailh_x":{"ok":"no","why":"Choc mini has no hot-swap socket"}},"sets":{"choc_v1":{"turned":[],"swap":[]},"choc_v2":{"turned":[],"swap":[]},"mx":{"turned":[],"swap":[]},"gateron_lp":{"turned":[],"swap":[]},"choc_v1,choc_v2":{"turned":[],"swap":[]},"choc_v1,mx":{"turned":["mx"],"swap":[]},"choc_v1,gateron_lp":{"turned":["gateron_lp"],"swap":[]},"choc_v2,gateron_lp":{"turned":["gateron_lp"],"swap":[]},"mx,gateron_lp":{"turned":["gateron_lp"],"swap":[]},"choc_v1,choc_v2,gateron_lp":{"turned":["gateron_lp"],"swap":[]}}}}}}/*COMPAT-END*/;
+const SW_IDS = Object.keys(COMPAT.types);            // also the priority order: the first selected keeps the LED
+const SW_SHORT = { choc_v1: "Choc v1", choc_v2: "Choc v2", mx: "MX", gateron_lp: "Gat. LP", mx_lp: "MX LP", kh: "KH",
+  alps: "Alps", choc_mini: "Mini", kailh_x: "X" };
+const SW_COLOR = { choc_v1: "#7fb2ff", choc_v2: "#5fd0e0", mx: "#f0a35e", gateron_lp: "#b98cf2", mx_lp: "#f07f95", kh: "#e3cf6a",
+  alps: "#8fd3a0", choc_mini: "#6fe0c0", kailh_x: "#d9a0e6" };
+const OWN_BOARD = [{ id: "hall", label: "Hall effect" }, { id: "optical", label: "Optical" }, { id: "topre", label: "Topre / EC" }];
+const MOUNTS = [{ id: "hotswap", label: "Hot-swap" }, { id: "solder", label: "Soldered" }];
+const swSort = types => SW_IDS.filter(t => types.includes(t));
+const swLabel = t => COMPAT.types[t]?.label || t;
+function fitTable() { return COMPAT.modes[state.mount][state.rgb ? "light" : "dark"]; }
+function fitOf(types) { return types.length ? fitTable().sets[swSort(types).join(",")] || null : null; }
+function pairInfo(a, b) { const p = fitTable().pairs; return p[a + "|" + b] || p[b + "|" + a]; }
+function whyNot(types, t) {
+  if (state.mount === "hotswap" && !COMPAT.types[t].socket) return `${swLabel(t)} has no hot-swap socket.`;
+  for (const o of types) { const p = pairInfo(o, t); if (p && p.ok === "no") return `${swLabel(t)} and ${swLabel(o)}: ${p.why}.`; }
+  return `${swLabel(t)} does not fit together with all of ${types.map(swLabel).join(", ")}.`;
+}
+// Keep the selection buildable after the mounting or the light changes: drop types in reverse priority.
+function reconcileSwitches() {
+  if (fitOf(state.types)) return [];
+  const keep = [];
+  for (const t of swSort(state.types)) if (fitOf([...keep, t])) keep.push(t);
+  if (!keep.length) keep.push(SW_IDS.find(t => fitOf([t])));
+  const removed = state.types.filter(t => !keep.includes(t));
+  state.types = keep;
+  return removed;
+}
+const STYLES = [{ id: "staggered", label: "Staggered" }, { id: "grid", label: "Grid" }];
+const FEELS = [{ id: "linear", label: "Linear" }, { id: "tactile", label: "Tactile" }, { id: "clicky", label: "Clicky" }, { id: "silent", label: "Silent" }];
+const CONNS = [{ id: "wireless", label: "Wireless" }, { id: "wired", label: "Wired" }];
+
+const FUNCS = [
+  { group: "Desktop", items: [
+    { id: "stealth", key: "hide", name: "Stealth: hide all windows", code: "LGUI(KC_D)" },
+    { id: "lock", key: "lock", name: "Lock screen", code: "LGUI(KC_L)" },
+    { id: "screenshot", key: "shot", name: "Screenshot of an area", code: "LGUI(LSFT(KC_S))" },
+    { id: "calculator", key: "calc", name: "Calculator", code: "KC_CALC" } ] },
+  { group: "Discord", items: [
+    { id: "discord_mute", key: "dc mute", name: "Discord: mute mic", code: "LCTL(LSFT(KC_M))" },
+    { id: "discord_deafen", key: "dc deaf", name: "Discord: deafen", code: "LCTL(LSFT(KC_D))" } ] },
+  { group: "Media", items: [
+    { id: "play_pause", key: "play", name: "Play / pause", code: "KC_MPLY" },
+    { id: "next_track", key: "next", name: "Next track", code: "KC_MNXT" },
+    { id: "prev_track", key: "prev", name: "Previous track", code: "KC_MPRV" },
+    { id: "volume_up", key: "vol +", name: "Volume up", code: "KC_VOLU" },
+    { id: "volume_down", key: "vol −", name: "Volume down", code: "KC_VOLD" },
+    { id: "mute", key: "mute", name: "Mute sound", code: "KC_MUTE" },
+    { id: "mic_mute", key: "mic", name: "Mic mute in calls", code: "LGUI(LALT(KC_K))" } ] },
+  { group: "Editing", items: [
+    { id: "copy", key: "copy", name: "Copy", code: "LCTL(KC_C)" },
+    { id: "paste", key: "paste", name: "Paste", code: "LCTL(KC_V)" },
+    { id: "undo", key: "undo", name: "Undo", code: "LCTL(KC_Z)" },
+    { id: "redo", key: "redo", name: "Redo", code: "LCTL(KC_Y)" } ] },
+  { group: "Macros (recorded later in the KO app)", items: Array.from({ length: 8 }, (_, i) => (
+    { id: "macro_" + (i + 1), key: "M" + (i + 1), name: "Macro " + (i + 1), code: "M" + i })) },
+  { group: "Layers", items: [{ id: "fn_layer", key: "fn", name: "Fn layer while held", code: "MO(1)" }] },
+];
+const FUNC_BY_ID = {};
+for (const g of FUNCS) for (const f of g.items) FUNC_BY_ID[f.id] = f;
+
+/* ------------------------------------------------------------------ layouts (units of 19.05 mm) */
+const seq = ids => ids.map(i => [i, 1]);
+const NUM = ["grv", "n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8", "n9", "n0", "mins", "eql"];
+const QROW = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "lbrc", "rbrc"];
+const AROW = ["a", "s", "d", "f", "g", "h", "j", "k", "l", "scln", "quot"];
+const ZROW = ["z", "x", "c", "v", "b", "n", "m", "comm", "dot", "slsh"];
+const FROW = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12"];
+const B60 = [["lctl", 1.25], ["lgui", 1.25], ["lalt", 1.25], ["spc", 6.25], ["ralt", 1.25], ["rgui", 1.25], ["app", 1.25], ["rctl", 1.25]];
+const B65 = [["lctl", 1.25], ["lgui", 1.25], ["lalt", 1.25], ["spc", 6.25], ["ralt", 1], ["fn", 1], ["rctl", 1]];
+const ARROWS = [["left", 1], ["down", 1], ["right", 1]];
+
+// The 15 u alpha block: number row to shift row. ISO puts the tall enter on the Q row; the A row leaves room for its lower part.
+function alphaBlock(std, rshift) {
+  const r1 = [...seq(NUM), ["bspc", 2]];
+  if (std === "ANSI") return [r1, [["tab", 1.5], ...seq(QROW), ["bsls", 1.5]], [["caps", 1.75], ...seq(AROW), ["ent", 2.25]],
+    [["lsft", 2.25], ...seq(ZROW), ["rsft", rshift]]];
+  return [r1, [["tab", 1.5], ...seq(QROW), ["ent_iso", 1.5, 2]], [["caps", 1.75], ...seq(AROW), ["nuhs", 1], ["_", 1.25]],
+    [["lsft", 1.25], ["nubs", 1], ...seq(ZROW), ["rsft", rshift]]];
+}
+
+// Returns {rows: [[item…]…], fGap}. item: [id, w, h] | ["_", gap] | ["@", absolute x]
+function staggeredRows(size, std) {
+  if (size === "40") return { rows: [
+    [["tab", 1.25], ...seq(["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]), ["bspc", 1.75]],
+    [["esc", 1.5], ...seq(["a", "s", "d", "f", "g", "h", "j", "k", "l", "scln"]), ["ent", 1.5]],
+    std === "ANSI" ? [["lsft", 1.75], ...seq(ZROW), ["rsft", 1.25]] : [["lsft", 1.25], ["nubs", 1], ...seq(ZROW.slice(0, 9)), ["rsft", 1.75]],
+    [...B65],
+  ], fGap: 0, hasF: false };
+  if (size === "60") { const a = alphaBlock(std, 2.75); return { rows: [...a, [...B60]], hasF: false }; }
+  if (size === "65") { const a = alphaBlock(std, 1.75);
+    return { rows: [[...a[0], ["del", 1]], [...a[1], ["pgup", 1]], [...a[2], ["pgdn", 1]], [...a[3], ["up", 1], ["end", 1]], [...B65, ...ARROWS]], hasF: false }; }
+  if (size === "75") { const a = alphaBlock(std, 1.75);
+    return { rows: [[["esc", 1], ...seq(FROW), ["prt", 1], ["ins", 1], ["del", 1]],
+      [...a[0], ["home", 1]], [...a[1], ["pgup", 1]], [...a[2], ["pgdn", 1]], [...a[3], ["up", 1], ["end", 1]], [...B65, ...ARROWS]], hasF: true, fGap: 0.25 }; }
+  if (size === "tkl" || size === "100") {
+    const a = alphaBlock(std, 2.75);
+    const f = [["esc", 1], ["_", 1], ...seq(FROW.slice(0, 4)), ["_", 0.5], ...seq(FROW.slice(4, 8)), ["_", 0.5], ...seq(FROW.slice(8)),
+      ["@", 15.25], ["prt", 1], ["scr", 1], ["pause", 1]];
+    const rows = [f, [...a[0], ["@", 15.25], ["ins", 1], ["home", 1], ["pgup", 1]], [...a[1], ["@", 15.25], ["del", 1], ["end", 1], ["pgdn", 1]],
+      [...a[2]], [...a[3], ["@", 16.25], ["up", 1]], [...B60, ["@", 15.25], ...ARROWS]];
+    if (size === "100") {
+      rows[1].push(["@", 18.5], ["nlck", 1], ["pslash", 1], ["past", 1], ["pmns", 1]);
+      rows[2].push(["@", 18.5], ["p7", 1], ["p8", 1], ["p9", 1], ["pplus", 1, 2]);
+      rows[3].push(["@", 18.5], ["p4", 1], ["p5", 1], ["p6", 1]);
+      rows[4].push(["@", 18.5], ["p1", 1], ["p2", 1], ["p3", 1], ["pent", 1, 2]);
+      rows[5].push(["@", 18.5], ["p0", 2], ["pdot", 1]);
+    }
+    return { rows, hasF: true, fGap: 0.5 };
+  }
+  if (size === "96") { const a = alphaBlock(std, 1.75);
+    return { rows: [[["esc", 1], ...seq(FROW), ["del", 1], ["ins", 1], ["home", 1], ["end", 1], ["pgup", 1], ["pgdn", 1]],
+      [...a[0], ["nlck", 1], ["pslash", 1], ["past", 1], ["pmns", 1]],
+      [...a[1], ["p7", 1], ["p8", 1], ["p9", 1], ["pplus", 1, 2]],
+      [...a[2], ["p4", 1], ["p5", 1], ["p6", 1]],
+      [...a[3], ["up", 1], ["p1", 1], ["p2", 1], ["p3", 1], ["pent", 1, 2]],
+      [...B65, ...ARROWS, ["p0", 1], ["pdot", 1]]], hasF: true, fGap: 0.25 }; }
+  throw new Error("unknown size " + size);
+}
+
+// Grid (ortholinear): every key on whole-unit columns. The alpha block is 14 columns; the ISO enter becomes a 1 × 2 key.
+function gridRows(size, std) {
+  const iso = std === "ISO";
+  const R1 = [...seq(NUM), ["bspc", 1]];
+  const R2 = iso ? [["tab", 1], ...seq(QROW), ["ent", 1, 2]] : [["tab", 1], ...seq(QROW), ["bsls", 1]];
+  const R3 = iso ? [["caps", 1], ...seq(AROW), ["nuhs", 1], ["_", 1]] : [["caps", 1], ...seq(AROW), ["ent", 2]];
+  const R4 = iso ? [["lsft", 1], ["nubs", 1], ...seq(ZROW), ["rsft", 2]] : [["lsft", 2], ...seq(ZROW), ["rsft", 2]];
+  const R4u = iso ? [["lsft", 1], ["nubs", 1], ...seq(ZROW), ["rsft", 1], ["up", 1]] : [["lsft", 2], ...seq(ZROW), ["rsft", 1], ["up", 1]];
+  const GB60 = [["lctl", 1], ["lgui", 1], ["lalt", 1], ["spc", 6], ["ralt", 1], ["rgui", 1], ["fn", 1], ["app", 1], ["rctl", 1]];
+  const GB65 = [["lctl", 1], ["lgui", 1], ["lalt", 1], ["spc", 6], ["ralt", 1], ["fn", 1], ["rctl", 1], ...ARROWS];
+  if (size === "40") return { rows: [
+    [["tab", 1], ...seq(["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]), ["bspc", 1]],
+    [["esc", 1], ...seq(["a", "s", "d", "f", "g", "h", "j", "k", "l", "scln"]), ["ent", 1]],
+    iso ? [["lsft", 1], ["nubs", 1], ...seq(ZROW.slice(0, 9)), ["rsft", 1]] : [["lsft", 1], ...seq(ZROW), ["rsft", 1]],
+    [["lctl", 1], ["lgui", 1], ["lalt", 1], ["spc", 6], ["ralt", 1], ["fn", 1], ["rctl", 1]],
+  ], hasF: false };
+  if (size === "60") return { rows: [R1, R2, R3, R4, GB60], hasF: false };
+  if (size === "65") return { rows: [[...R1, ["del", 1]], [...R2, ["pgup", 1]], [...R3, ["pgdn", 1]], [...R4u, ["end", 1]], GB65], hasF: false };
+  if (size === "75") return { rows: [[["esc", 1], ...seq(FROW), ["prt", 1], ["del", 1]],
+    [...R1, ["home", 1]], [...R2, ["pgup", 1]], [...R3, ["pgdn", 1]], [...R4u, ["end", 1]], GB65], hasF: true, fGap: 0.25 };
+  if (size === "tkl" || size === "100") {
+    const rows = [[["esc", 1], ["_", 1], ...seq(FROW), ["@", 14.25], ["prt", 1], ["scr", 1], ["pause", 1]],
+      [...R1, ["@", 14.25], ["ins", 1], ["home", 1], ["pgup", 1]], [...R2, ["@", 14.25], ["del", 1], ["end", 1], ["pgdn", 1]],
+      [...R3], [...R4, ["@", 15.25], ["up", 1]], [...GB60, ["@", 14.25], ...ARROWS]];
+    if (size === "100") {
+      rows[1].push(["@", 17.5], ["nlck", 1], ["pslash", 1], ["past", 1], ["pmns", 1]);
+      rows[2].push(["@", 17.5], ["p7", 1], ["p8", 1], ["p9", 1], ["pplus", 1, 2]);
+      rows[3].push(["@", 17.5], ["p4", 1], ["p5", 1], ["p6", 1]);
+      rows[4].push(["@", 17.5], ["p1", 1], ["p2", 1], ["p3", 1], ["pent", 1, 2]);
+      rows[5].push(["@", 17.5], ["p0", 2], ["pdot", 1]);
+    }
+    return { rows, hasF: true, fGap: 0.5 };
+  }
+  if (size === "96") return { rows: [[["esc", 1], ...seq(FROW), ["del", 1], ["home", 1], ["end", 1], ["pgup", 1], ["pgdn", 1]],
+    [...R1, ["nlck", 1], ["pslash", 1], ["past", 1], ["pmns", 1]], [...R2, ["p7", 1], ["p8", 1], ["p9", 1], ["pplus", 1, 2]],
+    [...R3, ["p4", 1], ["p5", 1], ["p6", 1]], [...R4u, ["p1", 1], ["p2", 1], ["p3", 1], ["pent", 1, 2]],
+    [...GB65, ["p0", 1], ["pdot", 1]]], hasF: true, fGap: 0.25 };
+  throw new Error("unknown size " + size);
+}
+
+function buildMain(size, std, style) {
+  const { rows, hasF, fGap } = style === "grid" ? gridRows(size, std) : staggeredRows(size, std);
+  const keys = [];
+  let y = 0;
+  rows.forEach((row, ri) => {
+    if (ri === 1 && hasF) y += fGap;
+    let x = 0;
+    for (const [id, w, h] of row) {
+      if (id === "_") { x += w; continue; }
+      if (id === "@") { x = w; continue; }
+      const k = { id, x, y, w, h: h || 1 };
+      if (id === "ent_iso") { k.shape = "iso-enter"; k.h = 2; }
+      keys.push(k);
+      x += w;
+    }
+    y += 1;
+  });
+  return keys;
+}
+
+/* ------------------------------------------------------------------ state */
+const LIMITS = { top: 2, left: 2, right: 2 };
+const DEFAULT_STATE = {
+  name: "KO 65 ISO-CH", nameAuto: true,
+  size: "65", style: "staggered", standard: "iso-ch", connectivity: "wireless",
+  mount: "hotswap", types: ["choc_v1"], feel: "linear", rgb: true, underglow: false,
+  extra: { top: [], left: [], right: [] },
+};
+let state = load() || structuredClone(DEFAULT_STATE);
+let format = "ko";
+let selected = null;     // {side, bi, ki}
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem("ko-layout-draft-v3") || "null"); return s && s.extra && s.size && s.style && Array.isArray(s.types) && s.types.length && s.mount ? s : null; } catch (e) { return null; }
+}
+function persist() { try { localStorage.setItem("ko-layout-draft-v3", JSON.stringify(state)); } catch (e) {} }
+const stdInfo = () => STANDARDS.find(s => s.id === state.standard) || STANDARDS[0];
+
+/* ------------------------------------------------------------------ geometry */
+function round(v) { return Math.round(v * 10000) / 10000; }
+function geometry() {
+  const si = stdInfo();
+  const main = buildMain(state.size, si.std, state.style);
+  const maxX = Math.max(...main.map(k => k.x + k.w));
+  const maxY = Math.max(...main.map(k => k.y + k.h));
+  const rowsY = [...new Set(main.map(k => k.y))].sort((a, b) => a - b);
+  const topMax = Math.floor(maxX), sideMax = rowsY.length;
+  const extras = [];
+  state.extra.top.forEach((b, i) => b.keys.slice(0, topMax).forEach((k, j) =>
+    extras.push({ side: "top", bi: i, ki: j, x: j, y: -0.5 - (i + 1), w: 1, h: 1, ...k })));
+  state.extra.left.forEach((b, i) => b.keys.slice(0, sideMax).forEach((k, j) =>
+    extras.push({ side: "left", bi: i, ki: j, x: -0.5 - (i + 1), y: rowsY[j], w: 1, h: 1, ...k })));
+  state.extra.right.forEach((b, i) => b.keys.slice(0, sideMax).forEach((k, j) =>
+    extras.push({ side: "right", bi: i, ki: j, x: maxX + 0.5 + i, y: rowsY[j], w: 1, h: 1, ...k })));
+  return { main, extras, maxX, maxY, rowsY, topMax, sideMax };
+}
+function clampBlocks() {
+  const g = geometry();
+  for (const b of state.extra.top) b.keys = b.keys.slice(0, g.topMax);
+  for (const side of ["left", "right"]) for (const b of state.extra[side]) b.keys = b.keys.slice(0, g.sideMax);
+}
+const legendFor = id => { const L = LEGENDS[stdInfo().lang] || {}; return id in L ? L[id] : DEF[id].label; };
+function extraLabel(k) {
+  if (k.fn === "custom") return k.label || "";
+  return k.fn && FUNC_BY_ID[k.fn] ? FUNC_BY_ID[k.fn].key : "";
+}
+
+/* ------------------------------------------------------------------ SVG rendering */
+const SVGNS = "http://www.w3.org/2000/svg";
+const S = 100, INSET = 4, R = 10;
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function roundedPath(pts, r) {
+  const n = pts.length; let d = "";
+  for (let i = 0; i < n; i++) {
+    const p = pts[(i - 1 + n) % n], c = pts[i], q = pts[(i + 1) % n];
+    const l1 = Math.hypot(c[0] - p[0], c[1] - p[1]), l2 = Math.hypot(q[0] - c[0], q[1] - c[1]);
+    const rr = Math.min(r, l1 / 2, l2 / 2);
+    const a = [c[0] + (p[0] - c[0]) * rr / l1, c[1] + (p[1] - c[1]) * rr / l1];
+    const b = [c[0] + (q[0] - c[0]) * rr / l2, c[1] + (q[1] - c[1]) * rr / l2];
+    d += (i ? "L" : "M") + a[0].toFixed(1) + " " + a[1].toFixed(1) + "Q" + c[0] + " " + c[1] + " " + b[0].toFixed(1) + " " + b[1].toFixed(1);
+  }
+  return d + "Z";
+}
+function capShape(k, cls, parent) {
+  const x = k.x * S, y = k.y * S, w = k.w * S, h = k.h * S, d = INSET;
+  if (k.shape === "iso-enter") {
+    const pts = [[x + d, y + d], [x + w - d, y + d], [x + w - d, y + h - d], [x + 25 + d, y + h - d], [x + 25 + d, y + 100 - d], [x + d, y + 100 - d]];
+    return el("path", { d: roundedPath(pts, R), class: cls }, parent);
+  }
+  return el("rect", { x: x + d, y: y + d, width: w - 2 * d, height: h - 2 * d, rx: R, class: cls }, parent);
+}
+function addText(parent, cx, cy, text, cls, size, maxW) {
+  const words = text.split(" ");
+  const lines = (text.length > 5 && words.length > 1 && maxW < 140) ? [words.slice(0, -1).join(" "), words[words.length - 1]] : [text];
+  const t = el("text", { x: cx, y: cy, class: cls, "text-anchor": "middle", "dominant-baseline": "central", "font-size": size }, parent);
+  if (lines.length === 1) { t.textContent = text; return; }
+  lines.forEach((ln, i) => { const ts = el("tspan", { x: cx, y: cy + (i - 0.5) * size * 1.15 }, t); ts.textContent = ln; });
+}
+function control(parent, cx, cy, r, kind, label, onClick, small) {
+  const g = el("g", { class: "ctl" + (small ? " small" : ""), tabindex: 0, role: "button", "aria-label": label }, parent);
+  el("circle", { cx, cy, r }, g);
+  const a = r * 0.45;
+  const d = kind === "plus" ? `M${cx - a} ${cy}H${cx + a}M${cx} ${cy - a}V${cy + a}` : kind === "minus" ? `M${cx - a} ${cy}H${cx + a}`
+    : `M${cx - a * 0.8} ${cy - a * 0.8}L${cx + a * 0.8} ${cy + a * 0.8}M${cx + a * 0.8} ${cy - a * 0.8}L${cx - a * 0.8} ${cy + a * 0.8}`;
+  el("path", { d }, g);
+  const t = el("title", {}, g); t.textContent = label;
+  g.addEventListener("click", e => { e.stopPropagation(); onClick(); });
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } });
+}
+
+function render() {
+  const dropped = reconcileSwitches();
+  if (dropped.length) toast(`${dropped.map(swLabel).join(", ")} removed: ${state.mount === "hotswap" ? "no room for their sockets here" : "no room for their holes here"}.`);
+  clampBlocks();
+  const g = geometry();
+  const all = [...g.main, ...g.extras];
+  const minX = Math.min(...all.map(k => k.x)), minY = Math.min(...all.map(k => k.y));
+  const maxX = Math.max(...all.map(k => k.x + k.w)), maxY = Math.max(...all.map(k => k.y + k.h));
+  const sideCols = state.extra.left.length + state.extra.right.length > 0;
+  const mL = 1.5, mR = state.extra.top.length ? 2.2 : 1.5, mT = 1.3, mB = sideCols ? 2.0 : 0.8;
+  const vb = [(minX - mL) * S, (minY - mT) * S, (maxX - minX + mL + mR) * S, (maxY - minY + mT + mB) * S];
+  const svg = el("svg", { viewBox: vb.join(" "), role: "img", "aria-label": "Keyboard layout preview" });
+  svg.style.minWidth = Math.round(vb[2] / S * 24) + "px";
+  const defs = el("defs", {}, svg);
+  const f = el("filter", { id: "cap-shadow", x: "-10%", y: "-10%", width: "120%", height: "130%" }, defs);
+  el("feDropShadow", { dx: 0, dy: 3, stdDeviation: 2.5, "flood-color": "#000", "flood-opacity": 0.38 }, f);
+  if (state.underglow) {          // soft light around the board where the underside LEDs shine on the desk
+    const gf = el("filter", { id: "underglow", x: "-50%", y: "-50%", width: "200%", height: "200%" }, defs);
+    el("feGaussianBlur", { stdDeviation: 34 }, gf);
+    el("rect", { x: minX * S - 14, y: minY * S - 14, width: (maxX - minX) * S + 28, height: (maxY - minY) * S + 28, rx: 40,
+      fill: "#cfd8ff", opacity: 0.2, filter: "url(#underglow)" }, svg);
+  }
+  const caps = el("g", { filter: "url(#cap-shadow)" }, svg);
+  const legends = el("g", {}, svg);
+
+  for (const k of g.main) {
+    const d = DEF[k.id];
+    const isMod = d.kind === "mod" || d.kind === "sym";
+    capShape(k, "cap" + (isMod ? " mod" : ""), caps);
+    const label = legendFor(k.id);
+    if (!label) continue;
+    const cx = (k.shape === "iso-enter" ? k.x + 0.25 + 0.625 : k.x + k.w / 2) * S;
+    const cy = (k.y + k.h / 2) * S;
+    const size = d.kind === "mod" ? 19 : d.kind === "fkey" ? 21 : d.kind === "sym" ? 28 : d.kind === "arrow" ? 28 : (label.length > 1 ? 26 : 32);
+    addText(legends, cx, cy, label, "lg" + (isMod ? " mod" : ""), size, k.w * S);
+  }
+  for (const k of g.extras) {
+    const label = extraLabel(k);
+    const isSel = selected && selected.side === k.side && selected.bi === k.bi && selected.ki === k.ki;
+    const shape = capShape(k, "cap extra" + (label ? "" : " empty") + (isSel ? " selected" : ""), caps);
+    shape.setAttribute("tabindex", 0);
+    shape.setAttribute("role", "button");
+    shape.setAttribute("aria-label", `Extra key ${k.side} ${k.bi + 1}.${k.ki + 1}: ${label || "unassigned"}`);
+    shape.dataset.side = k.side; shape.dataset.bi = k.bi; shape.dataset.ki = k.ki;
+    shape.addEventListener("click", e => { e.stopPropagation(); openPicker(k.side, k.bi, k.ki, shape); });
+    shape.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPicker(k.side, k.bi, k.ki, shape); } });
+    const cx = (k.x + 0.5) * S, cy = (k.y + 0.5) * S;
+    if (label) addText(legends, cx, cy, label, "lg extra", label.length > 4 ? 18 : 21, S);
+    else el("path", { d: `M${cx - 10} ${cy}H${cx + 10}M${cx} ${cy - 10}V${cy + 10}`, class: "plus-empty" }, legends);
+  }
+
+  // block tools: − / + / × beside each extra row or under each extra column
+  state.extra.top.forEach((b, i) => {
+    const y = (-0.5 - (i + 1) + 0.5) * S, x0 = (Math.min(b.keys.length, g.topMax) + 0.45) * S;
+    control(svg, x0, y, 20, "minus", "One key fewer", () => resizeBlock("top", i, -1), true);
+    control(svg, x0 + 55, y, 20, "plus", "One key more", () => resizeBlock("top", i, +1), true);
+    control(svg, x0 + 110, y, 20, "close", "Remove this row", () => removeBlock("top", i), true);
+  });
+  for (const side of ["left", "right"]) state.extra[side].forEach((b, i) => {
+    const x = (side === "left" ? -0.5 - (i + 1) + 0.5 : g.maxX + 0.5 + i + 0.5) * S;
+    const y0 = (g.rowsY[Math.min(b.keys.length, g.sideMax) - 1] + 1 + 0.45) * S;
+    control(svg, x, y0, 20, "minus", "One key fewer", () => resizeBlock(side, i, -1), true);
+    control(svg, x, y0 + 52, 20, "plus", "One key more", () => resizeBlock(side, i, +1), true);
+    control(svg, x, y0 + 104, 20, "close", "Remove this column", () => removeBlock(side, i), true);
+  });
+  // add buttons: above and beside the board
+  const midY = (g.maxY / 2) * S;
+  const rightEdge = Math.max(g.maxX, ...g.extras.filter(k => k.side === "right").map(k => k.x + 1));
+  if (state.extra.top.length < LIMITS.top) control(svg, (g.maxX / 2) * S, (minY - 0.72) * S, 30, "plus", "Add a row of keys above", () => addBlock("top"));
+  if (state.extra.left.length < LIMITS.left) control(svg, (minX - 0.75) * S, midY, 30, "plus", "Add a column of keys on the left", () => addBlock("left"));
+  if (state.extra.right.length < LIMITS.right) control(svg, (rightEdge + 0.75) * S, midY, 30, "plus", "Add a column of keys on the right", () => addBlock("right"));
+
+  const scroll = document.getElementById("stage-scroll");
+  scroll.replaceChildren(svg);
+  renderInfo(g);
+  document.getElementById("seg-switches")._sync?.();
+  persist();
+  if (selected) requestAnimationFrame(positionPicker);
+}
+
+/* ------------------------------------------------------------------ extra blocks */
+function addBlock(side) {
+  const g = geometry();
+  const n = side === "top" ? g.topMax : g.sideMax;
+  state.extra[side].push({ keys: Array.from({ length: n }, () => ({ fn: null })) });
+  closePicker(); render();
+}
+function removeBlock(side, i) { state.extra[side].splice(i, 1); closePicker(); render(); }
+function resizeBlock(side, i, delta) {
+  const g = geometry();
+  const max = side === "top" ? g.topMax : g.sideMax;
+  const b = state.extra[side][i];
+  const n = Math.max(1, Math.min(max, b.keys.length + delta));
+  while (b.keys.length < n) b.keys.push({ fn: null });
+  b.keys.length = n;
+  if (selected && selected.side === side && selected.bi === i && selected.ki >= n) closePicker();
+  render();
+}
+
+/* ------------------------------------------------------------------ function picker */
+const pop = document.getElementById("pop");
+function openPicker(side, bi, ki, anchor) {
+  selected = { side, bi, ki };
+  const key = state.extra[side][bi].keys[ki];
+  pop.replaceChildren();
+  const head = document.createElement("div"); head.className = "pop-head";
+  const h = document.createElement("h2"); h.id = "pop-title";
+  h.textContent = `${side === "top" ? "Row" : side === "left" ? "Left column" : "Right column"} ${bi + 1}, key ${ki + 1}`;
+  const x = document.createElement("button"); x.className = "icon-btn"; x.type = "button"; x.setAttribute("aria-label", "Close"); x.textContent = "×";
+  x.addEventListener("click", closePicker);
+  head.append(h, x);
+  const groups = document.createElement("div"); groups.className = "fn-groups";
+  for (const gr of FUNCS) {
+    const box = document.createElement("div"); box.className = "fn-group";
+    const lab = document.createElement("span"); lab.className = "label"; lab.textContent = gr.group;
+    const chips = document.createElement("div"); chips.className = "chips";
+    for (const fdef of gr.items) {
+      const c = document.createElement("button"); c.type = "button"; c.className = "chip"; c.textContent = fdef.name;
+      c.title = fdef.code; c.setAttribute("aria-pressed", key.fn === fdef.id ? "true" : "false");
+      c.addEventListener("click", () => { setKey({ fn: fdef.id }); });
+      chips.appendChild(c);
+    }
+    box.append(lab, chips); groups.appendChild(box);
+  }
+  const cust = document.createElement("div"); cust.className = "fn-group";
+  const cl = document.createElement("span"); cl.className = "label"; cl.textContent = "Your own label (macro set up later)";
+  const row = document.createElement("form"); row.className = "custom-row";
+  const inp = document.createElement("input"); inp.id = "custom-label"; inp.maxLength = 8; inp.placeholder = "e.g. obs";
+  inp.value = key.fn === "custom" ? key.label || "" : "";
+  const ok = document.createElement("button"); ok.className = "btn"; ok.type = "submit"; ok.textContent = "Set";
+  row.addEventListener("submit", e => { e.preventDefault(); const v = inp.value.trim(); if (v) setKey({ fn: "custom", label: v }); });
+  row.append(inp, ok); cust.append(cl, row);
+  const foot = document.createElement("div"); foot.className = "pop-foot";
+  const info = document.createElement("span"); info.className = "muted";
+  info.textContent = key.fn && key.fn !== "custom" ? "Sends " + FUNC_BY_ID[key.fn].code : key.fn === "custom" ? "Custom macro" : "Not assigned";
+  const clr = document.createElement("button"); clr.className = "btn ghost"; clr.type = "button"; clr.textContent = "Clear key";
+  clr.disabled = !key.fn;
+  clr.addEventListener("click", () => setKey({ fn: null }));
+  foot.append(info, clr);
+  pop.append(head, groups, cust, foot);
+  pop.hidden = false;
+  render();
+  positionPicker();
+}
+function positionPicker() {
+  if (!selected || pop.hidden) return;
+  const shape = document.querySelector(`#stage-scroll [data-side="${selected.side}"][data-bi="${selected.bi}"][data-ki="${selected.ki}"]`);
+  const stage = document.getElementById("stage");
+  if (!shape) return;
+  const kr = shape.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  let left = kr.left - sr.left + kr.width / 2 - pw / 2;
+  left = Math.max(8, Math.min(sr.width - pw - 8, left));
+  let top = kr.bottom - sr.top + 10;
+  if (top + ph > sr.height + 260) top = Math.max(8, kr.top - sr.top - ph - 10);
+  pop.style.left = left + "px"; pop.style.top = top + "px";
+}
+function setKey(v) {
+  if (!selected) return;
+  state.extra[selected.side][selected.bi].keys[selected.ki] = v;
+  const { side, bi, ki } = selected;
+  const shape = document.querySelector(`#stage-scroll [data-side="${side}"][data-bi="${bi}"][data-ki="${ki}"]`);
+  openPicker(side, bi, ki, shape);
+}
+function closePicker() { selected = null; pop.hidden = true; }
+pop.addEventListener("click", e => e.stopPropagation());   // chips rebuild the popover; keep the click inside it
+document.addEventListener("click", e => { if (!pop.hidden && !pop.contains(e.target)) { closePicker(); render(); } });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !pop.hidden) { closePicker(); render(); }
+  if ((e.key === "Delete" || e.key === "Backspace") && selected && !pop.hidden && document.activeElement?.tagName !== "INPUT") setKey({ fn: null });
+});
+window.addEventListener("resize", positionPicker);
+
+/* ------------------------------------------------------------------ export */
+function exportKO() {
+  const g = geometry(), si = stdInfo();
+  const all = [...g.main, ...g.extras];
+  const ox = Math.min(...all.map(k => k.x)), oy = Math.min(...all.map(k => k.y));
+  const keys = g.main.map(k => {
+    const o = { id: k.id, x: round(k.x - ox), y: round(k.y - oy), w: k.w, h: k.h, label: legendFor(k.id), code: DEF[k.id].code };
+    if (k.shape) o.shape = k.shape;
+    return o;
+  });
+  for (const k of g.extras) {
+    const block = `${k.side}-${k.bi + 1}`;
+    const f = k.fn && k.fn !== "custom" ? FUNC_BY_ID[k.fn] : null;
+    keys.push({ id: `${block}-${String(k.ki + 1).padStart(2, "0")}`, x: round(k.x - ox), y: round(k.y - oy), w: 1, h: 1,
+      label: extraLabel(k), code: f ? f.code : null, block, action: k.fn || null });
+  }
+  const blocks = [];
+  for (const side of ["top", "left", "right"]) state.extra[side].forEach((b, i) => blocks.push({ id: `${side}-${i + 1}`, side, count: b.keys.length }));
+  return {
+    format: "ko-layout", version: 3, name: state.name.trim() || "KO build",
+    layout: { size: state.size, style: state.style, standard: si.std, language: si.lang },
+    connectivity: state.connectivity,
+    switch: { mount: state.mount, types: swSort(state.types), turned: fitOf(state.types)?.turned || [], feel: state.feel, case: caseFor(state.types) },
+    lighting: { per_key: state.rgb, underglow: state.underglow },
+    unit_mm: 19.05,
+    matrix: "auto",
+    blocks, keys,
+  };
+}
+function caseFor(types) { return types.some(t => COMPAT.types[t]?.height === "tall") ? "tall" : "slim"; }   // tall switches need the tall case
+function exportKLE() {
+  const ko = exportKO();
+  const rows = new Map();
+  for (const k of ko.keys) { const key = k.y.toFixed(4); if (!rows.has(key)) rows.set(key, []); rows.get(key).push(k); }
+  const out = [{ name: ko.name, notes: "Exported from the KO layout builder (ko-layout v3)" }];
+  let prevY = -1, first = true;
+  for (const ky of [...rows.keys()].sort((a, b) => a - b)) {
+    const y = +ky, row = [], keys = rows.get(ky).sort((a, b) => a.x - b.x);
+    let cx = 0, yoff = first ? y : y - (prevY + 1);
+    for (const k of keys) {
+      const p = {};
+      const kx = k.shape === "iso-enter" ? k.x + 0.25 : k.x, kw = k.shape === "iso-enter" ? 1.25 : k.w;
+      if (yoff) { p.y = round(yoff); yoff = 0; }
+      if (Math.abs(kx - cx) > 1e-6) p.x = round(kx - cx);
+      if (kw !== 1) p.w = kw;
+      if (k.h !== 1) p.h = k.h;
+      if (k.shape === "iso-enter") { p.x2 = -0.25; p.w2 = 1.5; p.h2 = 1; }
+      if (Object.keys(p).length) row.push(p);
+      row.push(k.label || "");
+      cx = kx + kw;
+    }
+    out.push(row); prevY = y; first = false;
+  }
+  return out;
+}
+function fileText() {
+  if (format === "kle") return JSON.stringify(exportKLE(), null, 1);
+  const ko = exportKO();
+  // one key per line keeps the file readable and diff-friendly
+  const head = JSON.stringify({ ...ko, keys: "__KEYS__" }, null, 2);
+  const keys = "[\n" + ko.keys.map(k => "    " + JSON.stringify(k)).join(",\n") + "\n  ]";
+  return head.replace('"__KEYS__"', keys) + "\n";
+}
+function slug(s) { return (s || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60); }
+
+/* ------------------------------------------------------------------ import */
+function importKO(text) {
+  let o;
+  try { o = JSON.parse(text); } catch (e) { throw new Error("This is not valid JSON."); }
+  if (!o || o.format !== "ko-layout") throw new Error("Not a KO layout file (\"format\" must be \"ko-layout\").");
+  if (![1, 2, 3].includes(o.version)) throw new Error(`Layout file version ${o.version} is not supported here; this page reads versions 1 to 3.`);
+  const std = STANDARDS.find(s => s.std === o.layout?.standard && s.lang === o.layout?.language);
+  if (!SIZES.some(s => s.id === o.layout?.size) || !std) throw new Error("Unknown size or standard in the file.");
+  let types = o.version === 1 ? (o.switch?.family === "mx" ? ["mx"] : ["choc_v1"])
+    : (Array.isArray(o.version === 2 ? o.switch?.fitted : o.switch?.types) ? (o.version === 2 ? o.switch.fitted : o.switch.types) : []);
+  types = types.filter(t => t in COMPAT.types);
+  if (!types.length) types = ["choc_v1"];
+  const mount = o.version === 3 && MOUNTS.some(m => m.id === o.switch?.mount) ? o.switch.mount : "hotswap";
+  const next = { name: o.name || "KO build", nameAuto: false, size: o.layout.size, standard: std.id,
+    style: o.version >= 2 && STYLES.some(t => t.id === o.layout.style) ? o.layout.style : "staggered",
+    connectivity: CONNS.some(c => c.id === o.connectivity) ? o.connectivity : "wireless",
+    mount, types, feel: FEELS.some(f => f.id === o.switch?.feel) ? o.switch.feel : "linear",
+    rgb: o.version === 1 ? o.rgb !== false : o.lighting?.per_key !== false,
+    underglow: o.version >= 2 && o.lighting?.underglow === true,
+    extra: { top: [], left: [], right: [] } };
+  for (const b of o.blocks || []) {
+    if (!LIMITS[b.side] || next.extra[b.side].length >= LIMITS[b.side]) continue;
+    const ks = (o.keys || []).filter(k => k.block === b.id).sort((p, q) => b.side === "top" ? p.x - q.x : p.y - q.y);
+    const keys = Array.from({ length: Math.max(1, b.count | 0) }, (_, i) => {
+      const k = ks[i];
+      if (!k || !k.action) return { fn: null };
+      if (k.action === "custom") return { fn: "custom", label: String(k.label || "").slice(0, 8) };
+      return FUNC_BY_ID[k.action] ? { fn: k.action } : { fn: "custom", label: String(k.label || "").slice(0, 8) };
+    });
+    next.extra[b.side].push({ keys });
+  }
+  return next;
+}
+function applyState(next) { state = next; closePicker(); syncControls(); render(); }
+
+/* ------------------------------------------------------------------ info, notes */
+function renderFit() {
+  const fit = fitOf(state.types) || { turned: [] };
+  const sel = swSort(state.types), turned = fit.turned;
+  const mountLabel = state.mount === "hotswap" ? "Hot-swap" : "Soldered";
+  let status = `${mountLabel}: ${sel.map(swLabel).join(" + ")} ${sel.length > 1 ? "fit on one footprint" : "only"}.`;
+  if (turned.length) status += ` ${turned.map(swLabel).join(", ")} turned 180°${state.rgb ? ", without per-key light" : ""}.`;
+  if (fit.led === "unverified") status += ` Light position for ${swLabel(sel[0])} not yet checked.`;
+  document.getElementById("fit-status").textContent = status;
+
+  // one key position, seen from the top (mm)
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "-10.3 -10.3 20.6 20.6");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "Holes and sockets of one key position for the selected switches");
+  const add = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); parent.appendChild(e); return e; };
+  add("rect", { x: -9.525, y: -9.525, width: 19.05, height: 19.05, rx: 1.2, fill: "#2a2b2f", stroke: "#4d4f55", "stroke-width": 0.15 });
+  const tr = (x, y, rot) => rot ? [-x, -y] : [x, y];
+  if (state.rgb && ["choc_v1", "choc_v2", "mx"].includes(sel[0]))
+    add("rect", { x: -1.8, y: 2.95, width: 3.6, height: 3.9, rx: 0.3, fill: "none", stroke: "#e8cf73", "stroke-width": 0.18, "stroke-dasharray": "0.5 0.35" });
+  const hot = state.mount === "hotswap", drawnSockets = new Set();
+  for (const t of sel) {
+    const T = COMPAT.types[t], rot = turned.includes(t), col = SW_COLOR[t];
+    if (hot && !drawnSockets.has(T.socket)) {
+      drawnSockets.add(T.socket);
+      const S = COMPAT.sockets[T.socket];
+      const [ax, ay] = tr(S.body[0], S.body[1], rot), [bx, by] = tr(S.body[2], S.body[3], rot);
+      add("rect", { x: Math.min(ax, bx), y: Math.min(ay, by), width: Math.abs(bx - ax), height: Math.abs(by - ay), rx: 0.3,
+        fill: col, "fill-opacity": 0.14, stroke: col, "stroke-opacity": 0.6, "stroke-width": 0.12 });
+      for (const [x, y, w, h] of S.pads) { const [px, py] = tr(x, y, rot);
+        add("rect", { x: px - w / 2, y: py - h / 2, width: w, height: h, rx: 0.2, fill: col, "fill-opacity": 0.45 }); }
+    }
+    for (const [x, y, d] of T.holes) { const [hx, hy] = tr(x, y, rot);
+      add("circle", { cx: hx, cy: hy, r: d / 2, fill: "none", stroke: "#d9d9d6", "stroke-opacity": 0.75, "stroke-width": 0.12 }); }
+    for (const [x, y, d] of T.pins) { const [hx, hy] = tr(x, y, rot);
+      if (hot) add("circle", { cx: hx, cy: hy, r: COMPAT.sockets[T.socket].sleeves / 2, fill: "none", stroke: col, "stroke-width": 0.2 });
+      else { add("circle", { cx: hx, cy: hy, r: d / 2 + COMPAT.rules.ring_mm, fill: col });
+        add("circle", { cx: hx, cy: hy, r: d / 2, fill: "#2a2b2f" }); } }
+  }
+  add("path", { d: "M-0.6 0H0.6M0 -0.6V0.6", stroke: "#6d7075", "stroke-width": 0.12 });
+  document.getElementById("fit-fp").replaceChildren(svg);
+  const legend = sel.map(t => { const s = document.createElement("span"); const i = document.createElement("i"); i.style.background = SW_COLOR[t];
+    s.append(i, swLabel(t) + (turned.includes(t) ? " ↻" : "")); return s; });
+  if (state.rgb && ["choc_v1", "choc_v2", "mx"].includes(sel[0])) { const s = document.createElement("span"); const i = document.createElement("i");
+    i.style.border = "1px dashed #e8cf73"; s.append(i, "LED window"); legend.push(s); }
+  document.getElementById("fit-legend").replaceChildren(...legend);
+
+  // matrix for the current mounting and light
+  const tbl = document.getElementById("fit-matrix");
+  tbl.replaceChildren();
+  const head = document.createElement("tr"); head.appendChild(document.createElement("th"));
+  for (const b of SW_IDS) { const th = document.createElement("th"); th.textContent = SW_SHORT[b]; th.title = swLabel(b); if (sel.includes(b)) th.className = "sel"; head.appendChild(th); }
+  tbl.appendChild(head);
+  for (const a of SW_IDS) {
+    const tr2 = document.createElement("tr");
+    const th = document.createElement("th"); th.className = "row" + (sel.includes(a) ? " sel" : ""); th.textContent = swLabel(a); tr2.appendChild(th);
+    for (const b of SW_IDS) {
+      const td = document.createElement("td");
+      const hl = sel.includes(a) && sel.includes(b) ? " sel" : "";
+      if (a === b) {
+        const alone = !!fitTable().sets[a];
+        td.className = (alone ? "self" : "no") + hl; td.textContent = alone ? "·" : "✕";
+        td.title = alone ? swLabel(a) : whyNot([], a);
+      } else {
+        const p = pairInfo(a, b);
+        td.className = p.ok + hl; td.textContent = { yes: "✓", turn: "↻", no: "✕" }[p.ok];
+        td.title = p.ok === "no" ? `${swLabel(a)} + ${swLabel(b)}: ${p.why}` : p.ok === "turn" ? `${p.turned.map(swLabel).join(", ")} turned 180°` : `${swLabel(a)} + ${swLabel(b)} fit`;
+      }
+      tr2.appendChild(td);
+    }
+    tbl.appendChild(tr2);
+  }
+}
+
+function renderInfo(g) {
+  const all = [...g.main, ...g.extras];
+  const w = Math.max(...all.map(k => k.x + k.w)) - Math.min(...all.map(k => k.x));
+  const d = Math.max(...all.map(k => k.y + k.h)) - Math.min(...all.map(k => k.y));
+  const stabs = g.main.filter(k => k.w >= 2 || (k.h >= 2 && k.shape !== "iso-enter")).length;
+  const rows = new Set(all.map(k => k.y)).size;
+  const perRow = {};
+  for (const k of all) perRow[k.y] = (perRow[k.y] || 0) + 1;
+  const cols = Math.max(...Object.values(perRow));
+  const stats = [
+    [String(all.length), "switches"],
+    [`${Math.round(w * 19.05)} × ${Math.round(d * 19.05)} mm`, "key area"],
+    [String(stabs), "stabilizers"],
+    [`${rows} × ${cols}`, "matrix"],
+    [caseFor(state.types) === "tall" ? "Tall" : "Slim", "case"],
+  ];
+  const box = document.getElementById("stats");
+  box.replaceChildren(...stats.map(([v, l]) => { const s = document.createElement("div"); s.className = "stat";
+    const b = document.createElement("b"); b.textContent = v; const sp = document.createElement("span"); sp.textContent = l; s.append(b, sp); return s; }));
+
+  const notes = [];
+  if (state.size === "40") notes.push("40 %: digits and F-keys go on the Fn layer.");
+  if (state.size === "40" || state.size === "60") notes.push("The generator checks that the battery fits under this size.");
+  if (d * 19.05 < 80) notes.push("The core strip beside the keys is 80 mm long, deeper than this key area: the case grows to fit it.");
+  if (rows > 8) notes.push("More than 8 rows: the generator folds them into 8 matrix rows.");
+  const ul = document.getElementById("notes");
+  renderFit();
+  ul.replaceChildren(...notes.map(t => { const li = document.createElement("li"); li.textContent = t; li.className = "warn"; return li; }));
+  document.getElementById("json-out").value = fileText();
+}
+
+/* ------------------------------------------------------------------ settings controls */
+function seg(id, options, get, set) {
+  const box = document.getElementById(id);
+  box.replaceChildren();
+  for (const o of options) {
+    const b = document.createElement("button"); b.type = "button"; b.dataset.value = o.id;
+    b.append(o.label);
+    if (o.later) { const s = document.createElement("small"); s.textContent = "later"; b.append(s); b.disabled = true; b.title = "Planned as its own switch-board variant"; }
+    b.addEventListener("click", () => { set(o.id); autoName(); syncControls(); render(); });
+    box.appendChild(b);
+  }
+  box._sync = () => { for (const b of box.children) b.setAttribute("aria-pressed", String(b.dataset.value) === String(get())); };
+}
+seg("seg-size", SIZES, () => state.size, v => { state.size = v; });
+seg("seg-std", STANDARDS, () => state.standard, v => { state.standard = v; });
+seg("seg-conn", CONNS, () => state.connectivity, v => { state.connectivity = v; });
+seg("seg-style", STYLES, () => state.style, v => { state.style = v; });
+seg("seg-glow", [{ id: "on", label: "On" }, { id: "off", label: "Off" }], () => state.underglow ? "on" : "off", v => { state.underglow = v === "on"; });
+seg("seg-mount", MOUNTS, () => state.mount, v => { state.mount = v; });
+// Switch types: chips show live whether a type still fits with the ones already chosen.
+(function () {
+  const box = document.getElementById("seg-switches");
+  for (const t of SW_IDS) {
+    const b = document.createElement("button"); b.type = "button"; b.dataset.value = t;
+    const mark = document.createElement("span"); mark.className = "mark";
+    b.append(swLabel(t), mark);
+    b.addEventListener("click", () => {
+      const on = state.types.includes(t);
+      if (on) {
+        if (state.types.length === 1) { toast("Keep at least one switch type."); return; }
+        state.types = state.types.filter(x => x !== t);
+      } else {
+        if (!fitOf([...state.types, t])) { toast(whyNot(state.types, t)); return; }
+        state.types = [...state.types, t];
+      }
+      render();
+    });
+    box.appendChild(b);
+  }
+  for (const o of OWN_BOARD) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "own"; b.disabled = true;
+    b.title = "Needs its own switch board: no pins, a sensor under every key";
+    const sm = document.createElement("small"); sm.textContent = "own board"; b.append(o.label, sm); box.appendChild(b);
+  }
+  box._sync = () => {
+    const fit = fitOf(state.types) || { turned: [] };
+    for (const b of box.children) {
+      const t = b.dataset.value; if (!t) continue;
+      const on = state.types.includes(t);
+      const next = on ? fit : fitOf([...state.types, t]);
+      const status = !next ? "no" : next.turned.includes(t) ? "turn" : "yes";
+      b.setAttribute("aria-pressed", String(on));
+      b.classList.toggle("no", !on && status === "no");
+      b.classList.toggle("turn", status === "turn");
+      b.querySelector(".mark").textContent = status === "no" && !on ? "✕" : status === "turn" ? "↻" : "";
+      b.title = status === "no" && !on ? whyNot(state.types, t) : status === "turn" ? `${swLabel(t)}: turned 180°${state.rgb ? ", no per-key light" : ""}` : swLabel(t);
+    }
+  };
+})();
+seg("seg-feel", FEELS, () => state.feel, v => { state.feel = v; });
+seg("seg-rgb", [{ id: "on", label: "On" }, { id: "off", label: "Off" }], () => state.rgb ? "on" : "off", v => { state.rgb = v === "on"; });
+seg("seg-format", [{ id: "ko", label: "KO layout" }, { id: "kle", label: "KLE" }], () => format, v => { format = v; });
+// The build name follows the settings until the viewer types their own.
+function autoName() {
+  if (state.nameAuto === false) return;
+  const si = stdInfo();
+  state.name = `KO ${state.size === "tkl" ? "TKL" : state.size} ${si.std}-${si.lang}${state.style === "grid" ? " grid" : ""}${state.connectivity === "wired" ? " wired" : ""}`;
+}
+function syncControls() {
+  for (const id of ["seg-size", "seg-style", "seg-std", "seg-conn", "seg-mount", "seg-switches", "seg-feel", "seg-rgb", "seg-glow", "seg-format"]) document.getElementById(id)._sync();
+  document.getElementById("build-name").value = state.name;
+}
+const nameIn = document.getElementById("build-name");
+nameIn.addEventListener("input", () => { state.name = nameIn.value; state.nameAuto = false; persist(); document.getElementById("json-out").value = fileText(); });
+
+/* ------------------------------------------------------------------ toast */
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+}
+
+/* ------------------------------------------------------------------ copy, download, load */
+document.getElementById("btn-copy").addEventListener("click", () => {
+  const text = fileText();
+  const fallback = () => { const d = document.getElementById("json-details"); d.open = true; const ta = document.getElementById("json-out"); ta.focus(); ta.select(); toast("Selected the file below. Press Ctrl+C or ⌘C to copy."); };
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(() => toast("Copied the layout file"), fallback); else fallback();
+});
+let downloads = null, db = null;
+document.getElementById("btn-download").addEventListener("click", async () => {
+  const name = (slug(state.name) || "ko-build") + (format === "kle" ? "-kle" : "") + ".json";
+  const text = fileText();
+  if (downloads) {
+    try { await downloads.save({ filename: name, data: text }); toast("Saved " + name); }
+    catch (e) { if (e && e.code === "declined") return; toast(e && e.code === "rate_limited" ? "A save prompt is already open." : "This view can't save files. Use Copy JSON instead."); }
+    return;
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+document.getElementById("btn-load").addEventListener("click", () => {
+  const st = document.getElementById("load-status");
+  try { applyState(importKO(document.getElementById("json-in").value)); st.textContent = "Loaded."; toast("Loaded " + state.name); }
+  catch (e) { st.textContent = e.message; }
+});
+document.getElementById("file-in").addEventListener("change", e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => { const st = document.getElementById("load-status");
+    try { applyState(importKO(String(r.result))); st.textContent = "Loaded " + file.name + "."; toast("Loaded " + state.name); } catch (err) { st.textContent = err.message; } };
+  r.readAsText(file);
+  e.target.value = "";
+});
+
+/* ------------------------------------------------------------------ saved builds (artifact store) */
+const savedList = document.getElementById("saved-list"), savedStatus = document.getElementById("saved-status");
+function summaryText(cfg) {
+  const sz = SIZES.find(s => s.id === cfg.layout.size)?.label || cfg.layout.size;
+  const sw = (cfg.switch.types || cfg.switch.fitted || [cfg.switch.family]).map(swLabel).join(" + ") + (cfg.switch.mount === "solder" ? " soldered" : " hot-swap");
+  return `${sz}${cfg.layout.style === "grid" ? " grid" : ""} · ${cfg.layout.standard} ${cfg.layout.language} · ${cfg.connectivity} · ${sw} · ${cfg.keys.length} keys`;
+}
+function renderSaved(docs) {
+  savedList.replaceChildren();
+  if (!docs.length) {
+    const li = document.createElement("li"); li.className = "empty"; li.style.display = "block";
+    li.textContent = "No saved builds yet.";
+    savedList.appendChild(li); return;
+  }
+  for (const d of docs) {
+    const v = d.data(); if (!v || !v.config) continue;
+    const li = document.createElement("li");
+    const meta = document.createElement("div"); meta.className = "meta";
+    const b = document.createElement("b"); b.textContent = v.name || d.id;
+    const s = document.createElement("span");
+    const when = v.savedAt ? new Date(v.savedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "";
+    s.textContent = (v.summary || "") + (when ? " · " + when : "");
+    meta.append(b, s);
+    const acts = document.createElement("div"); acts.className = "row-actions";
+    const ld = document.createElement("button"); ld.className = "btn"; ld.type = "button"; ld.textContent = "Open";
+    ld.addEventListener("click", () => { try { applyState(importKO(JSON.stringify(v.config))); toast("Opened " + (v.name || d.id)); } catch (e) { toast(e.message); } });
+    const del = document.createElement("button"); del.className = "btn ghost"; del.type = "button"; del.textContent = "Delete";
+    del.addEventListener("click", async () => {
+      if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Confirm"; setTimeout(() => { del.dataset.armed = ""; del.textContent = "Delete"; }, 3000); return; }
+      try { await db.collection("builds").doc(d.id).delete(); toast("Deleted " + (v.name || d.id)); } catch (e) { toast("Could not delete it here."); }
+    });
+    acts.append(ld, del);
+    li.append(meta, acts);
+    savedList.appendChild(li);
+  }
+}
+document.getElementById("btn-save").addEventListener("click", async e => {
+  const btn = e.currentTarget;
+  const cfg = exportKO();
+  const id = slug(cfg.name) || "ko-build";
+  btn.disabled = true;
+  try {
+    await db.collection("builds").doc(id).set({ name: cfg.name, savedAt: new Date().toISOString(), summary: summaryText(cfg), config: cfg });
+    toast("Saved “" + cfg.name + "”");
+  } catch (err) {
+    const c = err && err.code;
+    toast(c === "invalid_argument" ? "You can open builds here but not save them." : c === "quota_exceeded" ? "Storage is full. Delete an old build first." : "Could not save. Try again in a moment.");
+  } finally { btn.disabled = false; }
+});
+async function connectRuntime() {
+  if (!window.claude || typeof window.claude.use !== "function") {
+    document.getElementById("btn-download").hidden = false;           // plain browser: normal download works
+    savedStatus.textContent = "Saving builds works when this page is opened on claude.ai.";
+    renderSaved([]);
+    return;
+  }
+  savedStatus.textContent = "Loading saved builds…";
+  const [d, dl] = await Promise.all([window.claude.use("db").catch(() => null), window.claude.use("downloads").catch(() => null)]);
+  downloads = dl; db = d;
+  document.getElementById("btn-download").hidden = !downloads;
+  if (!db) { savedStatus.textContent = "Saved builds are not available in this view."; renderSaved([]); return; }
+  document.getElementById("btn-save").hidden = false;
+  const timer = setTimeout(() => { savedStatus.textContent = "Saved builds can't be reached yet."; }, 10000);
+  db.collection("builds").orderBy("savedAt", "desc").limit(100).onSnapshot(snap => {
+    if (!snap.metadata.fromCache) { clearTimeout(timer); savedStatus.textContent = ""; }
+    renderSaved(snap.docs);
+  }, () => { clearTimeout(timer); savedStatus.textContent = "Saved builds are not available in this view."; });
+}
+
+/* ------------------------------------------------------------------ start */
+syncControls();
+render();
+connectRuntime();
+window.__ko = { geometry, exportKO, exportKLE, importKO, applyState, fileText, COMPAT, get state() { return state; }, SIZES, STANDARDS };
+</script>
+</body></html>

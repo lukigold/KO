@@ -30,7 +30,7 @@ but need a taller top case (later variant). Exact numbers: OPEN-11.
 |---|---|---|---|
 | MECH-001 | Height including keycaps (Choc build) shall be ≤ 18 mm front and ≤ 22 mm back; goal 20 mm at the back. | P6 | M |
 | MECH-002 | The case shall have a built-in tilt of about 2° (barely noticeable), no fold-out feet, and rubber feet. | P1 | I |
-| MECH-003 | The battery sits under the switch board; the core board sits at the back edge; both USB-C ports exit through the back edge. | P1 | I |
+| MECH-003 | The battery sits under the switch board. The core board is a strip beside the key area at the right, its back end at the back edge, soldered to the switch board's right edge. Both USB-C ports exit through the back edge: port A from the core board (right end), port B from the switch board (left end); both are long-body receptacles whose mouths reach through the case wall. (Changed by D-41.) | P1 | I |
 | MECH-004 | The MX variant shall reuse the switch board with a taller top case and plate. | Later | I |
 | MECH-010 | Final case: CNC-machined aluminium (top and bottom), anodized **dark creamy warm silver**. Physical anodizing samples shall be approved before the final order. | P6 | I |
 | MECH-011 | No transparent window, no visible status LEDs, no fold-out parts. | P1 | I |

@@ -165,18 +165,6 @@
   "kind": "mpn",
   "mpn": "XY-S2B-PH-SM4-TB"
  },
- "J_NTC": {
-  "kind": "mpn",
-  "mpn": "SM02B-SRSS-TB(LF)(SN)"
- },
- "J_HAPTIC": {
-  "kind": "mpn",
-  "mpn": "SM06B-SRSS-TB(LF)(SN)"
- },
- "SW_PWR": {
-  "kind": "mpn",
-  "mpn": "PCM12SMTR"
- },
  "RT_NTC": {
   "kind": "fixed",
   "lcsc": "",
@@ -197,11 +185,6 @@
   "kind": "mpn",
   "mpn": "ECS-.327-12.5-34B-TR"
  },
- "J_SWD": {
-  "kind": "search",
-  "search": "2x5P 1.27mm SMD pin header",
-  "package": ""
- },
  "C_18p_0402_C0G": {
   "kind": "capacitor",
   "package": "0402",
@@ -218,5 +201,36 @@
   "kind": "resistor",
   "package": "0402",
   "value": 133000
+ },
+ "R_330_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 330
+ },
+ "U_AHCT125": {
+  "kind": "mpn",
+  "mpn": "SN74AHCT1G125DCKR(UMW)"
+ },
+ "J_USBC_L10": {
+  "kind": "mpn",
+  "mpn": "HX TYPE-C 16P L10.0"
+ },
+ "U_TPS2121": {
+  "kind": "mpn",
+  "mpn": "TPS2121RUXR"
+ },
+ "U_TS3USB221A": {
+  "kind": "mpn",
+  "mpn": "TS3USB221ARSER"
+ },
+ "R_36k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 36000
+ },
+ "R_22k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 22000
  }
 }

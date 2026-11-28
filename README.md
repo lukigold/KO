@@ -155,7 +155,7 @@ tools/         test rigs (latency, power), scripts
 LICENSES/      full license texts
 ```
 
-Only `docs/`, `hardware/` (core board rev A schematic, tools) and `LICENSES/` exist today; the rest is created in the phase that needs it.
+Only `docs/`, `hardware/` (core board rev A, tools), `generator/` (layout builder page, KO layout file schema and example) and `LICENSES/` exist today; the rest is created in the phase that needs it.
 
 ## License
 
