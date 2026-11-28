@@ -21,7 +21,7 @@ from kisch.sexpr import find, find_all, parse
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 LIB = ROOT / "hardware" / "switch" / "lib" / "ko-switch.pretty"
 OX, OY = 100.0, 100.0
-ML, MF, MB, MR = 1.0, 1.0, 8.0, 3.0      # key area margins: left, front, back (port B band, OPEN-24), right
+ML, MF, MB, MR = 1.0, 2.5, 8.0, 3.0      # key area margins: left, front (lines behind the front row), back (port B band, OPEN-24), right
 NETCLASSES = {
     "Default": {"track_width": 0.2, "clearance": 0.15, "via_diameter": 0.6, "via_drill": 0.3},
     "Power": {"track_width": 0.6, "clearance": 0.15, "via_diameter": 0.8, "via_drill": 0.4},
@@ -155,7 +155,7 @@ def build(b, outdir: pathlib.Path) -> None:
     tree = export_netlist(outdir, b.slug)
     pcb_path = outdir / f"{b.slug}.kicad_pcb"
     board = pcbnew.NewBoard(str(pcb_path))
-    board.SetCopperLayerCount(2)
+    board.SetCopperLayerCount(4)
     board.GetDesignSettings().SetBoardThickness(mm(1.6))
     tb = board.GetTitleBlock()
     tb.SetTitle(f"KO switch board: {b.name}")
@@ -208,6 +208,22 @@ def build(b, outdir: pathlib.Path) -> None:
             if pa.y > pk.y:
                 fp.SetOrientationDegrees(rot + 180)
 
+    gnd = board.FindNet("GND")
+    for layer, name in ((pcbnew.In1_Cu, "GND plane"), (pcbnew.F_Cu, "GND top"), (pcbnew.B_Cu, "GND bottom")):
+        z = pcbnew.ZONE(board)
+        z.SetLayer(layer)
+        z.SetNet(gnd)
+        o = z.Outline()
+        o.NewOutline()
+        for x, y in ((0.3, 0.3), (W - 0.3, 0.3), (W - 0.3, H - 0.3), (0.3, H - 0.3)):
+            o.Append(mm(OX + x), mm(OY + y))
+        z.SetZoneName(name)
+        z.SetMinThickness(mm(0.2))
+        z.SetLocalClearance(mm(0.25))
+        z.SetThermalReliefGap(mm(0.25))
+        z.SetThermalReliefSpokeWidth(mm(0.3))
+        z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
+        board.Add(z)
     t = pcbnew.PCB_TEXT(board)
     t.SetText(f"KO {b.name} v1\nCERN-OHL-S-2.0")
     t.SetLayer(pcbnew.B_SilkS)

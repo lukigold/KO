@@ -36,6 +36,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("layout")
     ap.add_argument("--pcb", action="store_true")
+    ap.add_argument("--route", action="store_true", help="with --pcb: route the board (minutes)")
     a = ap.parse_args()
     b = layout.read(a.layout)
     outdir = OUT / b.slug
@@ -52,6 +53,9 @@ def main():
     if a.pcb:
         import pcb
         pcb.build(b, outdir)
+        if a.route:
+            import route
+            route.route(outdir / f"{b.slug}.kicad_pcb", b)
 
 
 if __name__ == "__main__":
