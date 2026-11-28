@@ -1,0 +1,189 @@
+(footprint "LED_E6CC1205RGBC3UDA_ReverseMount"
+	(version 20241229)
+	(generator "ko-gen")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(descr "EKINGLUX E6CC1205RGBC3UDA reverse-mount RGB LED, common anode (pin 2), light hole 2.0 x 3.9")
+	(tags "LED RGB reverse mount common anode")
+	(property "Reference" "REF**"
+		(at 0 -2.6 0)
+		(layer "F.SilkS")
+		(uuid "a67b8c35-669b-5782-89ce-4abb0d3832e1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "LED_E6CC1205RGBC3UDA_ReverseMount"
+		(at 0 2.6 0)
+		(layer "F.Fab")
+		(uuid "aa131fd0-7806-59e9-b0be-2a2d64a3a439")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "a6a5efe0-78a8-5aac-b5ca-f97c74cba69a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "EKINGLUX E6CC1205RGBC3UDA reverse-mount RGB LED, common anode (pin 2), light hole 2.0 x 3.9"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "72317502-adfa-5395-81b6-a30564bf4806")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(pad "1" smd rect
+		(at 1.375 -0.585)
+		(size 0.75 0.7)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "d8458503-6b79-5992-8028-4e370f895efb")
+	)
+	(pad "2" smd rect
+		(at -1.375 -0.585)
+		(size 0.75 0.7)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "975fbe54-6bb0-52b4-89f2-45e1508375b6")
+	)
+	(pad "3" smd rect
+		(at 1.375 0.585)
+		(size 0.75 0.7)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "e0024385-6b0e-5f4f-bbb2-d30f9b94c823")
+	)
+	(pad "4" smd rect
+		(at -1.375 0.585)
+		(size 0.75 0.7)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(uuid "cf56264e-fa54-5d72-8ee3-b6742c4fcd78")
+	)
+	(pad "" np_thru_hole oval
+		(at 0 0)
+		(size 2 3.9)
+		(drill oval 2 3.9)
+		(layers "*.Cu" "*.Mask")
+		(uuid "5f71590b-d8c8-5aa5-a41f-6d2d1636b124")
+	)
+	(fp_line
+		(start -1.6 -0.625)
+		(end 1.6 -0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "47536921-e852-5d7e-9dec-61dbca61ed19")
+	)
+	(fp_line
+		(start 1.6 -0.625)
+		(end 1.6 0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "53f87239-baba-5df9-94e7-dd15dd67f084")
+	)
+	(fp_line
+		(start 1.6 0.625)
+		(end -1.6 0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "7f8784c0-1679-5f5c-b0bf-352f097af5b0")
+	)
+	(fp_line
+		(start -1.6 0.625)
+		(end -1.6 -0.625)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "d5f65b53-f82b-5e52-96f9-70a189867ea4")
+	)
+	(fp_line
+		(start -2 -2.2)
+		(end 2 -2.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "ae569b5a-aedd-520e-b6a2-37ead30299c1")
+	)
+	(fp_line
+		(start 2 -2.2)
+		(end 2 2.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "a9acf9fd-5c5b-583f-88d5-e9d570dcd9e1")
+	)
+	(fp_line
+		(start 2 2.2)
+		(end -2 2.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "bbff5100-10ef-5552-b3b5-c274e3733ec4")
+	)
+	(fp_line
+		(start -2 2.2)
+		(end -2 -2.2)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "39241e95-364c-50e2-a6b1-0bca68ffb090")
+	)
+	(fp_circle
+		(center 2.2 -0.9)
+		(end 2.32 -0.9)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.SilkS")
+		(uuid "3e9ce5bd-9bc8-571e-a1d4-676618ce94a5")
+	)
+	(model "${KIPRJMOD}/../lib/ko-switch.3dshapes/LED_E6CC1205RGBC3UDA_ReverseMount.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+	(embedded_fonts no)
+)
