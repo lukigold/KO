@@ -230,7 +230,7 @@ def route(board_path: pathlib.Path, b, iters=40, workers=None) -> None:
         nets.append(net)
     print(f"  maze: {len(conns)} connections")
     board = pcbnew.LoadBoard(str(board_path))
-    r = maze.Router(board, box, KLAYER, clearance=0.18, hole_clearance=0.36)
+    r = maze.Router(board, box, KLAYER, clearance=0.22, hole_clearance=0.36)
     neg = maze.Negotiator(r)
     paths = neg.run(conns, iters=iters, workers=workers or os.cpu_count(), max_nodes=4_000_000,
                     log=lambda s: print(s, flush=True))
@@ -266,3 +266,38 @@ def route(board_path: pathlib.Path, b, iters=40, workers=None) -> None:
     filler = pcbnew.ZONE_FILLER(board)
     filler.Fill(board.Zones())
     pcbnew.SaveBoard(str(board_path), board)
+    for rnd in range(3):
+        n = cleanup(board_path, box)
+        print(f"  cleanup {rnd + 1}: {n} more connections routed", flush=True)
+        if n == 0:
+            break
+
+
+def cleanup(board_path: pathlib.Path, box) -> int:
+    """Connections the negotiation left open, routed one after another on the finished board."""
+    items = drc_unconnected(board_path)
+    board = pcbnew.LoadBoard(str(board_path))
+    r = maze.Router(board, box, KLAYER, clearance=0.22, hole_clearance=0.36)
+    cu = Copper(board)
+    n = 0
+    for k, it in enumerate(items):
+        a, c = it["items"][0], it["items"][1]
+        net = a["description"].split("[", 1)[1].split("]", 1)[0] if "[" in a["description"] else ""
+        if not net or net == "GND" or board.FindNet(net) is None:
+            continue
+        ni = board.FindNet(net)
+        hw = half_width(board, net, a["description"] + c["description"])
+        path, _ = r.route(ni.GetNetCode(), ends(a), ends(c), hw, VIA[0] / 2, VIA[1], margin=40, max_nodes=8_000_000)
+        if not path:
+            continue
+        segs, vias = r.simplify(path, ni.GetNetCode(), hw)
+        r.add(100000 + k, ni.GetNetCode(), segs, vias, hw, VIA[0] / 2, VIA[1])
+        for layer, pts in segs:
+            for p0, p1 in zip(pts, pts[1:]):
+                cu.track(ni, KLAYER[layer], (p0[0] - OX, p0[1] - OY), (p1[0] - OX, p1[1] - OY), 2 * hw, lock=False)
+        for x, y in vias:
+            cu.via(ni, x - OX, y - OY, lock=False)
+        n += 1
+    pcbnew.ZONE_FILLER(board).Fill(board.Zones())
+    pcbnew.SaveBoard(str(board_path), board)
+    return n
