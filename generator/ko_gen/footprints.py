@@ -89,9 +89,11 @@ def led():
     written mirrored here: after the flip pin 1 sits top-left as in the datasheet's top view."""
     fp = FP(LED, "EKINGLUX E6CC1205RGBC3UDA reverse-mount RGB LED, common anode (pin 2), light hole 2.0 x 3.9",
             "LED RGB reverse mount common anode", -2.6, 2.6)
-    for num, x, y in (("1", 1.375, -0.585), ("2", -1.375, -0.585), ("3", 1.375, 0.585), ("4", -1.375, 0.585)):
-        fp.pad(num, x, y, 0.75, 0.7)
-    fp.npth_oval(0, 0, 2.0, 3.9)
+    # datasheet pads start right at the 2.0 mm hole; here the hole is 1.7 mm wide (lens 1.4 mm) and the pads
+    # 0.7 mm wide from 1.15 mm out, so copper keeps 0.3 mm from the hole edge and still covers 0.45 mm of each lead
+    for num, x, y in (("1", 1.5, -0.585), ("2", -1.5, -0.585), ("3", 1.5, 0.585), ("4", -1.5, 0.585)):
+        fp.pad(num, x, y, 0.7, 0.7)
+    fp.npth_oval(0, 0, 1.7, 3.9)
     fp.rect(-1.6, -0.625, 1.6, 0.625, "F.Fab", 0.1)
     fp.rect(-2.0, -2.2, 2.0, 2.2, "F.CrtYd", 0.05)
     fp.circle(2.2, -0.9, 0.12, "F.SilkS", 0.1)              # pin 1 marker (mirrored side before the flip)
