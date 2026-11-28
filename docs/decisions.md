@@ -92,7 +92,7 @@ All decisions below were made on 2026-11-15 in the requirements interview with t
 | OPEN-08 | Keycap product: Choc-compatible, metallic look, RGB compatibility, legends | P1 | Metal caps block light and add weight |
 | OPEN-09 | Number and layout of programmable keys on the knob module | P4 | |
 | OPEN-10 | macOS playback state for the music knob | P5 | No stable public now-playing API; per-player integrations (Apple Music, Spotify) or another method |
-| OPEN-11 | Exact stack-up heights and battery capacity | P1 | Core outline set to 50 × 32 mm (D-34); battery must fit beside it under a 40 % layout |
+| OPEN-11 | Exact stack-up heights and battery capacity | P1 | Core is a 19 × 80 mm strip right of the key area (D-41, D-56; was 50 × 32 mm, D-34); battery must fit beside it under a 40 % layout |
 | OPEN-12 | One LED position serving both MX and Choc light windows | P1 | Choc takes priority if impossible. D-39 places the LED 4.9 mm south of the centre, between the two windows (Choc 4.7, MX 5.08); confirm against both switch datasheets when the switch-board footprint is drawn |
 | OPEN-13 | RMK integration: shift-register column scanning; Vial and KO protocol coexisting | P1–P2 | |
 | OPEN-14 | 2.4 GHz pairing flow details | P2 | Must satisfy RF-013 |
