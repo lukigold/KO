@@ -14,7 +14,7 @@ There is one switch board per layout and variant. All of them plug into the same
 
 | Variant | Status | Notes |
 |---|---|---|
-| MX + Choc hot-swap (combined footprint), per-key RGB | **v1** | Same approach as Zack Freedman's MiRage Mk2. v1 is built with Choc switches in the slim case |
+| Choc v1/v2 hot-swap, per-key RGB, optional underglow | **v1** | D-57: MX and Choc hot-swap with per-key light do not fit one key (D-38); v1 is Choc-only, in the slim case |
 | Soldered multi-footprint | Later (generator, GEN-015) | Holes for every selected switch type in one footprint, e.g. Choc v1 + v2 + MX + Gateron LP + Alps; switches are soldered |
 | Hall-effect | Later | Own board, same interface (uses the reserved lines) |
 | Gateron low-profile | Later | Own board, same interface |
@@ -90,7 +90,7 @@ the MCU. Diodes run column → row (COL2ROW).
 
 | ID | Requirement | Phase | Verify |
 |---|---|---|---|
-| SWB-001 | Each key position shall accept both a Kailh MX hot-swap socket and a Kailh Choc (v1/v2) hot-swap socket. | P1 | T |
+| ~~SWB-001~~ | ~~Each key position shall accept both a Kailh MX hot-swap socket and a Kailh Choc (v1/v2) hot-swap socket.~~ Superseded by SWB-017 (D-57). | P1 | T |
 | SWB-002 | Key pitch shall be 19.05 mm. | P1 | I |
 | SWB-003 | Keys 2u and wider shall have stabilizer footprints for both MX-style and Choc stabilizers. | P1 | I |
 | SWB-004 | Each key shall have one reverse-mount RGB LED placed for the switches' light windows; if one position cannot serve both families, Choc takes priority (OPEN-12). | P1 | T |
@@ -100,9 +100,12 @@ the MCU. Diodes run column → row (COL2ROW).
 | SWB-008 | A descriptor EEPROM shall carry the data listed above; the generator writes it; the firmware configures itself from it. | P1 | T |
 | SWB-009 | The board shall be generated entirely by the generator pipeline from a layout file, with no manual routing. | P1 | I |
 | SWB-010 | ERC/DRC shall be clean, the board orderable at JLCPCB as generated, and sockets assemblable by JLCPCB or by hand. | P1 | I |
-| SWB-011 | v1 shall include a 75 % ISO board (the owner's Swiss build) and a 75 % ANSI board. | P1 | I |
+| ~~SWB-011~~ | ~~v1 shall include a 75 % ISO board (the owner's Swiss build) and a 75 % ANSI board.~~ Superseded by SWB-018 (D-57). | P1 | I |
 | SWB-012 | Mounting and soft-mount points shall support the Choc plate height (slim case) and the MX plate height (taller case). | P1 | I |
 | SWB-013 | PCB thickness shall be 1.6 mm unless the height stack-up requires 1.2 mm (decided with OPEN-11). | P1 | I |
 | SWB-014 | Hall-effect and Gateron low-profile switch boards shall use the same connector and descriptor, declaring their variant. | Later | A |
 | SWB-015 | The board shall carry USB-C port B at its back-left corner (long-body 16-pin receptacle, ESD on D± and CC) and pass VBUS_B, D±, CC1/CC2 to the core contacts. | P1 | I/T |
 | SWB-016 | The board's right edge shall carry the 33 castellated contacts of the core interface (2.0 mm pitch, contact 1 at the back, two groups at the positions given under "Interface"), aligned so the core's back end is level with the board's back edge. | P1 | I |
+| SWB-017 | Each key position shall accept a Kailh Choc v1/v2 hot-swap socket (CPG1350); the key footprint takes both switch generations (D-38). | P1 | T |
+| SWB-018 | The generator shall build a switch board for every size, style and standard the layout builder offers, from the builder's KO layout file; v1 starts with the owner's 65 % ISO-CH board. | P1 | T |
+| SWB-019 | With underglow selected in the layout file, the board shall carry underglow RGB LEDs on its underside on spare LED-driver channels (D-40 A, GEN-014). | P1 | T |

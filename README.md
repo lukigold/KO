@@ -97,12 +97,12 @@ Verification: **T** test · **M** measurement · **I** inspection · **A** analy
 
 | ID | Requirement | Phase | Verify |
 |---|---|---|---|
-| SYS-01 | The main keyboard shall be a one-piece 75 % layout; the owner's build is ISO-CH, and ANSI/ISO variants shall come from the generator. | P1 | I |
+| ~~SYS-01~~ | ~~The main keyboard shall be a one-piece 75 % layout; the owner's build is ISO-CH, and ANSI/ISO variants shall come from the generator.~~ Superseded by SYS-15 (D-57). | P1 | I |
 | SYS-02 | Height including keycaps shall be ≤ 18 mm at the front and ≤ 22 mm at the back (goal: 20 mm), with a built-in tilt of about 2° and no fold-out feet. | P6 | M |
 | SYS-03 | In basic mode (RGB off, no powered modules) the battery shall last ≥ 4 weeks at 8 h/day of use over 2.4 GHz or Bluetooth. | P2 | M + A |
 | SYS-04 | The keyboard shall connect over USB-C (any time, battery or not), 2.4 GHz via the KO dongle, and Bluetooth (Mac/iOS), and choose automatically. | P2 | T |
 | SYS-05 | Report rate shall be 1,000 Hz over USB and 2.4 GHz; key-to-host latency ≤ 2 ms wired and ≤ 3 ms over 2.4 GHz (p99). | P2 | M |
-| SYS-06 | Any MX-style or Kailh Choc v1/v2 switch shall fit the v1 switch board without soldering. | P1 | T |
+| ~~SYS-06~~ | ~~Any MX-style or Kailh Choc v1/v2 switch shall fit the v1 switch board without soldering.~~ Superseded by SYS-16 (D-57). | P1 | T |
 | SYS-07 | Two identical USB-C ports: either can be the host/charging port; the other is an accessory port (≤ 500 mA) that works while the keyboard is wired. | P2 | T |
 | SYS-08 | Modules shall attach magnetically on all four sides and be hot-pluggable; side modules shall chain left and right; the interface spec shall be public. | P3 | T |
 | SYS-09 | The top module shall provide three force-feedback knobs whose behaviour switches per application. | P4 | D |
@@ -111,6 +111,8 @@ Verification: **T** test · **M** measurement · **I** inspection · **A** analy
 | SYS-12 | Firmware in Rust; configurable without reflashing (Vial in P1–P2, KO app from P5). | P1 | D |
 | SYS-13 | All boards and cases shall be orderable at JLCPCB/PCBWay (PCB, assembly, CNC) and repairable by hand. | P1 | I |
 | SYS-14 | Battery and all external contacts shall be protected: LiPo protection, current limits, ESD protection. | P1 | T |
+| SYS-15 | The main keyboard shall be one piece in any size the layout builder offers; the switch board is generated from the builder's KO layout file. The owner's first build is 65 % ISO-CH. | P1 | I |
+| SYS-16 | Any Kailh Choc v1 or v2 switch shall fit the v1 switch board without soldering (hot-swap), with per-key RGB under every key. | P1 | T |
 | SYS-15 | Total prototyping spend shall stay around CHF 2,000. | all | A |
 | SYS-16 | License: GPL-3.0-or-later (software), CERN-OHL-S-2.0 (hardware), CC-BY-4.0 + MIT/Apache-2.0 (module spec and its reference code). | P0 | I |
 
