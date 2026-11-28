@@ -229,7 +229,17 @@ class Router:
                                 items.append(("poly", pts, {li}, net))
                 if pad.HasHole():
                     c, d = pad.GetPosition(), pad.GetDrillSize()
-                    items.append(("hole", ((_mm(c.x), _mm(c.y)), _mm(max(d.x, d.y)) / 2), set(), net))
+                    cx, cy, w, h = _mm(c.x), _mm(c.y), _mm(d.x), _mm(d.y)
+                    if abs(w - h) < 1e-3:
+                        items.append(("hole", ((cx, cy), w / 2), set(), net))
+                    else:                      # slot: circles of the short radius along the long axis
+                        r = min(w, h) / 2
+                        half = max(w, h) / 2 - r
+                        ang = math.radians(pad.GetOrientation().AsDegrees()) + (0 if w > h else math.pi / 2)
+                        n = max(2, int(half / (r / 2)) + 1)
+                        for k in range(-n, n + 1):
+                            t = half * k / n
+                            items.append(("hole", ((cx + t * math.cos(ang), cy - t * math.sin(ang)), r), set(), net))
             for z in fp.Zones():
                 self._keepout(z, items)
         for z in self.b.Zones():
