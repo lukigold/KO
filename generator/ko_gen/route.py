@@ -184,6 +184,8 @@ def drc_unconnected(pcb: pathlib.Path) -> list:
 def ends(item):
     d = item["description"]
     x, y = item["pos"]["x"], item["pos"]["y"]           # KiCad page mm, as the router works in
+    if " of J1" in d:                                   # castellated contact: start inside its copper, off the edge
+        return [(x - 1.2, y, li) for li in range(3)]
     if "PTH pad" in d or d.startswith("Via"):
         return [(x, y, li) for li in range(3)]
     for name, li in LAYER.items():
