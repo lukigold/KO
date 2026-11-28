@@ -129,6 +129,41 @@ def structured(board, b) -> int:
     return n
 
 
+def qfn_fanout(board) -> int:
+    """LED driver: every signal pad gets a 0.15 mm track straight out past its pad, then a diagonal to its own via
+    on a ring 4.6 mm outside the pad row, the vias spread to twice the pad pitch (0.8 mm) so a track fits between
+    neighbours further out. Pad rows at 0.4 mm pitch leave no room for the grid router to find these escapes."""
+    cu = Copper(board)
+    n = 0
+    for fp in board.GetFootprints():
+        if not fp.GetReference().startswith("U2") or len(fp.Pads()) < 60:
+            continue
+        c = fp.GetPosition()
+        cx, cy = pcbnew.ToMM(c.x) - OX, pcbnew.ToMM(c.y) - OY
+        for p in fp.Pads():
+            net = p.GetNet()
+            name = net.GetNetname()
+            if not p.GetNumber() or name in ("GND", "") or name.startswith("unconnected"):
+                continue
+            q = p.GetPosition()
+            px, py = pcbnew.ToMM(q.x) - OX - cx, pcbnew.ToMM(q.y) - OY - cy
+            if abs(abs(px) - 3.395) < 0.05:          # left / right side
+                ox, t = (1 if px > 0 else -1), py
+                a = (cx + ox * 4.0, cy + t)
+                v = (cx + ox * 8.0, cy + 2 * t)
+            elif abs(abs(py) - 3.395) < 0.05:        # top / bottom side
+                oy, t = (1 if py > 0 else -1), px
+                a = (cx + t, cy + oy * 4.0)
+                v = (cx + 2 * t, cy + oy * 8.0)
+            else:
+                continue
+            cu.track(net, pcbnew.B_Cu, (cx + px, cy + py), a, 0.15)
+            cu.track(net, pcbnew.B_Cu, a, v, 0.15)
+            cu.via(net, *v)
+            n += 1
+    return n
+
+
 def gnd_fanout(board, router) -> int:
     """A via within 1.6 mm of every bottom-side SMD GND pad, on a free spot, with a 0.3 mm stub."""
     gnd = board.FindNet("GND")
@@ -209,6 +244,7 @@ def half_width(board, net: str, ends_desc: str) -> float:
 def route(board_path: pathlib.Path, b, iters=40, workers=None) -> None:
     board = pcbnew.LoadBoard(str(board_path))
     print(f"  structured lines: {structured(board, b)} items")
+    print(f"  LED driver fan-out: {qfn_fanout(board)} pads")
     bb = board.GetBoardEdgesBoundingBox()
     box = (pcbnew.ToMM(bb.GetLeft()), pcbnew.ToMM(bb.GetTop()), pcbnew.ToMM(bb.GetRight()), pcbnew.ToMM(bb.GetBottom()))
     r0 = maze.Router(board, box, KLAYER, clearance=0.18, hole_clearance=0.28)

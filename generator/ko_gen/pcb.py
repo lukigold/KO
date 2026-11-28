@@ -103,16 +103,17 @@ def placements(b) -> dict:
     for n in range(b.drivers):
         dx = lx - n * 14.0
         P[f"U{20 + n}"] = (dx, cy, 0, "B")
-        P[f"R{20 + n}"] = (dx - 5.0, cy + 2.0, 0, "B")              # ISET (pin 13, left side, low)
-        for j in range(6):                                          # supply caps in a row under the package
-            P[f"C{20 + 10 * n + j}"] = (dx - 3.0 + 1.2 * j, cy + 5.0, 90, "B")
-    P["C5"] = (lx + 8.0, cy + 5.0, 90, "B")
-    P["U4"] = (lx + 8.5, cy - 3.0, 0, "B")
-    P["R2"] = (lx + 11.5, cy - 4.0, 90, "B")
-    P["C4"] = (lx + 12.7, cy - 4.0, 90, "B")
-    P["R3"] = (lx + 11.5, cy - 1.0, 90, "B")
-    P["R4"] = (lx + 12.7, cy - 1.0, 90, "B")
-    P["R5"] = (lx + 8.5, cy + 1.0, 0, "B")
+        # the package's signals fan out to a ring of vias about 7 mm out (route.py); its parts sit outside it
+        P[f"R{20 + n}"] = (dx - 10.0, cy + 4.6, 0, "B")              # ISET
+        for j in range(6):                                          # supply caps beside the left fan
+            P[f"C{20 + 10 * n + j}"] = (dx - 10.0, cy - 3.0 + 1.2 * j, 0, "B")
+    P["C5"] = (lx - 10.3, cy - 4.8, 0, "B")
+    P["U4"] = (lx + 12.5, cy - 3.0, 0, "B")
+    P["R2"] = (lx + 12.5, cy - 5.6, 0, "B")
+    P["C4"] = (lx + 12.5, cy - 6.8, 0, "B")
+    P["R3"] = (lx + 11.9, cy - 0.4, 0, "B")
+    P["R4"] = (lx + 11.9, cy + 0.8, 0, "B")
+    P["R5"] = (lx + 11.9, cy + 2.0, 0, "B")
     rx = cx + 16.0
     for i in range(b.regs):
         P[f"U{10 + i}"] = (rx + i * 8.5, cy, 0, "B")
