@@ -1,17 +1,81 @@
 {
- "U_IS31FL3741A": {"kind": "mpn", "mpn": "IS31FL3741A-QFLS4-TR"},
- "U_74HC595": {"kind": "mpn", "mpn": "74HC595D,118"},
- "U_24C02": {"kind": "mpn", "mpn": "AT24C02D-SSHM-T"},
- "U_PCA9306": {"kind": "mpn", "mpn": "PCA9306DCUR"},
- "J_CHOC_SOCKET": {"kind": "mpn", "mpn": "CPG135001S30"},
- "D_1N4148W": {"kind": "mpn", "mpn": "1N4148W"},
- "LED_E6CC1205": {"kind": "mpn", "mpn": "E6CC1205RGBC3UDA"},
- "U_USBLC6": {"kind": "mpn", "mpn": "USBLC6-2SC6"},
- "J_USBC_HX": {"kind": "mpn", "mpn": "TYPE-C 16P L10.0"},
- "R_10k_0402": {"kind": "resistor", "package": "0402", "value": 10000.0},
- "R_100_0402": {"kind": "resistor", "package": "0402", "value": 100.0},
- "R_200k_0402": {"kind": "resistor", "package": "0402", "value": 200000.0},
- "C_100n_0402": {"kind": "capacitor", "package": "0402", "value": 1e-7, "min_v": 16},
- "C_1u_0402": {"kind": "capacitor", "package": "0402", "value": 1e-6, "min_v": 16},
- "C_10u_0805": {"kind": "capacitor", "package": "0805", "value": 1e-5, "min_v": 10}
+ "U_IS31FL3741A": {
+  "kind": "mpn",
+  "mpn": "IS31FL3741A-QFLS4-TR"
+ },
+ "U_74HC595": {
+  "kind": "mpn",
+  "mpn": "74HC595D,118"
+ },
+ "U_24C02": {
+  "kind": "mpn",
+  "mpn": "AT24C02D-SSHM-T"
+ },
+ "U_PCA9306": {
+  "kind": "mpn",
+  "mpn": "PCA9306DCUR"
+ },
+ "J_CHOC_SOCKET": {
+  "kind": "mpn",
+  "mpn": "CPG135001S30"
+ },
+ "D_1N4148W": {
+  "kind": "mpn",
+  "mpn": "1N4148W"
+ },
+ "LED_E6CC1205": {
+  "kind": "mpn",
+  "mpn": "E6CC1205RGBC3UDA"
+ },
+ "U_USBLC6": {
+  "kind": "mpn",
+  "mpn": "USBLC6-2SC6"
+ },
+ "J_USBC_HX": {
+  "kind": "mpn",
+  "mpn": "TYPE-C 16P L10.0"
+ },
+ "R_10k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 10000.0
+ },
+ "R_100_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 100.0
+ },
+ "R_200k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 200000.0
+ },
+ "C_100n_0402": {
+  "kind": "capacitor",
+  "package": "0402",
+  "value": 1e-07,
+  "min_v": 16
+ },
+ "C_1u_0402": {
+  "kind": "capacitor",
+  "package": "0402",
+  "value": 1e-06,
+  "min_v": 16
+ },
+ "C_10u_0805": {
+  "kind": "capacitor",
+  "package": "0805",
+  "value": 1e-05,
+  "min_v": 10
+ },
+ "R_33_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 33.0
+ },
+ "R_100k_0402": {
+  "kind": "resistor",
+  "package": "0402",
+  "value": 100000.0
+ }
 }

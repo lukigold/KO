@@ -101,6 +101,24 @@ def led():
     fp.write()
 
 
+GLOW = "LED_E6CC1205RGBC3UDA_Underglow"
+
+
+def glow():
+    """The same LED mounted normally on the bottom, lens facing down (underglow). Standard top-view land pattern
+    (pin 1 top-left); the flip onto B.Cu turns it into the view from below. No light hole."""
+    fp = FP(GLOW, "EKINGLUX E6CC1205RGBC3UDA RGB LED, common anode (pin 2), normal mount (underglow on the bottom)",
+            "LED RGB common anode underglow", -1.6, 1.6)
+    for num, x, y in (("1", -1.375, -0.585), ("2", 1.375, -0.585), ("3", -1.375, 0.585), ("4", 1.375, 0.585)):
+        fp.pad(num, x, y, 0.75, 0.7)
+    fp.rect(-1.6, -0.625, 1.6, 0.625, "F.Fab", 0.1)
+    fp.rect(-2.0, -1.2, 2.0, 1.2, "F.CrtYd", 0.05)
+    fp.circle(-2.2, -0.9, 0.12, "F.SilkS", 0.1)
+    boxes(GLOW, [(-1.6, -0.625, 0, 1.6, 0.625, 1.1, (0.95, 0.95, 0.95))])
+    fp.model()
+    fp.write()
+
+
 def qfn60():
     fp = FP(QFN, "Lumissil IS31FL3741A QFN-60 7x7 mm, 0.4 mm pitch, EP 5.4 mm, per datasheet Rev. D land pattern",
             "QFN-60 IS31FL3741A", -4.6, 4.6)
@@ -158,6 +176,7 @@ def main():
         shutil.rmtree(OUT)
     key()
     led()
+    glow()
     qfn60()
     castellated()
     copy_core("USB_C_Receptacle_HX_TYPE-C-16P_L10.0")

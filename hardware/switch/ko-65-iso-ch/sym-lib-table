@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "kosw")(type "KiCad")(uri "${KIPRJMOD}/lib/kosw.kicad_sym")(options "")(descr "KO project symbols (generated)"))
+)
