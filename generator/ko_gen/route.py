@@ -183,7 +183,7 @@ def drc_unconnected(pcb: pathlib.Path) -> list:
 
 def ends(item):
     d = item["description"]
-    x, y = item["pos"]["x"] - OX, item["pos"]["y"] - OY
+    x, y = item["pos"]["x"], item["pos"]["y"]           # KiCad page mm, as the router works in
     if "PTH pad" in d or d.startswith("Via"):
         return [(x, y, li) for li in range(3)]
     for name, li in LAYER.items():
